@@ -1,0 +1,45 @@
+.TH "LL2GO" 1 "2015-04-19" "Ll2go" "Ll2go Manual"
+.SH "NAME"
+ll2go is a tool which decompiles LLVM IR assembly files to Go source code
+(e.g. *.ll -> *.go).
+.SH "SYNOPSIS"
+ll2go
+.I "[option...]"
+.I "[argument...]"
+.PP
+.SH "OPTIONS"
+.B "-f"
+.RS 4
+Force overwrite existing Go source code.
+.RE
+.PP
+.B "-funcs"
+<string>
+.RS 4
+.RS 4
+Comma separated list of functions to decompile (e.g. "foo,bar").
+.RE
+.RE
+.PP
+.B "-pkgname"
+<string>
+.RS 4
+.RS 4
+Package name.
+.RE
+.RE
+.PP
+.B "-q"
+.RS 4
+.RS 4
+Suppress non-error messages.
+.RE
+.RE
+.PP
+.B "-v"
+.RS 4
+.RS 4
+Enable verbose output.
+.RE
+.RE
+.PP

@@ -1,0 +1,22 @@
+* Use rsc's `grind` to make code more ideomatic and to separate concerns.
+    - Move variable declarations to the top of the function, use assignments (e.g. "=") for all binops and let `grind` do the hard work of moving declarations as close to their use as possible.
+    - Recognize init and post statements in for-loops.
+        // from:
+        i := 0
+        for i < 10 {
+            // body
+            i++
+        }
+
+        // to:
+        for i := 0; i < 10; i++ {
+            // body
+        }
+
+* Expression propagation and dead code removal.
+    - Expand temporary variables if they are not redefined between their definition and use.
+    - HACK: Remove unused temporary variables definitions by utilizing "go/parser" and checking for "unused variable" errors.
+
+* Define variables on their first assignment.
+    - Use assignment statements for all binops.
+    - HACK: Add a second pass which parses the generated Go source code. Change assignment statements into declare and initialize (:=) statements by locating "variable not define" errors.
