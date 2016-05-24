@@ -1,0 +1,6 @@
+digraph post_loop {
+	cond [label="entry"]
+	exit [label="exit"]
+	cond->cond [label="true"]
+	cond->exit [label="false"]
+}
