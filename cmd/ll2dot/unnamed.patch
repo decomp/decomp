@@ -1,0 +1,21 @@
+diff --git a/lib/IR/AsmWriter.cpp b/lib/IR/AsmWriter.cpp
+index c494d6c..1a96956 100644
+--- a/lib/IR/AsmWriter.cpp
++++ b/lib/IR/AsmWriter.cpp
+@@ -2025,13 +2025,14 @@ void AssemblyWriter::printBasicBlock(const BasicBlock *BB) {
+     Out << "\n";
+     PrintLLVMName(Out, BB->getName(), LabelPrefix);
+     Out << ':';
+-  } else if (!BB->use_empty()) {      // Don't print block # of no uses...
+-    Out << "\n; <label>:";
++  } else {      // Print block # for unnamed basic blocks.
++    Out << "\n";
+     int Slot = Machine.getLocalSlot(BB);
+     if (Slot != -1)
+       Out << Slot;
+     else
+       Out << "<badref>";
++    Out << ':';
+   }
+ 
+   if (!BB->getParent()) {

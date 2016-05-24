@@ -1,0 +1,17 @@
+digraph main {
+	0->4[ label=default ];
+	0->1[ label="case 0" ];
+	0->2[ label="case 1" ];
+	0->3[ label="case 2" ];
+	1->2;
+	2->3;
+	3->4;
+	4->5;
+	0 [ label=entry ];
+	1;
+	2;
+	3;
+	4;
+	5;
+
+}

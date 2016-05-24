@@ -1,0 +1,11 @@
+digraph main {
+	0->3[ label=false ];
+	0->2[ label=true ];
+	2->4;
+	3->4;
+	0 [ label=entry ];
+	2;
+	3;
+	4;
+
+}
