@@ -1,0 +1,30 @@
+language: go
+
+notifications:
+  email: false
+
+env:
+  global:
+    - secure: "NQA+tDhwFEDMF5G/ACkwQiWzG4niKM2dsGoqey+TRpz2NMdN+Z6gk7KBO/cJPhIfEpbomW7QfLcH96B3iTKAe2Crfw38yC9q+MFmfCBnUhFnkZi7K4fMOFI0jBRcZpY3e5tS9D5bN5bESU54xddfEo/KV/QQJGy6V9DAvtuR6HE="
+    - PATH=$HOME/gopath/bin:$PATH
+
+before_install:
+  - go get golang.org/x/tools/cmd/cover
+  - go get golang.org/x/tools/cmd/goimports
+  - go get golang.org/x/tools/cmd/vet
+  - go get github.com/golang/lint/golint
+  - go get github.com/mattn/goveralls
+
+install:
+  - cd ..
+  - mkdir -p $HOME/gopath/src/decomp.org/x/cmd/
+  - mv restructure $HOME/gopath/src/decomp.org/x/cmd/
+  - cd $HOME/gopath/src/decomp.org/x/cmd/restructure/
+  - go get ./...
+
+before_script:
+  - wget https://gist.github.com/mewmew/379014c9a2e6885e238d/raw/goclean.sh
+  - chmod +x goclean.sh
+
+script:
+  - ./goclean.sh

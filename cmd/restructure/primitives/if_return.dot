@@ -1,0 +1,7 @@
+digraph if_return {
+	cond [label="entry"]
+	body_return
+	exit [label="exit"]
+	cond->body_return [label="true"]
+	cond->exit [label="false"]
+}

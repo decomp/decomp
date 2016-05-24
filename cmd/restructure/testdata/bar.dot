@@ -1,0 +1,15 @@
+digraph bar {
+	E -> F
+	E -> J
+	F -> G
+	F -> H
+	G -> I
+	H -> I
+	I -> E
+	E [label="entry"]
+	F
+	G
+	H
+	I
+	J [label="exit"]
+}

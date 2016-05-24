@@ -1,0 +1,8 @@
+digraph pre_loop {
+	cond [label="entry"]
+	body
+	exit [label="exit"]
+	cond->body [label="true"]
+	body->cond
+	cond->exit [label="false"]
+}

@@ -1,0 +1,19 @@
+[
+	{
+		"prim": "list",
+		"node": "list0",
+		"nodes": {
+			"entry": "F",
+			"exit": "G"
+		}
+	},
+	{
+		"prim": "if",
+		"node": "if0",
+		"nodes": {
+			"body": "list0",
+			"cond": "E",
+			"exit": "H"
+		}
+	}
+]
