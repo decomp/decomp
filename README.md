@@ -4,6 +4,10 @@ The aim of this project is to implement a decompilation pipeline composed of ind
 
 From a high-level perspective, the components of the decompilation pipeline are conceptually grouped into three modules. Firstly, the *front-end* translates a source language (e.g. x86 assembly) into [LLVM IR](http://llvm.org/docs/LangRef.html); a platform-independent low-level intermediate representation. Secondly, the *middle-end* structures the LLVM IR by identifying high-level control flow primitives (e.g. pre-test loops, 2-way conditionals). Lastly, the *back-end* translates the structured LLVM IR into a high-level target programming language (e.g. [Go](https://golang.org/)).
 
+The following poster illustrates the current capabilities of the decompilation pipeline, using a composition of independent components to translate LLVM IR to Go.
+
+[![Poster: Compositional Decompilation](https://raw.githubusercontent.com/decomp/doc/master/poster/poster.png)](https://raw.githubusercontent.com/decomp/doc/master/poster/poster.pdf)
+
 ## Front-end
 
 Translate machine code (e.g. x86 assembly) to LLVM IR.
