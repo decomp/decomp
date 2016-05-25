@@ -22,11 +22,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	xprimitive "decomp.org/x/graphs/primitive"
-	"github.com/mewfork/dot"
+	xprimitive "decomp.org/decomp/graphs/primitive"
 	"github.com/mewkiz/pkg/errutil"
 	"github.com/mewkiz/pkg/osutil"
 	"github.com/mewkiz/pkg/pathutil"
+	"github.com/mewspring/dot"
 	"llvm.org/llvm/bindings/go/llvm"
 )
 

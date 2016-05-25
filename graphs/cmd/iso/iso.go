@@ -14,12 +14,12 @@ import (
 	"path/filepath"
 	"sort"
 
-	"decomp.org/x/graphs"
-	"decomp.org/x/graphs/iso"
-	"github.com/mewfork/dot"
+	"decomp.org/decomp/graphs"
+	"decomp.org/decomp/graphs/iso"
 	"github.com/mewkiz/pkg/errutil"
 	"github.com/mewkiz/pkg/goutil"
 	"github.com/mewkiz/pkg/osutil"
+	"github.com/mewspring/dot"
 )
 
 // When flagStart is a non-empty string, locate an isomorphism of the subgraph
@@ -66,7 +66,7 @@ func locate(graphPath, subPath string) error {
 
 	// Search for subgraph in GOPATH if not found.
 	if ok, _ := osutil.Exists(subPath); !ok {
-		dir, err := goutil.SrcDir("decomp.org/x/graphs/testdata/primitives")
+		dir, err := goutil.SrcDir("decomp.org/decomp/graphs/testdata/primitives")
 		if err != nil {
 			return errutil.Err(err)
 		}

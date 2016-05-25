@@ -17,9 +17,9 @@ before_install:
 
 install:
   - cd ..
-  - mkdir -p $HOME/gopath/src/decomp.org/x/
-  - mv graphs $HOME/gopath/src/decomp.org/x/
-  - cd $HOME/gopath/src/decomp.org/x/graphs/
+  - mkdir -p $HOME/gopath/src/decomp.org/decomp/
+  - mv graphs $HOME/gopath/src/decomp.org/decomp/
+  - cd $HOME/gopath/src/decomp.org/decomp/graphs/
   - go get ./...
 
 before_script:

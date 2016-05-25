@@ -4,7 +4,7 @@ This project is a *work in progress*. The implementation is *incomplete* and sub
 
 # ll2go
 
-[![GoDoc](https://godoc.org/decomp.org/x/cmd/ll2go?status.svg)](https://godoc.org/decomp.org/x/cmd/ll2go)
+[![GoDoc](https://godoc.org/decomp.org/decomp/cmd/ll2go?status.svg)](https://godoc.org/decomp.org/decomp/cmd/ll2go)
 
 `ll2go` is a tool which decompiles LLVM IR assembly files to Go source code (e.g. *.ll -> *.go).
 
@@ -17,7 +17,7 @@ Please note that `ll2go` is meant to be used in combination with [go-post] which
 * Install the [dependencies](https://github.com/decomp/ll2go#dependencies) before running go-get.
 
 ```shell
-go get decomp.org/x/cmd/ll2go
+go get decomp.org/decomp/cmd/ll2go
 ```
 
 ## Usage
@@ -106,7 +106,7 @@ func main() {
 * [llvm.org/llvm/bindings/go/llvm](https://godoc.org/llvm.org/llvm/bindings/go/llvm) with [unnamed.patch](https://raw.githubusercontent.com/decomp/ll2dot/master/unnamed.patch)
 * `llvm-as` from [LLVM](http://llvm.org/)
 * `dot` from [Graphviz](http://www.graphviz.org/)
-* [ll2dot](https://decomp.org/x/cmd/ll2dot)
+* [ll2dot](https://decomp.org/decomp/cmd/ll2dot)
 
 ## Public domain
 

@@ -2,8 +2,8 @@
 package graphs
 
 import (
-	"github.com/mewfork/dot"
 	"github.com/mewkiz/pkg/errutil"
+	"github.com/mewspring/dot"
 )
 
 // SubGraph represents a subgraph with a dedicated entry and exit node. Incoming

@@ -4,9 +4,9 @@ package merge
 import (
 	"fmt"
 
-	"decomp.org/x/graphs"
-	"github.com/mewfork/dot"
+	"decomp.org/decomp/graphs"
 	"github.com/mewkiz/pkg/errutil"
+	"github.com/mewspring/dot"
 )
 
 // Merge merges the nodes of the isomorphism of sub in graph into a single node.

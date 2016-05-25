@@ -6,14 +6,14 @@ This project is a *work in progress*. The implementation is *incomplete* and sub
 
 [![Build Status](https://travis-ci.org/decomp/restructure.svg?branch=master)](https://travis-ci.org/decomp/restructure)
 [![Coverage Status](https://img.shields.io/coveralls/decomp/restructure.svg)](https://coveralls.io/r/decomp/restructure?branch=master)
-[![GoDoc](https://godoc.org/decomp.org/x/cmd/restructure?status.svg)](https://godoc.org/decomp.org/x/cmd/restructure)
+[![GoDoc](https://godoc.org/decomp.org/decomp/cmd/restructure?status.svg)](https://godoc.org/decomp.org/decomp/cmd/restructure)
 
 `restructure` is a tool which recovers high-level control flow primitives from control flow graphs (e.g. *.dot -> *.json). It takes an unstructured CFG (in Graphviz DOT file format) as input and produces a structured CFG (in JSON), which describes how the high-level control flow primitives relate to the nodes of the CFG.
 
 ## Installation
 
 ```shell
-go get decomp.org/x/cmd/restructure
+go get decomp.org/decomp/cmd/restructure
 ```
 
 ## Usage
@@ -30,7 +30,7 @@ Flags:
         Output path.
   -prims string
         An ordered, comma-separated list of control flow primitives (*.dot). Restructure
-        searches for missing files in $GOPATH/src/decomp.org/x/cmd/restructure/primitives/.
+        searches for missing files in $GOPATH/src/decomp.org/decomp/cmd/restructure/primitives/.
         (default "pre_loop.dot,post_loop.dot,list.dot,if.dot,if_else.dot,if_return.dot")
   -q    Suppress non-error messages.
   -steps

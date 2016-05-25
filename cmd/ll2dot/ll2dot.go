@@ -25,9 +25,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mewfork/dot"
 	"github.com/mewkiz/pkg/errutil"
 	"github.com/mewkiz/pkg/pathutil"
+	"github.com/mewspring/dot"
 	"llvm.org/llvm/bindings/go/llvm"
 )
 

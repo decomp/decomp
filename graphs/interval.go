@@ -12,7 +12,7 @@ package graphs
 import (
 	"log"
 
-	"github.com/mewfork/dot"
+	"github.com/mewspring/dot"
 )
 
 // An Interval is a single-entry subgraph in which h is the only entry node, and

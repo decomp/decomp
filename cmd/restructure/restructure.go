@@ -16,7 +16,7 @@
 //             Output path.
 //       -prims string
 //             An ordered, comma-separated list of control flow primitives (*.dot). Restructure
-//             searches for missing files in $GOPATH/src/decomp.org/x/cmd/restructure/primitives/.
+//             searches for missing files in $GOPATH/src/decomp.org/decomp/cmd/restructure/primitives/.
 //             (default "pre_loop.dot,post_loop.dot,list.dot,if.dot,if_else.dot,if_return.dot")
 //       -q    Suppress non-error messages.
 //       -steps
@@ -71,14 +71,14 @@ import (
 	"sort"
 	"strings"
 
-	"decomp.org/x/graphs"
-	"decomp.org/x/graphs/iso"
-	"decomp.org/x/graphs/merge"
-	"decomp.org/x/graphs/primitive"
-	"github.com/mewfork/dot"
+	"decomp.org/decomp/graphs"
+	"decomp.org/decomp/graphs/iso"
+	"decomp.org/decomp/graphs/merge"
+	"decomp.org/decomp/graphs/primitive"
 	"github.com/mewkiz/pkg/errutil"
 	"github.com/mewkiz/pkg/goutil"
 	"github.com/mewkiz/pkg/osutil"
+	"github.com/mewspring/dot"
 )
 
 var (
@@ -91,7 +91,7 @@ var (
 	flagOutput string
 	// flagPrimitives is an ordered, comma-separated list of control flow
 	// primitives (*.dot). Restructure searches for missing files in
-	// $GOPATH/src/decomp.org/x/cmd/restructure/primitives/.
+	// $GOPATH/src/decomp.org/decomp/cmd/restructure/primitives/.
 	flagPrimitives string
 	// When flagQuiet is true, suppress non-error messages.
 	flagQuiet bool
@@ -106,7 +106,7 @@ func init() {
 	flag.BoolVar(&flagImage, "img", false, "Generate image representations of the intermediate CFGs.")
 	flag.BoolVar(&flagIndent, "indent", false, "Indent JSON output.")
 	flag.StringVar(&flagOutput, "o", "", "Output path.")
-	flag.StringVar(&flagPrimitives, "prims", "pre_loop.dot,post_loop.dot,list.dot,if.dot,if_else.dot,if_return.dot", "An ordered, comma-separated list of control flow primitives (*.dot). Restructure searches for missing files in $GOPATH/src/decomp.org/x/cmd/restructure/primitives/.")
+	flag.StringVar(&flagPrimitives, "prims", "pre_loop.dot,post_loop.dot,list.dot,if.dot,if_else.dot,if_return.dot", "An ordered, comma-separated list of control flow primitives (*.dot). Restructure searches for missing files in $GOPATH/src/decomp.org/decomp/cmd/restructure/primitives/.")
 	flag.BoolVar(&flagQuiet, "q", false, "Suppress non-error messages.")
 	flag.BoolVar(&flagSteps, "steps", false, "Output intermediate CFGs at each step.")
 	flag.BoolVar(&flagVerbose, "v", false, "Verbose output.")
@@ -174,12 +174,12 @@ func main() {
 
 // parseSubs parses the graph representations of the given high-level control
 // flow primitives. If unable to locate a subgraph, a second attempt is made by
-// prepending $GOPATH/src/decomp.org/x/cmd/restructure/primitives/ to the
+// prepending $GOPATH/src/decomp.org/decomp/cmd/restructure/primitives/ to the
 // subgraph path.
 func parseSubs(subPaths []string) (subs []*graphs.SubGraph, err error) {
-	// Prepend $GOPATH/src/decomp.org/x/cmd/restructure/primitives/ to the path
+	// Prepend $GOPATH/src/decomp.org/decomp/cmd/restructure/primitives/ to the path
 	// of missing subgraphs.
-	subDir, err := goutil.SrcDir("decomp.org/x/cmd/restructure/primitives")
+	subDir, err := goutil.SrcDir("decomp.org/decomp/cmd/restructure/primitives")
 	if err != nil {
 		return nil, errutil.Err(err)
 	}

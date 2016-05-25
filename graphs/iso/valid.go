@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"decomp.org/x/graphs"
-	"github.com/mewfork/dot"
+	"decomp.org/decomp/graphs"
+	"github.com/mewspring/dot"
 )
 
 // isValid returns true if m is a valid mapping, from sub node name to graph

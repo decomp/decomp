@@ -4,7 +4,7 @@ This project is a *work in progress*. The implementation is *incomplete* and sub
 
 # ll2dot
 
-[![GoDoc](https://godoc.org/decomp.org/x/cmd/ll2dot?status.svg)](https://godoc.org/decomp.org/x/cmd/ll2dot)
+[![GoDoc](https://godoc.org/decomp.org/decomp/cmd/ll2dot?status.svg)](https://godoc.org/decomp.org/decomp/cmd/ll2dot)
 
 `ll2dot` is a tool which generates control flow graphs from LLVM IR assembly files (e.g. *.ll -> *.dot). The output is a set of Graphviz DOT files, each representing the control flow graph of a function using one node per basic block.
 
@@ -18,7 +18,7 @@ For a source file "foo.ll" containing the functions "bar" and "baz" the followin
 * Install the [dependencies](https://github.com/decomp/ll2dot#dependencies) before running go-get.
 
 ```shell
-go get decomp.org/x/cmd/ll2dot
+go get decomp.org/decomp/cmd/ll2dot
 ```
 
 ## Usage

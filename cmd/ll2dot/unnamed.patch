@@ -1,8 +1,8 @@
-diff --git a/lib/IR/AsmWriter.cpp b/lib/IR/AsmWriter.cpp
-index c494d6c..1a96956 100644
---- a/lib/IR/AsmWriter.cpp
-+++ b/lib/IR/AsmWriter.cpp
-@@ -2025,13 +2025,14 @@ void AssemblyWriter::printBasicBlock(const BasicBlock *BB) {
+Index: AsmWriter.cpp
+===================================================================
+--- AsmWriter.cpp	(revision 270635)
++++ AsmWriter.cpp	(working copy)
+@@ -2718,8 +2718,8 @@
      Out << "\n";
      PrintLLVMName(Out, BB->getName(), LabelPrefix);
      Out << ':';
@@ -12,10 +12,4 @@ index c494d6c..1a96956 100644
 +    Out << "\n";
      int Slot = Machine.getLocalSlot(BB);
      if (Slot != -1)
-       Out << Slot;
-     else
-       Out << "<badref>";
-+    Out << ':';
-   }
- 
-   if (!BB->getParent()) {
+       Out << Slot << ":";

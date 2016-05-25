@@ -3,9 +3,9 @@ package iso
 import (
 	"sort"
 
-	"decomp.org/x/graphs"
-	"github.com/mewfork/dot"
+	"decomp.org/decomp/graphs"
 	"github.com/mewkiz/pkg/errutil"
+	"github.com/mewspring/dot"
 )
 
 // solveBrute tries to solve the node pair equation through brute force. It

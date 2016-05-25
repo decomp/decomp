@@ -17,9 +17,9 @@ before_install:
 
 install:
   - cd ..
-  - mkdir -p $HOME/gopath/src/decomp.org/x/cmd/
-  - mv go-post $HOME/gopath/src/decomp.org/x/cmd/
-  - cd $HOME/gopath/src/decomp.org/x/cmd/go-post/
+  - mkdir -p $HOME/gopath/src/decomp.org/decomp/cmd/
+  - mv go-post $HOME/gopath/src/decomp.org/decomp/cmd/
+  - cd $HOME/gopath/src/decomp.org/decomp/cmd/go-post/
   - go get ./...
 
 before_script:

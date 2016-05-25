@@ -11,9 +11,9 @@ import (
 	"log"
 	"os"
 
-	"decomp.org/x/graphs"
-	"github.com/mewfork/dot"
+	"decomp.org/decomp/graphs"
 	"github.com/mewkiz/pkg/errutil"
+	"github.com/mewspring/dot"
 )
 
 const use = `

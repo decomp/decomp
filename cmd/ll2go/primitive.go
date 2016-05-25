@@ -15,10 +15,10 @@ import (
 	"go/token"
 	"sort"
 
-	"decomp.org/x/graphs"
-	xprimitive "decomp.org/x/graphs/primitive"
-	"github.com/mewfork/dot"
+	"decomp.org/decomp/graphs"
+	xprimitive "decomp.org/decomp/graphs/primitive"
 	"github.com/mewkiz/pkg/errutil"
+	"github.com/mewspring/dot"
 	"llvm.org/llvm/bindings/go/llvm"
 )
 

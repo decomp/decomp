@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"decomp.org/x/graphs/primitive"
+	"decomp.org/decomp/graphs/primitive"
 )
 
 func TestRestructure(t *testing.T) {

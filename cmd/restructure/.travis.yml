@@ -17,9 +17,9 @@ before_install:
 
 install:
   - cd ..
-  - mkdir -p $HOME/gopath/src/decomp.org/x/cmd/
-  - mv restructure $HOME/gopath/src/decomp.org/x/cmd/
-  - cd $HOME/gopath/src/decomp.org/x/cmd/restructure/
+  - mkdir -p $HOME/gopath/src/decomp.org/decomp/cmd/
+  - mv restructure $HOME/gopath/src/decomp.org/decomp/cmd/
+  - cd $HOME/gopath/src/decomp.org/decomp/cmd/restructure/
   - go get ./...
 
 before_script:
