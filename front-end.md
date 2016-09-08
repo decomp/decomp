@@ -47,3 +47,11 @@ Supported:
 Future:
 * x86_64 -> REIL
 * REIL -> LLVM IR
+
+## RevGen
+
+https://github.com/dslab-epfl/s2e/blob/revgen/docs/Tools/StaticTranslator.rst
+
+Supported:
+
+* x86 -> LLVM IR
