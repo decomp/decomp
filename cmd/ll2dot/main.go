@@ -9,11 +9,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gonum/graph"
+	"github.com/decomp/decomp/cfg"
 	"github.com/gonum/graph/encoding/dot"
-	"github.com/gonum/graph/simple"
 	"github.com/llir/llvm/asm"
-	"github.com/llir/llvm/ir"
 	"github.com/mewkiz/pkg/term"
 	"github.com/pkg/errors"
 )
@@ -77,97 +75,12 @@ func ll2dot(llPath string, funcs map[string]bool) error {
 			continue
 		}
 		dbg.Printf("generating CFG for function %q.", f.Name)
-		cfg := createCFG(f)
-		buf, err := dot.Marshal(cfg, f.Name, "", "\t", false)
+		g := cfg.New(f)
+		buf, err := dot.Marshal(g, f.Name, "", "\t", false)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		fmt.Println(string(buf))
 	}
 	return nil
-}
-
-func createCFG(f *ir.Function) graph.Graph {
-	cfg := simple.NewDirectedGraph(0, 0)
-	nodes := make(map[string]graph.Node)
-	for _, block := range f.Blocks {
-		from := createNode(cfg, nodes, block.Name)
-		switch term := block.Term.(type) {
-		case *ir.TermRet:
-			// nothing to do.
-		case *ir.TermBr:
-			to := createNode(cfg, nodes, term.Target.Name)
-			setEdge(cfg, from, to, "")
-		case *ir.TermCondBr:
-			to := createNode(cfg, nodes, term.TargetTrue.Name)
-			setEdge(cfg, from, to, "true")
-			to = createNode(cfg, nodes, term.TargetFalse.Name)
-			setEdge(cfg, from, to, "false")
-		case *ir.TermSwitch:
-			for _, c := range term.Cases {
-				to := createNode(cfg, nodes, c.Target.Name)
-				label := fmt.Sprintf("case (x=%v)", c.X.Ident())
-				setEdge(cfg, from, to, label)
-			}
-			to := createNode(cfg, nodes, term.TargetDefault.Name)
-			setEdge(cfg, from, to, "default case")
-		case *ir.TermUnreachable:
-			// nothing to do.
-		default:
-			panic(fmt.Sprintf("support for terminator %T not yet implemented", term))
-		}
-	}
-	return cfg
-}
-
-type node struct {
-	simple.Node
-	attrs
-}
-
-func createNode(cfg graph.DirectedBuilder, nodes map[string]graph.Node, label string) graph.Node {
-	if n, ok := nodes[label]; ok {
-		return n
-	}
-	id := cfg.NewNodeID()
-	n := &node{
-		Node: simple.Node(id),
-	}
-	if len(label) > 0 {
-		n.attrs = append(n.attrs, newLabel(label))
-	}
-	nodes[label] = n
-	cfg.AddNode(n)
-	return n
-}
-
-type edge struct {
-	simple.Edge
-	attrs
-}
-
-func setEdge(cfg graph.DirectedBuilder, from, to graph.Node, label string) {
-	e := &edge{
-		Edge: simple.Edge{
-			F: from,
-			T: to,
-		},
-	}
-	if len(label) > 0 {
-		e.attrs = append(e.attrs, newLabel(label))
-	}
-	cfg.SetEdge(e)
-}
-
-func newLabel(label string) dot.Attribute {
-	return dot.Attribute{
-		Key:   "label",
-		Value: fmt.Sprintf("%q", label),
-	}
-}
-
-type attrs []dot.Attribute
-
-func (attrs attrs) DOTAttributes() []dot.Attribute {
-	return attrs
 }
