@@ -19,6 +19,8 @@ int bar(int x) {
 
 int main(int argc, char **argv) {
 	int x;
+
+	x = 1;
 	if (x < 3) {
 		return bar(x);
 	}
