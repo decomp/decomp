@@ -73,7 +73,7 @@ func createCFG(f *ir.Function) graph.Graph {
 
 type node struct {
 	simple.Node
-	labelAttr
+	attrs
 }
 
 func createNode(cfg graph.DirectedBuilder, nodes map[string]graph.Node, label string) graph.Node {
@@ -82,8 +82,10 @@ func createNode(cfg graph.DirectedBuilder, nodes map[string]graph.Node, label st
 	}
 	id := cfg.NewNodeID()
 	n := &node{
-		Node:      simple.Node(id),
-		labelAttr: labelAttr(label),
+		Node: simple.Node(id),
+	}
+	if len(label) > 0 {
+		n.attrs = append(n.attrs, newLabel(label))
 	}
 	nodes[label] = n
 	cfg.AddNode(n)
@@ -92,7 +94,7 @@ func createNode(cfg graph.DirectedBuilder, nodes map[string]graph.Node, label st
 
 type edge struct {
 	simple.Edge
-	labelAttr
+	attrs
 }
 
 func setEdge(cfg graph.DirectedBuilder, from, to graph.Node, label string) {
@@ -101,21 +103,22 @@ func setEdge(cfg graph.DirectedBuilder, from, to graph.Node, label string) {
 			F: from,
 			T: to,
 		},
-		labelAttr: labelAttr(label),
+	}
+	if len(label) > 0 {
+		e.attrs = append(e.attrs, newLabel(label))
 	}
 	cfg.SetEdge(e)
 }
 
-type labelAttr string
-
-func (label labelAttr) DOTAttributes() []dot.Attribute {
-	var attrs []dot.Attribute
-	if len(label) > 0 {
-		attr := dot.Attribute{
-			Key:   "label",
-			Value: fmt.Sprintf("%q", label),
-		}
-		attrs = append(attrs, attr)
+func newLabel(label string) dot.Attribute {
+	return dot.Attribute{
+		Key:   "label",
+		Value: fmt.Sprintf("%q", label),
 	}
+}
+
+type attrs []dot.Attribute
+
+func (attrs attrs) DOTAttributes() []dot.Attribute {
 	return attrs
 }
