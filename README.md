@@ -20,19 +20,19 @@ Perform control flow analysis on the LLVM IR to identify high-level control flow
 
 ### ll2dot
 
-https://godoc.org/decomp.org/decomp/cmd/ll2dot
+https://godoc.org/github.com/decomp/decomp/cmd/ll2dot
 
 Control flow graph generation tool.
 
-> Generate control flow graphs from LLVM IR assembly files (e.g. *.ll -> *.dot)
+> Generate control flow graphs from LLVM IR assembly (i.e. *.ll -> *.dot).
 
 ### restructure
 
-https://godoc.org/decomp.org/decomp/cmd/restructure
+https://godoc.org/github.com/decomp/decomp/cmd/restructure
 
 Control flow recovery tool.
 
-> Recover control flow primitives from control flow graphs (e.g. *.dot -> *.json)
+> Recover control flow primitives from control flow graphs (i.e. *.dot -> *.json).
 
 ## Back-end
 
@@ -40,19 +40,19 @@ Translate structured LLVM IR to a high-level target language (e.g. Go).
 
 ### ll2go
 
-https://godoc.org/decomp.org/decomp/cmd/ll2go
+https://godoc.org/github.com/decomp/decomp/cmd/ll2go
 
 Go code generation tool.
 
-> Decompile LLVM IR assembly files to Go source code (e.g. *.ll -> *.go)
+> Decompile LLVM IR assembly files to Go source code (i.e. *.ll -> *.go).
 
 ### go-post
 
-https://godoc.org/decomp.org/decomp/cmd/go-post
+https://godoc.org/github.com/decomp/decomp/cmd/go-post
 
 Go post-processing tool.
 
-> Post-process Go source code to make it more idiomatic
+> Post-process Go source code to make it more idiomatic (i.e. *.go -> *.go).
 
 ## Public domain
 
