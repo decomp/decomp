@@ -34,7 +34,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/decomp/decomp/cfg"
+	"github.com/decomp/decomp/graph/cfg"
 	"github.com/gonum/graph"
 	"github.com/gonum/graph/encoding/dot"
 	"github.com/llir/llvm/asm"
@@ -97,7 +97,7 @@ func main() {
 	// Parse LLVM IR files.
 	for _, llPath := range flag.Args() {
 		if err := ll2dot(llPath, funcNames, force, img); err != nil {
-			log.Fatal(err)
+			log.Fatalf("%+v", err)
 		}
 	}
 }

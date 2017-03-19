@@ -9,8 +9,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/decomp/decomp/cfg"
-	"github.com/gonum/graph/encoding/dot"
+	"github.com/decomp/decomp/graph/cfg"
+	"github.com/gonum/graph"
 	"github.com/mewkiz/pkg/term"
 	"github.com/pkg/errors"
 )
@@ -33,6 +33,8 @@ Flags:
 func main() {
 	// Parse command line flags.
 	var (
+		// entryLabel specifies the entry node of the control flow graph.
+		entryLabel string
 		// indent specifies whether to indent JSON output.
 		indent bool
 		// output specifies the output path.
@@ -43,6 +45,7 @@ func main() {
 		// each step.
 		steps bool
 	)
+	flag.StringVar(&entryLabel, "entry", "", "entry node of the control flow graph")
 	flag.BoolVar(&indent, "indent", false, "indent JSON output")
 	flag.StringVar(&output, "o", "", "output path")
 	flag.BoolVar(&quiet, "q", false, "suppress non-error messages")
@@ -60,21 +63,47 @@ func main() {
 
 	// Parse DOT file.
 	dotPath := flag.Arg(0)
-	if err := restructure(dotPath, output, steps, indent); err != nil {
-		log.Fatal(err)
+	g, err := cfg.ParseFile(dotPath)
+	if err != nil {
+		log.Fatalf("%+v", err)
+	}
+
+	// Locate entry node.
+	entry, err := locateEntryNode(g, entryLabel)
+	if err != nil {
+		log.Fatalf("%+v", err)
+	}
+
+	// Perform control flow analysis.
+	if err := restructure(g, entry, steps); err != nil {
+		log.Fatalf("%+v", err)
 	}
 }
 
-func restructure(dotPath, output string, steps, indent bool) error {
-	g, err := cfg.ParseFile(dotPath)
-	if err != nil {
-		return errors.WithStack(err)
+func locateEntryNode(g *cfg.Graph, entryLabel string) (graph.Node, error) {
+	if len(entryLabel) > 0 {
+		entry := g.NodeByLabel(entryLabel)
+		if entry == nil {
+			return nil, errors.Errorf("unable to locate entry node with node label %q", entryLabel)
+		}
+		return entry, nil
 	}
-	// TODO: Remove debug output.
-	buf, err := dot.Marshal(g, "", "", "\t", false)
-	if err != nil {
-		return errors.WithStack(err)
+	var entry graph.Node
+	for _, n := range g.Nodes() {
+		preds := g.To(n)
+		if len(preds) == 0 {
+			if entry != nil {
+				return nil, errors.Errorf("more than one candidate for the entry node located; prev %#v, new %#v", entry, n)
+			}
+			entry = n
+		}
 	}
-	fmt.Println(string(buf))
+	if entry == nil {
+		return nil, errors.Errorf("unable to locate entry node; try specifying an entry node label using the -entry flag")
+	}
+	return entry, nil
+}
+
+func restructure(g *cfg.Graph, entry graph.Node, steps bool) error {
 	return nil
 }
