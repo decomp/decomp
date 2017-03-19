@@ -23,6 +23,17 @@ func ParseFile(path string) (*Graph, error) {
 	src := file.Graphs[0]
 	g := newGraph()
 	dot.CopyDirected(g, src)
+	for _, n := range g.Nodes() {
+		if n, ok := n.(*Node); ok {
+			if len(n.Label) < 1 {
+				return nil, errors.Errorf("invalid node %#v; missing node label", n)
+			}
+			if prev, ok := g.nodes[n.Label]; ok {
+				return nil, errors.Errorf("more than one node with node label %q; prev %#v, new %#v", n.Label, prev, n)
+			}
+			g.nodes[n.Label] = n
+		}
+	}
 	return g, nil
 }
 
