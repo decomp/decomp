@@ -24,7 +24,7 @@ https://godoc.org/github.com/decomp/decomp/cmd/ll2dot
 
 Control flow graph generation tool.
 
-> Generate control flow graphs from LLVM IR assembly (i.e. *.ll -> *.dot).
+> Generate control flow graphs from LLVM IR assembly (*.ll -> *.dot).
 
 ### restructure
 
@@ -32,7 +32,7 @@ https://godoc.org/github.com/decomp/decomp/cmd/restructure
 
 Control flow recovery tool.
 
-> Recover control flow primitives from control flow graphs (i.e. *.dot -> *.json).
+> Recover control flow primitives from control flow graphs (*.dot -> *.json).
 
 ## Back-end
 
@@ -44,7 +44,7 @@ https://godoc.org/github.com/decomp/decomp/cmd/ll2go
 
 Go code generation tool.
 
-> Decompile LLVM IR assembly files to Go source code (i.e. *.ll -> *.go).
+> Decompile LLVM IR assembly files to Go source code (*.ll -> *.go).
 
 ### go-post
 
@@ -52,7 +52,7 @@ https://godoc.org/github.com/decomp/decomp/cmd/go-post
 
 Go post-processing tool.
 
-> Post-process Go source code to make it more idiomatic (i.e. *.go -> *.go).
+> Post-process Go source code to make it more idiomatic (*.go -> *.go).
 
 ## Public domain
 

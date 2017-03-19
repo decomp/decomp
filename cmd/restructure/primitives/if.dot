@@ -1,8 +1,0 @@
-digraph if {
-	cond [label="entry"]
-	body
-	exit [label="exit"]
-	cond->body [label="true"]
-	cond->exit [label="false"]
-	body->exit
-}

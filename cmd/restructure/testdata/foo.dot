@@ -1,10 +1,10 @@
 digraph foo {
-	E -> F
-	E -> H
-	F -> G
-	G -> H
-	E [label="entry"]
-	F
-	G
-	H [label="exit"]
+	0 [label="entry"]
+	1
+	2
+	3 [label="exit"]
+	0 -> 1
+	0 -> 3
+	1 -> 2
+	2 -> 3
 }

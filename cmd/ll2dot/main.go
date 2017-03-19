@@ -1,8 +1,8 @@
 // TODO: Add support for parsing from standard input.
 
-// The ll2dot tool generates control flow graphs from LLVM IR assembly (i.e.
-// *.ll -> *.dot). The output is a set of Graphviz DOT files, each representing
-// the control flow graph of a function using one node per basic block.
+// The ll2dot tool generates control flow graphs from LLVM IR assembly (*.ll ->
+// *.dot). The output is a set of Graphviz DOT files, each representing the
+// control flow graph of a function using one node per basic block.
 //
 // For a source file "foo.ll" containing the functions "bar" and "baz" the
 // following DOT files are generated.
@@ -50,8 +50,8 @@ var dbg = log.New(os.Stderr, term.RedBold("ll2dot:")+" ", 0)
 
 func usage() {
 	const use = `
-ll2dot [OPTION]... FILE...
-Generate control flow graphs from LLVM IR assembly (i.e. *.ll -> *.dot).
+ll2dot [OPTION]... FILE.ll...
+Generate control flow graphs from LLVM IR assembly (*.ll -> *.dot).
 
 Flags:
 `
