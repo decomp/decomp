@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/gonum/graph"
-	"github.com/gonum/graph/encoding/dot"
 	"github.com/gonum/graph/simple"
 	"github.com/llir/llvm/ir"
 )
@@ -67,17 +66,17 @@ func (g *Graph) NodeByLabel(label string) graph.Node {
 	return g.nodes[label]
 }
 
-// getNode returns the node in the graph with the given label. A new node is
-// created if no such node exist already.
+// getNode returns the node in the graph with the given label, generating a new
+// such node if none exist.
 func (g *Graph) getNode(label string) graph.Node {
 	if n, ok := g.nodes[label]; ok {
 		return n
 	}
 	id := g.NewNodeID()
-	n := &node{
-		Node: simple.Node(id),
+	n := &Node{
+		Node:  simple.Node(id),
+		Label: label,
 	}
-	n.attrs = append(n.attrs, newLabel(label))
 	g.nodes[label] = n
 	g.AddNode(n)
 	return n
@@ -86,45 +85,26 @@ func (g *Graph) getNode(label string) graph.Node {
 // setEdge adds an edge from the source to the destination node. An optional
 // label may be specified for the edge.
 func (g *Graph) setEdge(from, to graph.Node, label string) {
-	e := &edge{
+	e := &Edge{
 		Edge: simple.Edge{
 			F: from,
 			T: to,
 		},
-	}
-	if len(label) > 0 {
-		e.attrs = append(e.attrs, newLabel(label))
+		Label: label,
 	}
 	g.SetEdge(e)
 }
 
-// node represents a graph node with DOT attributes.
-type node struct {
+// Node represents a node of a control flow graph.
+type Node struct {
 	simple.Node
-	// DOT attributes.
-	attrs
+	// Node label.
+	Label string
 }
 
-// edge represents a graph edge with DOT attributes.
-type edge struct {
+// Edge represents an edge of a control flow graph.
+type Edge struct {
 	simple.Edge
-	// DOT attributes.
-	attrs
-}
-
-// newLabel returns a new label DOT attribute.
-func newLabel(label string) dot.Attribute {
-	return dot.Attribute{
-		Key:   "label",
-		Value: fmt.Sprintf("%q", label),
-	}
-}
-
-// attrs represents a set of DOT attributes, and implements the
-// gonum/graph/encoding/dot.Attributer interface.
-type attrs []dot.Attribute
-
-// DOTAttributes returns the DOT attributes of a graph node or edge.
-func (attrs attrs) DOTAttributes() []dot.Attribute {
-	return attrs
+	// Edge label.
+	Label string
 }
