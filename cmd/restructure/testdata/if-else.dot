@@ -1,0 +1,13 @@
+digraph main {
+	// Node definitions.
+	0 [label="2"];
+	1 [label="4"];
+	2 [label="5"];
+	3 [label="6"];
+
+	// Edge definitions.
+	0 -> 1 [label="true"];
+	0 -> 2 [label="false"];
+	1 -> 3;
+	2 -> 3;
+}
