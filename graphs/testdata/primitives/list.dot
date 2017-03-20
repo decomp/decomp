@@ -1,5 +1,0 @@
-digraph list {
-	entry [label="entry"]
-	exit [label="exit"]
-	entry->exit
-}

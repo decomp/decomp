@@ -1,4 +1,0 @@
-digraph inf_loop {
-	entry [label="entry"]
-	entry->entry
-}

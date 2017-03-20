@@ -1,9 +1,0 @@
-digraph main {
-	0->1;
-	1->2;
-	2->1;
-	0 [ label=entry ];
-	1;
-	2;
-
-}
