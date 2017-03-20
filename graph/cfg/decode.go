@@ -49,6 +49,7 @@ func (g *Graph) NewEdge(from, to graph.Node) graph.Edge {
 
 // UnmarshalDOTAttr decodes a single DOT attribute.
 func (n *Node) UnmarshalDOTAttr(attr *ast.Attr) error {
+	n.Attrs[attr.Key] = attr.Val
 	switch attr.Key {
 	case "label":
 		s := attr.Val
@@ -68,6 +69,7 @@ func (n *Node) UnmarshalDOTAttr(attr *ast.Attr) error {
 
 // UnmarshalDOTAttr decodes a single DOT attribute.
 func (e *Edge) UnmarshalDOTAttr(attr *ast.Attr) error {
+	e.Attrs[attr.Key] = attr.Val
 	switch attr.Key {
 	case "label":
 		s := attr.Val
