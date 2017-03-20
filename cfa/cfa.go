@@ -46,6 +46,67 @@ func FindPrim(g graph.Directed, dom cfg.Dom) (*primitive.Primitive, error) {
 	return nil, errors.Errorf("unable to locate control flow primitive")
 }
 
+// Merge merges the nodes of the primitive into a single node, the label of
+// which is stored in prim.Node.
+func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
+	// Locate nodes to merge.
+	var nodes []graph.Node
+	for _, label := range prim.Nodes {
+		node := g.NodeByLabel(label)
+		if node == nil {
+			return errors.Errorf("unable to locate pre-merge node label %q", label)
+		}
+		nodes = append(nodes, node)
+	}
+	entry := g.NodeByLabel(prim.Entry)
+	if entry == nil {
+		return errors.Errorf("unable to locate entry node label %q", prim.Entry)
+	}
+	exit := g.NodeByLabel(prim.Exit)
+	if exit == nil {
+		return errors.Errorf("unable to locate exit node label %q", prim.Exit)
+	}
+
+	// Add new node for primitive.
+	var label string
+	for i := 0; ; i++ {
+		label = fmt.Sprintf("%s_%d", prim.Prim, i)
+		if g.NodeByLabel(label) == nil {
+			// unique label identified.
+			break
+		}
+	}
+	prim.Node = label
+	p := g.NewNodeWithLabel(label)
+
+	// Connect incoming edges to entry.
+	for _, from := range g.To(entry) {
+		e := g.Edge(from, entry)
+		var label string
+		if e, ok := e.(*cfg.Edge); ok {
+			label = e.Label
+		}
+		g.NewEdgeWithLabel(from, p, label)
+	}
+
+	// Connect outgoing edges from exit.
+	for _, to := range g.From(exit) {
+		e := g.Edge(exit, to)
+		var label string
+		if e, ok := e.(*cfg.Edge); ok {
+			label = e.Label
+		}
+		g.NewEdgeWithLabel(p, to, label)
+	}
+
+	// Remove old nodes.
+	for _, node := range nodes {
+		g.RemoveNode(node)
+	}
+
+	return nil
+}
+
 // label returns the label of the node.
 func label(n graph.Node) string {
 	if n, ok := n.(*cfg.Node); ok {
