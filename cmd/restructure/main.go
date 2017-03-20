@@ -193,8 +193,6 @@ func restructure(g *cfg.Graph, entry graph.Node, steps bool, name string) (prims
 		// Handle special case where entry node has been replaced by primitive
 		// node.
 		if !g.Has(entry) {
-			// TODO: Verify that the following works for graphs where the entry
-			// node is replaced.
 			entry = g.NodeByLabel(prim.Node)
 			if entry == nil {
 				return nil, errors.Errorf("unable to locate entry node %q", prim.Node)
