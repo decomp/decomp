@@ -5,14 +5,14 @@ import (
 	"strings"
 
 	"github.com/gonum/graph"
-	"github.com/graphism/dot"
-	"github.com/graphism/dot/ast"
+	"github.com/gonum/graph/encoding/dot"
+	dotparser "github.com/graphism/dot"
 	"github.com/pkg/errors"
 )
 
 // ParseFile parses the given Graphviz DOT file into a control flow graph.
 func ParseFile(path string) (*Graph, error) {
-	file, err := dot.ParseFile(path)
+	file, err := dotparser.ParseFile(path)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -21,7 +21,7 @@ func ParseFile(path string) (*Graph, error) {
 	}
 	src := file.Graphs[0]
 	g := newGraph()
-	dot.CopyDirected(g, src)
+	dot.Copy(g, src)
 	for _, n := range g.Nodes() {
 		if n, ok := n.(*Node); ok {
 			if len(n.Label) < 1 {
@@ -48,14 +48,14 @@ func (g *Graph) NewEdge(from, to graph.Node) graph.Edge {
 }
 
 // UnmarshalDOTAttr decodes a single DOT attribute.
-func (n *Node) UnmarshalDOTAttr(attr *ast.Attr) error {
-	n.Attrs[attr.Key] = attr.Val
+func (n *Node) UnmarshalDOTAttr(attr dot.Attribute) error {
+	n.Attrs[attr.Key] = attr.Value
 	switch attr.Key {
 	case "label":
-		s := attr.Val
+		s := attr.Value
 		if strings.HasPrefix(s, `"`) && strings.HasSuffix(s, `"`) {
 			var err error
-			s, err = strconv.Unquote(attr.Val)
+			s, err = strconv.Unquote(attr.Value)
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -68,14 +68,14 @@ func (n *Node) UnmarshalDOTAttr(attr *ast.Attr) error {
 }
 
 // UnmarshalDOTAttr decodes a single DOT attribute.
-func (e *Edge) UnmarshalDOTAttr(attr *ast.Attr) error {
-	e.Attrs[attr.Key] = attr.Val
+func (e *Edge) UnmarshalDOTAttr(attr dot.Attribute) error {
+	e.Attrs[attr.Key] = attr.Value
 	switch attr.Key {
 	case "label":
-		s := attr.Val
+		s := attr.Value
 		if strings.HasPrefix(s, `"`) && strings.HasSuffix(s, `"`) {
 			var err error
-			s, err = strconv.Unquote(attr.Val)
+			s, err = strconv.Unquote(attr.Value)
 			if err != nil {
 				return errors.WithStack(err)
 			}
