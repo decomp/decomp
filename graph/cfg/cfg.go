@@ -15,26 +15,26 @@ func New(f *ir.Function) *Graph {
 	_ = f.String()
 	g := newGraph()
 	for _, block := range f.Blocks {
-		from := g.getNode(block.Name)
+		from := g.NewNodeWithLabel(block.Name)
 		switch term := block.Term.(type) {
 		case *ir.TermRet:
 			// nothing to do.
 		case *ir.TermBr:
-			to := g.getNode(term.Target.Name)
-			g.setEdge(from, to, "")
+			to := g.NewNodeWithLabel(term.Target.Name)
+			g.NewEdgeWithLabel(from, to, "")
 		case *ir.TermCondBr:
-			to := g.getNode(term.TargetTrue.Name)
-			g.setEdge(from, to, "true")
-			to = g.getNode(term.TargetFalse.Name)
-			g.setEdge(from, to, "false")
+			to := g.NewNodeWithLabel(term.TargetTrue.Name)
+			g.NewEdgeWithLabel(from, to, "true")
+			to = g.NewNodeWithLabel(term.TargetFalse.Name)
+			g.NewEdgeWithLabel(from, to, "false")
 		case *ir.TermSwitch:
 			for _, c := range term.Cases {
-				to := g.getNode(c.Target.Name)
+				to := g.NewNodeWithLabel(c.Target.Name)
 				label := fmt.Sprintf("case (x=%v)", c.X.Ident())
-				g.setEdge(from, to, label)
+				g.NewEdgeWithLabel(from, to, label)
 			}
-			to := g.getNode(term.TargetDefault.Name)
-			g.setEdge(from, to, "default case")
+			to := g.NewNodeWithLabel(term.TargetDefault.Name)
+			g.NewEdgeWithLabel(from, to, "default case")
 		case *ir.TermUnreachable:
 			// nothing to do.
 		default:
@@ -49,50 +49,85 @@ func New(f *ir.Function) *Graph {
 type Graph struct {
 	*simple.DirectedGraph
 	// nodes maps from node label to graph node.
-	nodes map[string]graph.Node
+	nodes map[string]*Node
 }
 
 // newGraph returns a new control flow graph.
 func newGraph() *Graph {
 	g := &Graph{
 		DirectedGraph: simple.NewDirectedGraph(0, 0),
-		nodes:         make(map[string]graph.Node),
+		nodes:         make(map[string]*Node),
 	}
 	return g
 }
 
+// RemoveNode removes n from the graph, as well as any edges attached to it. If
+// the node is not in the graph it is a no-op.
+func (g *Graph) RemoveNode(n graph.Node) {
+	if n, ok := n.(*Node); ok {
+		delete(g.nodes, n.Label)
+	}
+	g.DirectedGraph.RemoveNode(n)
+}
+
 // NodeByLabel returns the node in the graph with the given label.
-func (g *Graph) NodeByLabel(label string) graph.Node {
+func (g *Graph) NodeByLabel(label string) *Node {
 	return g.nodes[label]
 }
 
-// getNode returns the node in the graph with the given label, generating a new
-// such node if none exist.
-func (g *Graph) getNode(label string) graph.Node {
-	if n, ok := g.nodes[label]; ok {
-		return n
-	}
+// newNode returns a new node with a unique node ID in the graph.
+func (g *Graph) newNode() *Node {
 	id := g.NewNodeID()
 	n := &Node{
 		Node:  simple.Node(id),
-		Label: label,
+		Attrs: make(Attrs),
 	}
-	g.nodes[label] = n
 	g.AddNode(n)
 	return n
 }
 
-// setEdge adds an edge from the source to the destination node. An optional
-// label may be specified for the edge.
-func (g *Graph) setEdge(from, to graph.Node, label string) {
+// NewNodeWithLabel returns a new node with the given label and a unique node ID
+// in the graph, or the existing edge if already present.
+func (g *Graph) NewNodeWithLabel(label string) *Node {
+	if n, ok := g.nodes[label]; ok {
+		return n
+	}
+	n := g.newNode()
+	n.Label = label
+	if len(label) > 0 {
+		n.Attrs["label"] = label
+	}
+	g.nodes[label] = n
+	return n
+}
+
+// newEdge returns a new edge from the source to the destination node in the
+// graph, or the existing edge if already present.
+func (g *Graph) newEdge(from, to graph.Node) *Edge {
+	if e := g.Edge(from, to); e != nil {
+		return e.(*Edge)
+	}
 	e := &Edge{
 		Edge: simple.Edge{
 			F: from,
 			T: to,
 		},
-		Label: label,
+		Attrs: make(Attrs),
 	}
 	g.SetEdge(e)
+	return e
+}
+
+// NewEdgeWithLabel returns a new edge from the source to the destination node
+// and with the given label in the graph, or the existing edge if already
+// present.
+func (g *Graph) NewEdgeWithLabel(from, to graph.Node, label string) *Edge {
+	e := g.newEdge(from, to)
+	e.Label = label
+	if len(label) > 0 {
+		e.Attrs["label"] = label
+	}
+	return e
 }
 
 // Node represents a node of a control flow graph.
@@ -100,6 +135,8 @@ type Node struct {
 	simple.Node
 	// Node label.
 	Label string
+	// DOT attributes.
+	Attrs
 }
 
 // Edge represents an edge of a control flow graph.
@@ -107,4 +144,6 @@ type Edge struct {
 	simple.Edge
 	// Edge label.
 	Label string
+	// DOT attributes.
+	Attrs
 }

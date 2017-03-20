@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/gonum/graph"
-	"github.com/gonum/graph/simple"
 	"github.com/graphism/dot"
 	"github.com/graphism/dot/ast"
 	"github.com/pkg/errors"
@@ -39,25 +38,13 @@ func ParseFile(path string) (*Graph, error) {
 
 // NewNode returns a new node with a unique node ID in the graph.
 func (g *Graph) NewNode() graph.Node {
-	id := g.NewNodeID()
-	n := &Node{
-		Node: simple.Node(id),
-	}
-	g.AddNode(n)
-	return n
+	return g.newNode()
 }
 
 // NewEdge returns a new edge from the source to the destination node in the
 // graph, or the existing edge if already present.
 func (g *Graph) NewEdge(from, to graph.Node) graph.Edge {
-	e := &Edge{
-		Edge: simple.Edge{
-			F: from,
-			T: to,
-		},
-	}
-	g.SetEdge(e)
-	return e
+	return g.newEdge(from, to)
 }
 
 // UnmarshalDOTAttr decodes a single DOT attribute.

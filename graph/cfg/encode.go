@@ -1,33 +1,29 @@
 package cfg
 
 import (
-	"fmt"
+	"sort"
 
 	"github.com/gonum/graph/encoding/dot"
 )
 
-// DOTAttributes returns the DOT attributes of the graph node.
-func (n *Node) DOTAttributes() []dot.Attribute {
+// Attrs specifies a set of DOT attributes as key-value pairs.
+type Attrs map[string]string
+
+// DOTAttributes returns the DOT attributes of a node or edge.
+func (a Attrs) DOTAttributes() []dot.Attribute {
 	var attrs []dot.Attribute
-	if len(n.Label) > 0 {
-		attrs = append(attrs, newLabel(n.Label))
+	var keys []string
+	for key := range a {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		val := a[key]
+		attr := dot.Attribute{
+			Key:   key,
+			Value: val,
+		}
+		attrs = append(attrs, attr)
 	}
 	return attrs
-}
-
-// DOTAttributes returns the DOT attributes of the graph edge.
-func (e *Edge) DOTAttributes() []dot.Attribute {
-	var attrs []dot.Attribute
-	if len(e.Label) > 0 {
-		attrs = append(attrs, newLabel(e.Label))
-	}
-	return attrs
-}
-
-// newLabel returns a new label DOT attribute.
-func newLabel(label string) dot.Attribute {
-	return dot.Attribute{
-		Key:   "label",
-		Value: fmt.Sprintf("%q", label),
-	}
 }
