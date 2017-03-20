@@ -168,7 +168,7 @@ func restructure(g *cfg.Graph, entry graph.Node, steps bool, name string) (prims
 	for step := 1; len(g.Nodes()) > 1; step++ {
 		// Locate primitive.
 		dom := cfg.NewDom(g, entry)
-		prim, err := findPrim(g, dom)
+		prim, err := cfa.FindPrim(g, dom)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -209,42 +209,6 @@ func restructure(g *cfg.Graph, entry graph.Node, steps bool, name string) (prims
 		}
 	}
 	return prims, nil
-}
-
-// findPrim locates a control flow primitive in the provided control flow graph
-// and merges its nodes into a single node.
-func findPrim(g graph.Directed, dom cfg.Dom) (*primitive.Primitive, error) {
-	// Locate pre-test loops.
-	if prim, ok := cfa.FindPreLoop(g, dom); ok {
-		return prim.Prim(), nil
-	}
-
-	// Locate post-test loops.
-	if prim, ok := cfa.FindPostLoop(g, dom); ok {
-		return prim.Prim(), nil
-	}
-
-	// Locate 1-way conditionals.
-	if prim, ok := cfa.FindIf(g, dom); ok {
-		return prim.Prim(), nil
-	}
-
-	// Locate 1-way conditionals with a body return statements.
-	if prim, ok := cfa.FindIfReturn(g, dom); ok {
-		return prim.Prim(), nil
-	}
-
-	// Locate 2-way conditionals.
-	if prim, ok := cfa.FindIfElse(g, dom); ok {
-		return prim.Prim(), nil
-	}
-
-	// Locate sequences of two statements.
-	if prim, ok := cfa.FindSeq(g, dom); ok {
-		return prim.Prim(), nil
-	}
-
-	return nil, errors.Errorf("unable to locate control flow primitive")
 }
 
 // merge merges the nodes of the primitive into a single node, the label of
