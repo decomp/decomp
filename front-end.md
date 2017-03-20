@@ -9,6 +9,14 @@ https://github.com/trailofbits/mcsema
 Supported:
 * x86 -> LLVM IR
 
+## Remill
+
+https://github.com/trailofbits/remill
+
+Supported:
+* x86 -> LLVM IR
+* x86_64 -> LLVM IR
+
 ## Fracture
 
 https://github.com/draperlaboratory/fracture
