@@ -6,7 +6,7 @@ import (
 
 	"github.com/gonum/graph"
 	"github.com/gonum/graph/encoding/dot"
-	dotparser "github.com/graphism/dot"
+	"github.com/gonum/graph/encoding/dot/dotparser"
 	"github.com/pkg/errors"
 )
 
@@ -21,7 +21,9 @@ func ParseFile(path string) (*Graph, error) {
 	}
 	src := file.Graphs[0]
 	g := newGraph()
-	dot.Copy(g, src)
+	if err := dot.Copy(g, src); err != nil {
+		return nil, errors.WithStack(err)
+	}
 	for _, n := range g.Nodes() {
 		if n, ok := n.(*Node); ok {
 			if len(n.Label) < 1 {
