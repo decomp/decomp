@@ -137,69 +137,6 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 	return fn, nil
 }
 
-// prim merges the basic blocks of the given primitive into a corresponding
-// conceputal basic block for the primitive.
-func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
-	switch prim.Prim {
-	case "if":
-		condName := prim.Nodes["cond"]
-		cond, ok := d.blocks[condName]
-		if !ok {
-			return nil, errors.Errorf("unable to located cond basic block %q", condName)
-		}
-		bodyName := prim.Nodes["body"]
-		body, ok := d.blocks[bodyName]
-		if !ok {
-			return nil, errors.Errorf("unable to located body basic block %q", bodyName)
-		}
-		exitName := prim.Nodes["exit"]
-		exit, ok := d.blocks[exitName]
-		if !ok {
-			return nil, errors.Errorf("unable to located exit basic block %q", exitName)
-		}
-		block, err := d.primIf(cond, body, exit)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		block.Name = prim.Node
-		return block, nil
-	default:
-		panic(fmt.Sprintf("support for primitive %q not yet implemented", prim.Prim))
-	}
-}
-
-// primIf merges the basic blocks of the given if-primitive into a corresponding
-// conceputal basic block for the primitive.
-func (d *decompiler) primIf(condBlock, bodyBlock, exitBlock *basicBlock) (*basicBlock, error) {
-	// Handle terminators.
-	condTerm, ok := condBlock.Term.(*ir.TermCondBr)
-	if !ok {
-		return nil, errors.Errorf("invalid cond terminator type; expected *ir.TermCondBr, got %T", condBlock.Term)
-	}
-	cond := d.value(condTerm.Cond)
-	// TODO: Figure out a clean way to check if the body basic block is the true
-	// branch or the false branch. If body is the false branch, negate the
-	// condition.
-	if _, ok := bodyBlock.Term.(*ir.TermBr); !ok {
-		return nil, errors.Errorf("invalid body terminator type; expected *ir.TermBr, got %T", bodyBlock.Term)
-	}
-	block := &basicBlock{BasicBlock: &ir.BasicBlock{}}
-	block.Term = exitBlock.Term
-
-	// Handle instructions.
-	block.stmts = append(block.stmts, d.stmts(condBlock)...)
-	body := &ast.BlockStmt{
-		List: d.stmts(bodyBlock),
-	}
-	ifStmt := &ast.IfStmt{
-		Cond: cond,
-		Body: body,
-	}
-	block.stmts = append(block.stmts, ifStmt)
-	block.stmts = append(block.stmts, d.stmts(exitBlock)...)
-	return block, nil
-}
-
 // global converts the given LLVM IR global identifier to a corresponding Go
 // identifier.
 func (d *decompiler) global(name string) *ast.Ident {
