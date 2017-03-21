@@ -367,6 +367,7 @@ func (d *decompiler) instBinaryOp(name string, x value.Value, op token.Token, y 
 	}
 	return &ast.AssignStmt{
 		Lhs: []ast.Expr{d.local(name)},
+		Tok: token.DEFINE,
 		Rhs: []ast.Expr{expr},
 	}
 }
