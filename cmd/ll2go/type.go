@@ -1,0 +1,60 @@
+package main
+
+import (
+	"fmt"
+	"go/ast"
+
+	irtypes "github.com/llir/llvm/ir/types"
+)
+
+// goType converts the given LLVM IR type to a corresponding Go type.
+func (d *decompiler) goType(t irtypes.Type) ast.Expr {
+	switch t := t.(type) {
+	case *irtypes.VoidType:
+		panic("support for *types.VoidType not yet implemented")
+	case *irtypes.FuncType:
+		params := &ast.FieldList{}
+		for _, p := range t.Params {
+			param := &ast.Field{
+				Type: d.goType(p.Typ),
+			}
+			if len(p.Name) > 0 {
+				param.Names = append(param.Names, d.local(p.Name))
+			}
+			params.List = append(params.List, param)
+		}
+		result := &ast.Field{
+			Type: d.goType(t.Ret),
+		}
+		results := &ast.FieldList{
+			List: []*ast.Field{result},
+		}
+		// TODO: Handle t.Variadic.
+		return &ast.FuncType{
+			Params:  params,
+			Results: results,
+		}
+	case *irtypes.IntType:
+		return &ast.Ident{
+			Name: fmt.Sprintf("int%d", t.Size),
+		}
+	case *irtypes.FloatType:
+		panic("support for *types.FloatType not yet implemented")
+	case *irtypes.PointerType:
+		return &ast.StarExpr{
+			X: d.goType(t.Elem),
+		}
+	case *irtypes.VectorType:
+		panic("support for *types.VectorType not yet implemented")
+	case *irtypes.LabelType:
+		panic("support for *types.LabelType not yet implemented")
+	case *irtypes.MetadataType:
+		panic("support for *types.MetadataType not yet implemented")
+	case *irtypes.ArrayType:
+		panic("support for *types.ArrayType not yet implemented")
+	case *irtypes.StructType:
+		panic("support for *types.StructType not yet implemented")
+	default:
+		panic(fmt.Sprintf("support for type %T not yet implemented", t))
+	}
+}
