@@ -35,6 +35,33 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 		}
 		block.Name = prim.Node
 		return block, nil
+	case "if_else":
+		condName := prim.Nodes["cond"]
+		condBlock, ok := d.blocks[condName]
+		if !ok {
+			return nil, errors.Errorf("unable to located cond basic block %q", condName)
+		}
+		bodyTrueName := prim.Nodes["body_true"]
+		bodyTrueBlock, ok := d.blocks[bodyTrueName]
+		if !ok {
+			return nil, errors.Errorf("unable to located body_true basic block %q", bodyTrueName)
+		}
+		bodyFalseName := prim.Nodes["body_false"]
+		bodyFalseBlock, ok := d.blocks[bodyFalseName]
+		if !ok {
+			return nil, errors.Errorf("unable to located body_false basic block %q", bodyFalseName)
+		}
+		exitName := prim.Nodes["exit"]
+		exitBlock, ok := d.blocks[exitName]
+		if !ok {
+			return nil, errors.Errorf("unable to located exit basic block %q", exitName)
+		}
+		block, err := d.primIfElse(condBlock, bodyTrueBlock, bodyFalseBlock, exitBlock)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		block.Name = prim.Node
+		return block, nil
 	case "pre_loop":
 		condName := prim.Nodes["cond"]
 		condBlock, ok := d.blocks[condName]
@@ -106,6 +133,44 @@ func (d *decompiler) primIf(condBlock, bodyBlock, exitBlock *basicBlock) (*basic
 		Body: body,
 	}
 	block.stmts = append(block.stmts, ifStmt)
+	block.stmts = append(block.stmts, d.stmts(exitBlock)...)
+	return block, nil
+}
+
+// primIfElse merges the basic blocks of the given if_else-primitive into a
+// corresponding conceputal basic block for the primitive.
+func (d *decompiler) primIfElse(condBlock, bodyTrueBlock, bodyFalseBlock, exitBlock *basicBlock) (*basicBlock, error) {
+	// Handle terminators.
+	condTerm, ok := condBlock.Term.(*ir.TermCondBr)
+	if !ok {
+		return nil, errors.Errorf("invalid cond terminator type; expected *ir.TermCondBr, got %T", condBlock.Term)
+	}
+	cond := d.value(condTerm.Cond)
+	// TODO: Figure out a clean way to check if the body_true basic block is the
+	// true branch or the false branch. If body_true is the false branch, use
+	// body_true for the else body of the if-statement.
+	if _, ok := bodyTrueBlock.Term.(*ir.TermBr); !ok {
+		return nil, errors.Errorf("invalid body_true terminator type; expected *ir.TermBr, got %T", bodyTrueBlock.Term)
+	}
+	if _, ok := bodyFalseBlock.Term.(*ir.TermBr); !ok {
+		return nil, errors.Errorf("invalid body_false terminator type; expected *ir.TermBr, got %T", bodyFalseBlock.Term)
+	}
+	block := &basicBlock{BasicBlock: &ir.BasicBlock{}}
+	block.Term = exitBlock.Term
+	// Handle instructions.
+	block.stmts = append(block.stmts, d.stmts(condBlock)...)
+	bodyTrue := &ast.BlockStmt{
+		List: d.stmts(bodyTrueBlock),
+	}
+	bodyFalse := &ast.BlockStmt{
+		List: d.stmts(bodyFalseBlock),
+	}
+	ifElseStmt := &ast.IfStmt{
+		Cond: cond,
+		Body: bodyTrue,
+		Else: bodyFalse,
+	}
+	block.stmts = append(block.stmts, ifElseStmt)
 	block.stmts = append(block.stmts, d.stmts(exitBlock)...)
 	return block, nil
 }
