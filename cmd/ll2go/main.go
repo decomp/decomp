@@ -11,6 +11,7 @@ import (
 	"go/ast"
 	"go/printer"
 	"go/token"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -49,8 +50,11 @@ func main() {
 	var (
 		// funcs represents a comma-separated list of functions to parse.
 		funcs string
+		// quiet specifies whether to suppress non-error messages.
+		quiet bool
 	)
 	flag.StringVar(&funcs, "funcs", "", "comma-separated list of functions to parse")
+	flag.BoolVar(&quiet, "q", false, "suppress non-error messages")
 	flag.Usage = usage
 	flag.Parse()
 	if flag.NArg() < 1 {
@@ -64,6 +68,10 @@ func main() {
 			continue
 		}
 		funcNames[funcName] = true
+	}
+	// Mute debug messages if `-q` is set.
+	if quiet {
+		dbg.SetOutput(ioutil.Discard)
 	}
 
 	// Decompile LLVM IR files to Go source code.
@@ -103,6 +111,7 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
+		dbg.Printf("decompiling function %q.", f.Name)
 		fn, err := d.funcDecl(f, prims)
 		if err != nil {
 			return errors.WithStack(err)
