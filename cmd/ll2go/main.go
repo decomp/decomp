@@ -240,6 +240,8 @@ func (d *decompiler) value(v value.Value) ast.Expr {
 				Kind:  token.INT,
 				Value: v.X.String(),
 			}
+		case constant.Expr:
+			return d.expr(v)
 		default:
 			panic(fmt.Sprintf("support for constant value %T not yet implemented", v))
 		}
