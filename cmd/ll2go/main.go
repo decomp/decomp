@@ -192,19 +192,16 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 		d.blocks[block.Name] = block
 	}
 
-	// After control flow recovery, a single basic block should remain.
-	var block *basicBlock
-	if len(d.blocks) != 1 {
-		return nil, errors.Errorf("control flow recovery failed; unable to reduce function into a single basic block; expected 1 basic block, got %d", len(d.blocks))
+	// A single remaining basic block indicates successful control flow recovery.
+	// If more than one basic block remains, unstructured control flow is added
+	// using goto-statements.
+	var stmts []ast.Stmt
+	for _, block := range d.blocks {
+		stmts = append(stmts, d.stmts(block)...)
+		block.stmts = append(block.stmts, d.term(block.Term))
 	}
-	for _, b := range d.blocks {
-		block = b
-	}
-
-	// Recover function body.
-	block.stmts = append(block.stmts, d.term(block.Term))
 	body := &ast.BlockStmt{
-		List: block.stmts,
+		List: stmts,
 	}
 	fn.Body = body
 	return fn, nil

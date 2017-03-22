@@ -12,38 +12,64 @@ import (
 func (d *decompiler) term(term ir.Terminator) ast.Stmt {
 	switch term := term.(type) {
 	case *ir.TermRet:
-		var results []ast.Expr
-		if term.X != nil {
-			results = append(results, d.value(term.X))
-		}
-		return &ast.ReturnStmt{
-			Results: results,
-		}
+		return d.termRet(term)
 	case *ir.TermBr:
-		// TODO: Implement as goto, to be used as a fallback for when control flow
-		// recovery fails.
-		panic("support for terminator *ir.TermBr not yet implemented")
+		return d.termBr(term)
 	case *ir.TermCondBr:
-		// TODO: Implement as goto, to be used as a fallback for when control flow
-		// recovery fails.
-		panic("support for terminator *ir.TermCondBr not yet implemented")
+		return d.termCondBr(term)
 	case *ir.TermSwitch:
-		// TODO: Implement as goto, to be used as a fallback for when control flow
-		// recovery fails.
-		panic("support for terminator *ir.TermSwitch not yet implemented")
+		return d.termSwitch(term)
 	case *ir.TermUnreachable:
-		unreachable := &ast.BasicLit{
-			Kind:  token.STRING,
-			Value: `"unreachable"`,
-		}
-		expr := &ast.CallExpr{
-			Fun:  ast.NewIdent("panic"),
-			Args: []ast.Expr{unreachable},
-		}
-		return &ast.ExprStmt{
-			X: expr,
-		}
+		return d.termUnreachable(term)
 	default:
 		panic(fmt.Sprintf("support for terminator %T not yet implemented", term))
+	}
+}
+
+// termRet converts the given LLVM IR ret termiantor to a corresponding Go
+// statement.
+func (d *decompiler) termRet(term *ir.TermRet) ast.Stmt {
+	if term.X == nil {
+		return &ast.ReturnStmt{}
+	}
+	return &ast.ReturnStmt{
+		Results: []ast.Expr{d.value(term.X)},
+	}
+}
+
+// termBr converts the given LLVM IR br termiantor to a corresponding Go
+// statement.
+func (d *decompiler) termBr(term *ir.TermBr) ast.Stmt {
+	// Use goto-statements as a fallback for incomplete control flow recovery.
+	panic("not yet implemented")
+}
+
+// termCondBr converts the given LLVM IR conditional br termiantor to a
+// corresponding Go statement.
+func (d *decompiler) termCondBr(term *ir.TermCondBr) ast.Stmt {
+	// Use goto-statements as a fallback for incomplete control flow recovery.
+	panic("not yet implemented")
+}
+
+// termSwitch converts the given LLVM IR switch termiantor to a corresponding Go
+// statement.
+func (d *decompiler) termSwitch(term *ir.TermSwitch) ast.Stmt {
+	// Use goto-statements as a fallback for incomplete control flow recovery.
+	panic("not yet implemented")
+}
+
+// termUnreachable converts the given LLVM IR unreachable termiantor to a
+// corresponding Go statement.
+func (d *decompiler) termUnreachable(term *ir.TermUnreachable) ast.Stmt {
+	unreachable := &ast.BasicLit{
+		Kind:  token.STRING,
+		Value: `"unreachable"`,
+	}
+	expr := &ast.CallExpr{
+		Fun:  ast.NewIdent("panic"),
+		Args: []ast.Expr{unreachable},
+	}
+	return &ast.ExprStmt{
+		X: expr,
 	}
 }

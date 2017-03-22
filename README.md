@@ -44,7 +44,7 @@ https://godoc.org/github.com/decomp/decomp/cmd/ll2go
 
 Go code generation tool.
 
-> Decompile LLVM IR assembly files to Go source code (*.ll -> *.go).
+> Decompile LLVM IR assembly to Go source code (*.ll -> *.go).
 
 ### go-post
 
