@@ -6,6 +6,7 @@ import (
 	"go/token"
 
 	"github.com/llir/llvm/ir"
+	irtypes "github.com/llir/llvm/ir/types"
 	"github.com/llir/llvm/ir/value"
 )
 
@@ -357,7 +358,29 @@ func (d *decompiler) instSelect(inst *ir.InstSelect) ast.Stmt {
 // instCall converts the given LLVM IR call instruction to a corresponding Go
 // statement.
 func (d *decompiler) instCall(inst *ir.InstCall) ast.Stmt {
-	panic("not yet implemented")
+	var callee ast.Expr
+	switch c := inst.Callee.(type) {
+	case *ir.Function:
+		// global function identifier.
+		callee = d.global(c.Name)
+	case *irtypes.Param:
+		// local function identifier.
+		callee = d.local(c.Name)
+	default:
+		panic(fmt.Sprintf("support for callee type %T not yet implemented", c))
+	}
+	var args []ast.Expr
+	for _, a := range inst.Args {
+		args = append(args, d.value(a))
+	}
+	expr := &ast.CallExpr{
+		Fun:  callee,
+		Args: args,
+	}
+	if irtypes.Equal(inst.Sig.Ret, irtypes.Void) {
+		return &ast.ExprStmt{X: expr}
+	}
+	return d.define(inst.Name, expr)
 }
 
 // instBinaryOp converts the given LLVM IR binary operation to a corresponding
