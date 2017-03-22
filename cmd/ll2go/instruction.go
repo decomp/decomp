@@ -15,9 +15,15 @@ import (
 func (d *decompiler) insts(insts []ir.Instruction) []ast.Stmt {
 	var stmts []ast.Stmt
 	for _, inst := range insts {
-		if _, ok := inst.(*ir.InstPhi); ok {
+		switch inst := inst.(type) {
+		case *ir.InstPhi:
 			// PHI instructions are handled during the pre-processing of basic
 			// blocks.
+			continue
+		case *ir.InstSelect:
+			// A select instruction corresponds to more than one Go statement, thus
+			// it is handled outside of d.inst.
+			stmts = append(stmts, d.instSelect(inst)...)
 			continue
 		}
 		stmts = append(stmts, d.inst(inst))
@@ -108,9 +114,11 @@ func (d *decompiler) inst(inst ir.Instruction) ast.Stmt {
 	case *ir.InstFCmp:
 		return d.instFCmp(inst)
 	case *ir.InstPhi:
-		panic(fmt.Sprintf("unexpected PHI instruction `%v`", inst))
+		// PHI instructions are handled by d.funcDecl.
+		panic(fmt.Sprintf("unexpected phi instruction `%v`", inst))
 	case *ir.InstSelect:
-		return d.instSelect(inst)
+		// select instructions are handled by d.insts.
+		panic(fmt.Sprintf("unexpected select instruction `%v`", inst))
 	case *ir.InstCall:
 		return d.instCall(inst)
 	default:
@@ -393,8 +401,28 @@ func (d *decompiler) instFCmp(inst *ir.InstFCmp) ast.Stmt {
 
 // instSelect converts the given LLVM IR select instruction to a corresponding
 // Go statement.
-func (d *decompiler) instSelect(inst *ir.InstSelect) ast.Stmt {
-	panic("not yet implemented")
+func (d *decompiler) instSelect(inst *ir.InstSelect) []ast.Stmt {
+	name := d.local(inst.Name)
+	spec := &ast.ValueSpec{
+		Names: []*ast.Ident{name},
+		Type:  d.goType(inst.X.Type()),
+	}
+	declStmt := &ast.DeclStmt{
+		Decl: &ast.GenDecl{
+			Tok:   token.VAR,
+			Specs: []ast.Spec{spec},
+		},
+	}
+	ifStmt := &ast.IfStmt{
+		Cond: d.value(inst.Cond),
+		Body: &ast.BlockStmt{
+			List: []ast.Stmt{d.assign(name, d.value(inst.X))},
+		},
+		Else: &ast.BlockStmt{
+			List: []ast.Stmt{d.assign(name, d.value(inst.Y))},
+		},
+	}
+	return []ast.Stmt{declStmt, ifStmt}
 }
 
 // instCall converts the given LLVM IR call instruction to a corresponding Go
