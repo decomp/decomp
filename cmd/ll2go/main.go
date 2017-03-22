@@ -1,3 +1,6 @@
+// TODO: Fix PHI handling; don't introduce new variables. Potentially requires
+// information from data analysis.
+
 package main
 
 import (
@@ -38,10 +41,10 @@ func ll2go(llPath string) error {
 		return errors.WithStack(err)
 	}
 	srcName := pathutil.FileName(llPath)
-	d := newDecompiler()
 	file := &ast.File{
 		Name: ast.NewIdent(srcName),
 	}
+	d := newDecompiler()
 	for _, f := range module.Funcs {
 		prims, err := parsePrims(srcName, f.Name)
 		if err != nil {
@@ -52,12 +55,12 @@ func ll2go(llPath string) error {
 			return errors.WithStack(err)
 		}
 		file.Decls = append(file.Decls, fn)
-		// TODO: Remove debug output.
-		if err := printer.Fprint(os.Stdout, token.NewFileSet(), fn); err != nil {
-			return errors.WithStack(err)
-		}
-		fmt.Println()
 	}
+	// TODO: Remove debug output.
+	if err := printer.Fprint(os.Stdout, token.NewFileSet(), file); err != nil {
+		return errors.WithStack(err)
+	}
+	fmt.Println()
 	return nil
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 
 	"github.com/decomp/decomp/cfa/primitive"
 	"github.com/llir/llvm/ir"
@@ -79,6 +80,23 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 			return nil, errors.Errorf("unable to located exit basic block %q", exitName)
 		}
 		block, err := d.primPreLoop(condBlock, bodyBlock, exitBlock)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		block.Name = prim.Node
+		return block, nil
+	case "post_loop":
+		condName := prim.Nodes["cond"]
+		condBlock, ok := d.blocks[condName]
+		if !ok {
+			return nil, errors.Errorf("unable to located cond basic block %q", condName)
+		}
+		exitName := prim.Nodes["exit"]
+		exitBlock, ok := d.blocks[exitName]
+		if !ok {
+			return nil, errors.Errorf("unable to located exit basic block %q", exitName)
+		}
+		block, err := d.primPostLoop(condBlock, exitBlock)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -199,6 +217,44 @@ func (d *decompiler) primPreLoop(condBlock, bodyBlock, exitBlock *basicBlock) (*
 	}
 	forStmt := &ast.ForStmt{
 		Cond: cond,
+		Body: body,
+	}
+	block.stmts = append(block.stmts, forStmt)
+	block.stmts = append(block.stmts, d.stmts(exitBlock)...)
+	return block, nil
+}
+
+// primPostLoop merges the basic blocks of the given post_loop-primitive into a
+// corresponding conceputal basic block for the primitive.
+func (d *decompiler) primPostLoop(condBlock, exitBlock *basicBlock) (*basicBlock, error) {
+	// Handle terminators.
+	condTerm, ok := condBlock.Term.(*ir.TermCondBr)
+	if !ok {
+		return nil, errors.Errorf("invalid cond terminator type; expected *ir.TermCondBr, got %T", condBlock.Term)
+	}
+	cond := d.value(condTerm.Cond)
+	cond = &ast.UnaryExpr{
+		Op: token.NOT,
+		X:  cond,
+	}
+	// TODO: Figure out a clean way to check if the exit basic block is the true
+	// branch or the false branch. If exit is the true branch, negate the
+	// condition.
+	block := &basicBlock{BasicBlock: &ir.BasicBlock{}}
+	block.Term = exitBlock.Term
+	// Handle instructions.
+	body := &ast.BlockStmt{
+		List: d.stmts(condBlock),
+	}
+	breakStmt := &ast.BranchStmt{Tok: token.BREAK}
+	ifBreakStmt := &ast.IfStmt{
+		Cond: cond,
+		Body: &ast.BlockStmt{
+			List: []ast.Stmt{breakStmt},
+		},
+	}
+	body.List = append(body.List, ifBreakStmt)
+	forStmt := &ast.ForStmt{
 		Body: body,
 	}
 	block.stmts = append(block.stmts, forStmt)
