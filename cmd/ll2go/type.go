@@ -11,7 +11,13 @@ import (
 func (d *decompiler) goType(t irtypes.Type) ast.Expr {
 	switch t := t.(type) {
 	case *irtypes.VoidType:
-		panic("support for *types.VoidType not yet implemented")
+		// The void type is only valid as a function return type in LLVM IR, or as
+		// part of a call instruction to a void function, or a ret instruction
+		// from a void function.
+		//
+		// Each of these cases will be handled specifically to take consideration
+		// to void types.
+		panic("unexpected void type")
 	case *irtypes.FuncType:
 		params := &ast.FieldList{}
 		for _, p := range t.Params {
@@ -23,11 +29,14 @@ func (d *decompiler) goType(t irtypes.Type) ast.Expr {
 			}
 			params.List = append(params.List, param)
 		}
-		result := &ast.Field{
-			Type: d.goType(t.Ret),
-		}
-		results := &ast.FieldList{
-			List: []*ast.Field{result},
+		var results *ast.FieldList
+		if !irtypes.Equal(t.Ret, irtypes.Void) {
+			result := &ast.Field{
+				Type: d.goType(t.Ret),
+			}
+			results = &ast.FieldList{
+				List: []*ast.Field{result},
+			}
 		}
 		// TODO: Handle t.Variadic.
 		return &ast.FuncType{
