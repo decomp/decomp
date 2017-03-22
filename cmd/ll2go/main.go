@@ -172,11 +172,7 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 			// statements to the predecessor basic blocks of the incoming values.
 			for _, inc := range phi.Incs {
 				pred := d.blocks[inc.Pred.Name]
-				assignStmt := &ast.AssignStmt{
-					Lhs: []ast.Expr{d.local(phi.Name)},
-					Tok: token.ASSIGN,
-					Rhs: []ast.Expr{d.value(inc.X)},
-				}
+				assignStmt := d.assign(d.local(phi.Name), d.value(inc.X))
 				pred.out = append(pred.out, assignStmt)
 			}
 		}

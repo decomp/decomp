@@ -248,7 +248,11 @@ func (d *decompiler) instLoad(inst *ir.InstLoad) ast.Stmt {
 // instStore converts the given LLVM IR store instruction to a corresponding Go
 // statement.
 func (d *decompiler) instStore(inst *ir.InstStore) ast.Stmt {
-	panic("not yet implemented")
+	dst := &ast.StarExpr{
+		X: d.value(inst.Dst),
+	}
+	src := d.value(inst.Src)
+	return d.assign(dst, src)
 }
 
 // instGetElementPtr converts the given LLVM IR getelementptr instruction to a
@@ -405,6 +409,17 @@ func (d *decompiler) instBinaryOp(name string, x value.Value, op token.Token, y 
 		Y:  d.value(y),
 	}
 	return d.define(name, expr)
+}
+
+// assign returns an assignment statement, assigning src to dst.
+//
+//    dst = src
+func (d *decompiler) assign(dst, src ast.Expr) *ast.AssignStmt {
+	return &ast.AssignStmt{
+		Lhs: []ast.Expr{dst},
+		Tok: token.ASSIGN,
+		Rhs: []ast.Expr{src},
+	}
 }
 
 // define returns an assignment statement, declaring a local variable of the
