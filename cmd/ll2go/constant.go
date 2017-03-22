@@ -152,109 +152,109 @@ func (d *decompiler) expr(expr constant.Expr) ast.Expr {
 // exprAdd converts the given LLVM IR add expression to a corresponding Go
 // statement.
 func (d *decompiler) exprAdd(expr *constant.ExprAdd) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.ADD, expr.Y)
 }
 
 // exprFAdd converts the given LLVM IR fadd expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFAdd(expr *constant.ExprFAdd) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.ADD, expr.Y)
 }
 
 // exprSub converts the given LLVM IR sub expression to a corresponding Go
 // statement.
 func (d *decompiler) exprSub(expr *constant.ExprSub) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.SUB, expr.Y)
 }
 
 // exprFSub converts the given LLVM IR fsub expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFSub(expr *constant.ExprFSub) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.SUB, expr.Y)
 }
 
 // exprMul converts the given LLVM IR mul expression to a corresponding Go
 // statement.
 func (d *decompiler) exprMul(expr *constant.ExprMul) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.MUL, expr.Y)
 }
 
 // exprFMul converts the given LLVM IR fmul expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFMul(expr *constant.ExprFMul) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.MUL, expr.Y)
 }
 
 // exprUDiv converts the given LLVM IR udiv expression to a corresponding Go
 // statement.
 func (d *decompiler) exprUDiv(expr *constant.ExprUDiv) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.QUO, expr.Y)
 }
 
 // exprSDiv converts the given LLVM IR sdiv expression to a corresponding Go
 // statement.
 func (d *decompiler) exprSDiv(expr *constant.ExprSDiv) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.QUO, expr.Y)
 }
 
 // exprFDiv converts the given LLVM IR fdiv expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFDiv(expr *constant.ExprFDiv) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.QUO, expr.Y)
 }
 
 // exprURem converts the given LLVM IR urem expression to a corresponding Go
 // statement.
 func (d *decompiler) exprURem(expr *constant.ExprURem) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.REM, expr.Y)
 }
 
 // exprSRem converts the given LLVM IR srem expression to a corresponding Go
 // statement.
 func (d *decompiler) exprSRem(expr *constant.ExprSRem) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.REM, expr.Y)
 }
 
 // exprFRem converts the given LLVM IR frem expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFRem(expr *constant.ExprFRem) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.REM, expr.Y)
 }
 
 // exprShl converts the given LLVM IR shl expression to a corresponding Go
 // statement.
 func (d *decompiler) exprShl(expr *constant.ExprShl) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.SHL, expr.Y)
 }
 
 // exprLShr converts the given LLVM IR lshr expression to a corresponding Go
 // statement.
 func (d *decompiler) exprLShr(expr *constant.ExprLShr) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.SHR, expr.Y)
 }
 
 // exprAShr converts the given LLVM IR ashr expression to a corresponding Go
 // statement.
 func (d *decompiler) exprAShr(expr *constant.ExprAShr) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.SHR, expr.Y)
 }
 
 // exprAnd converts the given LLVM IR and expression to a corresponding Go
 // statement.
 func (d *decompiler) exprAnd(expr *constant.ExprAnd) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.AND, expr.Y)
 }
 
 // exprOr converts the given LLVM IR or expression to a corresponding Go
 // statement.
 func (d *decompiler) exprOr(expr *constant.ExprOr) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.OR, expr.Y)
 }
 
 // exprXor converts the given LLVM IR xor expression to a corresponding Go
 // statement.
 func (d *decompiler) exprXor(expr *constant.ExprXor) ast.Expr {
-	panic("not yet implemented")
+	return d.binaryOp(expr.X, token.XOR, expr.Y)
 }
 
 // exprGetElementPtr converts the given LLVM IR getelementptr expression to a
@@ -278,91 +278,119 @@ func (d *decompiler) exprGetElementPtr(expr *constant.ExprGetElementPtr) ast.Exp
 // exprTrunc converts the given LLVM IR trunc expression to a corresponding Go
 // statement.
 func (d *decompiler) exprTrunc(expr *constant.ExprTrunc) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprZExt converts the given LLVM IR zext expression to a corresponding Go
 // statement.
 func (d *decompiler) exprZExt(expr *constant.ExprZExt) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprSExt converts the given LLVM IR sext expression to a corresponding Go
 // statement.
 func (d *decompiler) exprSExt(expr *constant.ExprSExt) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprFPTrunc converts the given LLVM IR fptrunc expression to a corresponding
 // Go statement.
 func (d *decompiler) exprFPTrunc(expr *constant.ExprFPTrunc) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprFPExt converts the given LLVM IR fpext expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFPExt(expr *constant.ExprFPExt) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprFPToUI converts the given LLVM IR fptoui expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFPToUI(expr *constant.ExprFPToUI) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprFPToSI converts the given LLVM IR fptosi expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFPToSI(expr *constant.ExprFPToSI) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprUIToFP converts the given LLVM IR uitofp expression to a corresponding Go
 // statement.
 func (d *decompiler) exprUIToFP(expr *constant.ExprUIToFP) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprSIToFP converts the given LLVM IR sitofp expression to a corresponding Go
 // statement.
 func (d *decompiler) exprSIToFP(expr *constant.ExprSIToFP) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprPtrToInt converts the given LLVM IR ptrtoint expression to a
 // corresponding Go statement.
 func (d *decompiler) exprPtrToInt(expr *constant.ExprPtrToInt) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprIntToPtr converts the given LLVM IR inttoptr expression to a
 // corresponding Go statement.
 func (d *decompiler) exprIntToPtr(expr *constant.ExprIntToPtr) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprBitCast converts the given LLVM IR bitcast expression to a corresponding
 // Go statement.
 func (d *decompiler) exprBitCast(expr *constant.ExprBitCast) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprAddrSpaceCast converts the given LLVM IR addrspacecast expression to a
 // corresponding Go statement.
 func (d *decompiler) exprAddrSpaceCast(expr *constant.ExprAddrSpaceCast) ast.Expr {
-	panic("not yet implemented")
+	// TODO: Add proper support for type conversion. For now, simply return the
+	// original value.
+	return d.value(expr.From)
 }
 
 // exprICmp converts the given LLVM IR icmp expression to a corresponding Go
 // statement.
 func (d *decompiler) exprICmp(expr *constant.ExprICmp) ast.Expr {
-	panic("not yet implemented")
+	op := intPred(ir.IntPred(expr.Pred))
+	return d.binaryOp(expr.X, op, expr.Y)
 }
 
 // exprFCmp converts the given LLVM IR fcmp expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFCmp(expr *constant.ExprFCmp) ast.Expr {
-	panic("not yet implemented")
+	op := floatPred(ir.FloatPred(expr.Pred))
+	return d.binaryOp(expr.X, op, expr.Y)
 }
 
 // exprSelect converts the given LLVM IR select expression to a corresponding Go
