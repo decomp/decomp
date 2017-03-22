@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 
 	"github.com/llir/llvm/ir"
 )
@@ -25,7 +26,17 @@ func (d *decompiler) term(term ir.Terminator) ast.Stmt {
 	case *ir.TermSwitch:
 		panic("support for terminator *ir.TermSwitch not yet implemented")
 	case *ir.TermUnreachable:
-		panic("support for terminator *ir.TermUnreachable not yet implemented")
+		unreachable := &ast.BasicLit{
+			Kind:  token.STRING,
+			Value: `"unreachable"`,
+		}
+		expr := &ast.CallExpr{
+			Fun:  ast.NewIdent("panic"),
+			Args: []ast.Expr{unreachable},
+		}
+		return &ast.ExprStmt{
+			X: expr,
+		}
 	default:
 		panic(fmt.Sprintf("support for terminator %T not yet implemented", term))
 	}

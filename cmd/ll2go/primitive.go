@@ -63,6 +63,28 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 		}
 		block.Name = prim.Node
 		return block, nil
+	case "if_return":
+		condName := prim.Nodes["cond"]
+		condBlock, ok := d.blocks[condName]
+		if !ok {
+			return nil, errors.Errorf("unable to located cond basic block %q", condName)
+		}
+		bodyName := prim.Nodes["body"]
+		bodyBlock, ok := d.blocks[bodyName]
+		if !ok {
+			return nil, errors.Errorf("unable to located body basic block %q", bodyName)
+		}
+		exitName := prim.Nodes["exit"]
+		exitBlock, ok := d.blocks[exitName]
+		if !ok {
+			return nil, errors.Errorf("unable to located exit basic block %q", exitName)
+		}
+		block, err := d.primIfReturn(condBlock, bodyBlock, exitBlock)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		block.Name = prim.Node
+		return block, nil
 	case "pre_loop":
 		condName := prim.Nodes["cond"]
 		condBlock, ok := d.blocks[condName]
@@ -189,6 +211,36 @@ func (d *decompiler) primIfElse(condBlock, bodyTrueBlock, bodyFalseBlock, exitBl
 		Else: bodyFalse,
 	}
 	block.stmts = append(block.stmts, ifElseStmt)
+	block.stmts = append(block.stmts, d.stmts(exitBlock)...)
+	return block, nil
+}
+
+// primIfReturn merges the basic blocks of the given if_return-primitive into a
+// corresponding conceputal basic block for the primitive.
+func (d *decompiler) primIfReturn(condBlock, bodyBlock, exitBlock *basicBlock) (*basicBlock, error) {
+	// Handle terminators.
+	condTerm, ok := condBlock.Term.(*ir.TermCondBr)
+	if !ok {
+		return nil, errors.Errorf("invalid cond terminator type; expected *ir.TermCondBr, got %T", condBlock.Term)
+	}
+	cond := d.value(condTerm.Cond)
+	// TODO: Figure out a clean way to check if the body basic block is the true
+	// branch or the false branch. If body is the false branch, negate the
+	// condition.
+	bodyTermStmt := d.term(bodyBlock.Term)
+	block := &basicBlock{BasicBlock: &ir.BasicBlock{}}
+	block.Term = exitBlock.Term
+	// Handle instructions.
+	block.stmts = append(block.stmts, d.stmts(condBlock)...)
+	body := &ast.BlockStmt{
+		List: d.stmts(bodyBlock),
+	}
+	body.List = append(body.List, bodyTermStmt)
+	ifReturnStmt := &ast.IfStmt{
+		Cond: cond,
+		Body: body,
+	}
+	block.stmts = append(block.stmts, ifReturnStmt)
 	block.stmts = append(block.stmts, d.stmts(exitBlock)...)
 	return block, nil
 }
