@@ -43,7 +43,7 @@ func FindPrim(g graph.Directed, dom cfg.Dom) (*primitive.Primitive, error) {
 		return prim.Prim(), nil
 	}
 
-	return nil, errors.Errorf("unable to locate control flow primitive")
+	return nil, errors.New("unable to locate control flow primitive")
 }
 
 // Merge merges the nodes of the primitive into a single node, the label of

@@ -20,10 +20,16 @@ func (d *decompiler) term(term ir.Terminator) ast.Stmt {
 			Results: results,
 		}
 	case *ir.TermBr:
+		// TODO: Implement as goto, to be used as a fallback for when control flow
+		// recovery fails.
 		panic("support for terminator *ir.TermBr not yet implemented")
 	case *ir.TermCondBr:
+		// TODO: Implement as goto, to be used as a fallback for when control flow
+		// recovery fails.
 		panic("support for terminator *ir.TermCondBr not yet implemented")
 	case *ir.TermSwitch:
+		// TODO: Implement as goto, to be used as a fallback for when control flow
+		// recovery fails.
 		panic("support for terminator *ir.TermSwitch not yet implemented")
 	case *ir.TermUnreachable:
 		unreachable := &ast.BasicLit{
