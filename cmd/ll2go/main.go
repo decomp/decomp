@@ -101,6 +101,9 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 		funcs = append(funcs, f)
 	}
 
+	// TODO: Recover global variables.
+
+	// Decompile functions.
 	srcName := pathutil.FileName(llPath)
 	file := &ast.File{
 		Name: ast.NewIdent(srcName),
@@ -200,6 +203,7 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 		stmts = append(stmts, d.stmts(block)...)
 		block.stmts = append(block.stmts, d.term(block.Term))
 	}
+	// TODO: Insert labels of target branches into corresponding basic blocks.
 	body := &ast.BlockStmt{
 		List: stmts,
 	}
@@ -238,17 +242,7 @@ func (d *decompiler) value(v value.Value) ast.Expr {
 			return d.local(v.GetName())
 		}
 	case constant.Constant:
-		switch v := v.(type) {
-		case *constant.Int:
-			return &ast.BasicLit{
-				Kind:  token.INT,
-				Value: v.X.String(),
-			}
-		case constant.Expr:
-			return d.expr(v)
-		default:
-			panic(fmt.Sprintf("support for constant value %T not yet implemented", v))
-		}
+		return d.constant(v)
 	default:
 		panic(fmt.Sprintf("support for value %T not yet implemented", v))
 	}

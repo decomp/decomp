@@ -5,8 +5,66 @@ import (
 	"go/ast"
 	"go/token"
 
+	"github.com/llir/llvm/ir"
 	"github.com/llir/llvm/ir/constant"
 )
+
+// constant converts the given LLVM IR constant to a corresponding Go
+// expression.
+func (d *decompiler) constant(c constant.Constant) ast.Expr {
+	switch c := c.(type) {
+	// Simple constants
+	case *constant.Int:
+		return d.constInt(c)
+	case *constant.Float:
+		return d.constFloat(c)
+	case *constant.Null:
+		return d.constNull(c)
+	// Complex constants
+	case *constant.Vector:
+		panic("support for *constant.Vector not yet implemented")
+	case *constant.Array:
+		panic("support for *constant.Array not yet implemented")
+	case *constant.Struct:
+		panic("support for *constant.Struct not yet implemented")
+	case *constant.ZeroInitializer:
+		panic("support for *constant.ZeroInitializer not yet implemented")
+	// Global variable and function addresses
+	case *ir.Global:
+		return d.global(c.Name)
+	case *ir.Function:
+		return d.global(c.Name)
+	// Constant expressions
+	case constant.Expr:
+		return d.expr(c)
+	default:
+		panic(fmt.Sprintf("support for constant value %T not yet implemented", c))
+	}
+}
+
+// constInt converts the given LLVM IR integer constant to a corresponding Go
+// expression.
+func (d *decompiler) constInt(c *constant.Int) ast.Expr {
+	return &ast.BasicLit{
+		Kind:  token.INT,
+		Value: c.X.String(),
+	}
+}
+
+// constFloat converts the given LLVM IR floating-point constant to a
+// corresponding Go expression.
+func (d *decompiler) constFloat(c *constant.Float) ast.Expr {
+	return &ast.BasicLit{
+		Kind:  token.FLOAT,
+		Value: c.X.String(),
+	}
+}
+
+// constNull converts the given LLVM IR null pointer constant constant to a
+// corresponding Go expression.
+func (d *decompiler) constNull(c *constant.Null) ast.Expr {
+	return ast.NewIdent("nil")
+}
 
 // expr converts the given LLVM IR expression to a corresponding Go expression.
 func (d *decompiler) expr(expr constant.Expr) ast.Expr {
