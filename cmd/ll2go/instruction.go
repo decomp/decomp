@@ -254,7 +254,19 @@ func (d *decompiler) instStore(inst *ir.InstStore) ast.Stmt {
 // instGetElementPtr converts the given LLVM IR getelementptr instruction to a
 // corresponding Go statement.
 func (d *decompiler) instGetElementPtr(inst *ir.InstGetElementPtr) ast.Stmt {
-	panic("not yet implemented")
+	src := d.value(inst.Src)
+	// TODO: Validate if index expressions should be added in reverse order.
+	for _, index := range inst.Indices {
+		src = &ast.IndexExpr{
+			X:     src,
+			Index: d.value(index),
+		}
+	}
+	expr := &ast.UnaryExpr{
+		Op: token.AND,
+		X:  src,
+	}
+	return d.define(inst.Name, expr)
 }
 
 // instTrunc converts the given LLVM IR trunc instruction to a corresponding Go
