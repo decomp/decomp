@@ -100,7 +100,7 @@ func main() {
 		dbg.SetOutput(ioutil.Discard)
 	}
 
-	// Parse LLVM IR files.
+	// Generate control flow graphs from LLVM IR files.
 	for _, llPath := range flag.Args() {
 		if err := ll2dot(llPath, funcNames, force, img); err != nil {
 			log.Fatalf("%+v", err)

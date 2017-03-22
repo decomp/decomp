@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/decomp/decomp/cfa/primitive"
 	"github.com/llir/llvm/asm"
@@ -21,13 +22,53 @@ import (
 	"github.com/llir/llvm/ir/constant"
 	"github.com/llir/llvm/ir/value"
 	"github.com/mewkiz/pkg/pathutil"
+	"github.com/mewkiz/pkg/term"
 	"github.com/pkg/errors"
 )
 
+// dbg represents a logger with the "ll2go:" prefix, which logs debug messages
+// to standard error.
+var dbg = log.New(os.Stderr, term.GreenBold("ll2go:")+" ", 0)
+
+func usage() {
+	const use = `
+Decompile LLVM IR assembly to Go source code (*.ll -> *.go).
+
+Usage:
+
+	ll2go [OPTION]... FILE.ll...
+
+Flags:
+`
+	fmt.Fprintln(os.Stderr, use[1:])
+	flag.PrintDefaults()
+}
+
 func main() {
+	// Parse command line flags.
+	var (
+		// funcs represents a comma-separated list of functions to parse.
+		funcs string
+	)
+	flag.StringVar(&funcs, "funcs", "", "comma-separated list of functions to parse")
+	flag.Usage = usage
 	flag.Parse()
+	if flag.NArg() < 1 {
+		flag.Usage()
+		os.Exit(1)
+	}
+	// Parse specified functions if `-funcs` is set.
+	funcNames := make(map[string]bool)
+	for _, funcName := range strings.Split(funcs, ",") {
+		if len(funcName) < 1 {
+			continue
+		}
+		funcNames[funcName] = true
+	}
+
+	// Decompile LLVM IR files to Go source code.
 	for _, llPath := range flag.Args() {
-		if err := ll2go(llPath); err != nil {
+		if err := ll2go(llPath, funcNames); err != nil {
 			log.Fatalf("%+v", err)
 		}
 	}
@@ -35,17 +76,29 @@ func main() {
 
 // ll2go converts the given LLVM IR assembly file into a corresponding Go source
 // file.
-func ll2go(llPath string) error {
+func ll2go(llPath string, funcNames map[string]bool) error {
+	dbg.Printf("parsing file %q.", llPath)
 	module, err := asm.ParseFile(llPath)
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
+	// Get functions set by `-funcs` or all functions if `-funcs` not used.
+	var funcs []*ir.Function
+	for _, f := range module.Funcs {
+		if len(funcNames) > 0 && !funcNames[f.Name] {
+			dbg.Printf("skipping function %q.", f.Name)
+			continue
+		}
+		funcs = append(funcs, f)
+	}
+
 	srcName := pathutil.FileName(llPath)
 	file := &ast.File{
 		Name: ast.NewIdent(srcName),
 	}
 	d := newDecompiler()
-	for _, f := range module.Funcs {
+	for _, f := range funcs {
 		prims, err := parsePrims(srcName, f.Name)
 		if err != nil {
 			return errors.WithStack(err)
