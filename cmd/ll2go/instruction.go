@@ -237,7 +237,11 @@ func (d *decompiler) instAlloca(inst *ir.InstAlloca) ast.Stmt {
 // instLoad converts the given LLVM IR load instruction to a corresponding Go
 // statement.
 func (d *decompiler) instLoad(inst *ir.InstLoad) ast.Stmt {
-	panic("not yet implemented")
+	// TODO: Handle type (inst.Typ).
+	expr := &ast.StarExpr{
+		X: d.value(inst.Src),
+	}
+	return d.define(inst.Name, expr)
 }
 
 // instStore converts the given LLVM IR store instruction to a corresponding Go
@@ -365,6 +369,12 @@ func (d *decompiler) instBinaryOp(name string, x value.Value, op token.Token, y 
 		Op: op,
 		Y:  d.value(y),
 	}
+	return d.define(name, expr)
+}
+
+// define returns an assignment statement, declaring a local variable of the
+// given name, initialized to expr.
+func (d *decompiler) define(name string, expr ast.Expr) *ast.AssignStmt {
 	return &ast.AssignStmt{
 		Lhs: []ast.Expr{d.local(name)},
 		Tok: token.DEFINE,
