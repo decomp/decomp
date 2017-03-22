@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 
 	"github.com/llir/llvm/ir/constant"
 )
@@ -201,7 +202,19 @@ func (d *decompiler) exprXor(expr *constant.ExprXor) ast.Expr {
 // exprGetElementPtr converts the given LLVM IR getelementptr expression to a
 // corresponding Go statement.
 func (d *decompiler) exprGetElementPtr(expr *constant.ExprGetElementPtr) ast.Expr {
-	panic("not yet implemented")
+	src := d.value(expr.Src)
+	// TODO: Validate if index expressions should be added in reverse order.
+	for _, index := range expr.Indices {
+		src = &ast.IndexExpr{
+			X:     src,
+			Index: d.value(index),
+		}
+	}
+	e := &ast.UnaryExpr{
+		Op: token.AND,
+		X:  src,
+	}
+	return e
 }
 
 // exprTrunc converts the given LLVM IR trunc expression to a corresponding Go
