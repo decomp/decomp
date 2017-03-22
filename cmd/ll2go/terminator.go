@@ -41,14 +41,39 @@ func (d *decompiler) termRet(term *ir.TermRet) ast.Stmt {
 // statement.
 func (d *decompiler) termBr(term *ir.TermBr) ast.Stmt {
 	// Use goto-statements as a fallback for incomplete control flow recovery.
-	panic("not yet implemented")
+
+	// TODO: Track and update target basic block name, if the target has been
+	// merged into a high-level primitive.
+	return &ast.BranchStmt{
+		Tok:   token.GOTO,
+		Label: d.label(term.Target.Name),
+	}
 }
 
 // termCondBr converts the given LLVM IR conditional br termiantor to a
 // corresponding Go statement.
 func (d *decompiler) termCondBr(term *ir.TermCondBr) ast.Stmt {
 	// Use goto-statements as a fallback for incomplete control flow recovery.
-	panic("not yet implemented")
+
+	// TODO: Track and update target basic block name, if the target has been
+	// merged into a high-level primitive.
+	gotoTrueStmt := &ast.BranchStmt{
+		Tok:   token.GOTO,
+		Label: d.label(term.TargetTrue.Name),
+	}
+	gotoFalseStmt := &ast.BranchStmt{
+		Tok:   token.GOTO,
+		Label: d.label(term.TargetFalse.Name),
+	}
+	return &ast.IfStmt{
+		Cond: d.value(term.Cond),
+		Body: &ast.BlockStmt{
+			List: []ast.Stmt{gotoTrueStmt},
+		},
+		Else: &ast.BlockStmt{
+			List: []ast.Stmt{gotoFalseStmt},
+		},
+	}
 }
 
 // termSwitch converts the given LLVM IR switch termiantor to a corresponding Go

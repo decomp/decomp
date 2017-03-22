@@ -220,6 +220,13 @@ func (d *decompiler) local(name string) *ast.Ident {
 	return ast.NewIdent(name)
 }
 
+// label converts the given LLVM IR basic block label to a corresponding Go
+// identifier.
+func (d *decompiler) label(name string) *ast.Ident {
+	name = "block_" + name
+	return ast.NewIdent(name)
+}
+
 // value converts the given LLVM IR value to a corresponding Go expression.
 func (d *decompiler) value(v value.Value) ast.Expr {
 	switch v := v.(type) {
