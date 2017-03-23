@@ -46,6 +46,7 @@ func (d *decompiler) goType(t irtypes.Type) ast.Expr {
 			Results: results,
 		}
 	case *irtypes.IntType:
+		d.intSizes[t.Size] = true
 		return &ast.Ident{
 			Name: fmt.Sprintf("int%d", t.Size),
 		}

@@ -15,6 +15,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -132,6 +133,43 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 		file.Decls = append(file.Decls, fn)
 	}
 
+	// Add types not part of builtin.
+	for intSize := range d.intSizes {
+		var intSizes []int
+		switch intSize {
+		case 8, 16, 32, 64:
+			// already builtin type of Go.
+		default:
+			intSizes = append(intSizes, intSize)
+		}
+		sort.Ints(intSizes)
+		for _, intSize := range intSizes {
+			typeName := fmt.Sprintf("int%d", intSize)
+			var underlying string
+			switch {
+			case intSize < 8:
+				underlying = "int8"
+			case intSize < 16:
+				underlying = "int16"
+			case intSize < 32:
+				underlying = "int32"
+			case intSize < 64:
+				underlying = "int64"
+			default:
+				return errors.Errorf("support for integer type with bit size %d not yet implemented", intSize)
+			}
+			spec := &ast.TypeSpec{
+				Name: ast.NewIdent(typeName),
+				Type: ast.NewIdent(underlying),
+			}
+			typeDecl := &ast.GenDecl{
+				Tok:   token.TYPE,
+				Specs: []ast.Spec{spec},
+			}
+			file.Decls = append(file.Decls, typeDecl)
+		}
+	}
+
 	// Set package name.
 	if hasMain {
 		file.Name = ast.NewIdent("main")
@@ -152,11 +190,15 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 type decompiler struct {
 	// Map from basic block label to conceptual basic block.
 	blocks map[string]*basicBlock
+	// Integer type bit sizes in use.
+	intSizes map[int]bool
 }
 
 // newDecompiler returns a new decompiler.
 func newDecompiler() *decompiler {
-	return &decompiler{}
+	return &decompiler{
+		intSizes: make(map[int]bool),
+	}
 }
 
 // globalDecl converts the given LLVM IR global into a corresponding Go variable
