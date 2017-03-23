@@ -57,14 +57,14 @@ func main() {
 	flag.BoolVar(&quiet, "q", false, "suppress non-error messages")
 	flag.Usage = usage
 	flag.Parse()
-	if flag.NArg() < 1 {
+	if flag.NArg() == 0 {
 		flag.Usage()
 		os.Exit(1)
 	}
 	// Parse specified functions if `-funcs` is set.
 	funcNames := make(map[string]bool)
 	for _, funcName := range strings.Split(funcs, ",") {
-		if len(funcName) < 1 {
+		if len(funcName) == 0 {
 			continue
 		}
 		funcNames[funcName] = true
@@ -110,9 +110,12 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 	}
 	d := newDecompiler()
 	for _, f := range funcs {
-		prims, err := parsePrims(srcName, f.Name)
-		if err != nil {
-			return errors.WithStack(err)
+		var prims []*primitive.Primitive
+		if len(f.Blocks) > 0 {
+			prims, err = parsePrims(srcName, f.Name)
+			if err != nil {
+				return errors.WithStack(err)
+			}
 		}
 		dbg.Printf("decompiling function %q.", f.Name)
 		fn, err := d.funcDecl(f, prims)
@@ -154,7 +157,7 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 		Name: d.global(f.Name),
 		Type: sig,
 	}
-	if len(f.Blocks) < 1 {
+	if len(f.Blocks) == 0 {
 		return fn, nil
 	}
 

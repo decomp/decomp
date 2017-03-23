@@ -83,14 +83,14 @@ func main() {
 	flag.BoolVar(&quiet, "q", false, "suppress non-error messages")
 	flag.Usage = usage
 	flag.Parse()
-	if flag.NArg() < 1 {
+	if flag.NArg() == 0 {
 		flag.Usage()
 		os.Exit(1)
 	}
 	// Parse specified functions if `-funcs` is set.
 	funcNames := make(map[string]bool)
 	for _, funcName := range strings.Split(funcs, ",") {
-		if len(funcName) < 1 {
+		if len(funcName) == 0 {
 			continue
 		}
 		funcNames[funcName] = true
