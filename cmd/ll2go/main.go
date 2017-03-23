@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 
 	"github.com/decomp/decomp/cfa/primitive"
 	"github.com/llir/llvm/asm"
@@ -105,11 +106,13 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 
 	// Decompile functions.
 	srcName := pathutil.FileName(llPath)
-	file := &ast.File{
-		Name: ast.NewIdent(srcName),
-	}
+	file := &ast.File{}
 	d := newDecompiler()
+	var hasMain bool
 	for _, f := range funcs {
+		if f.Name == "main" {
+			hasMain = true
+		}
 		var prims []*primitive.Primitive
 		if len(f.Blocks) > 0 {
 			prims, err = parsePrims(srcName, f.Name)
@@ -124,6 +127,13 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 		}
 		file.Decls = append(file.Decls, fn)
 	}
+	// Set package name.
+	if hasMain {
+		file.Name = ast.NewIdent("main")
+	} else {
+		file.Name = ident(srcName)
+	}
+
 	// TODO: Remove debug output.
 	if err := printer.Fprint(os.Stdout, token.NewFileSet(), file); err != nil {
 		return errors.WithStack(err)
@@ -217,21 +227,35 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 // global converts the given LLVM IR global identifier to a corresponding Go
 // identifier.
 func (d *decompiler) global(name string) *ast.Ident {
-	return ast.NewIdent(name)
+	return ident(name)
 }
 
 // local converts the given LLVM IR local identifier to a corresponding Go
 // identifier.
 func (d *decompiler) local(name string) *ast.Ident {
 	name = "_" + name
-	return ast.NewIdent(name)
+
+	return ident(name)
+}
+
+// ident returns a sanitized version of the given identifier.
+func ident(s string) *ast.Ident {
+	f := func(r rune) rune {
+		switch {
+		case unicode.IsLetter(r), unicode.IsNumber(r):
+			// valid rune in identifier.
+			return r
+		}
+		return '_'
+	}
+	return ast.NewIdent(strings.Map(f, s))
 }
 
 // label converts the given LLVM IR basic block label to a corresponding Go
 // identifier.
 func (d *decompiler) label(name string) *ast.Ident {
 	name = "block_" + name
-	return ast.NewIdent(name)
+	return ident(name)
 }
 
 // value converts the given LLVM IR value to a corresponding Go expression.
