@@ -102,12 +102,16 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 		funcs = append(funcs, f)
 	}
 
-	// TODO: Recover global variables.
-
-	// Decompile functions.
+	// Recover global variables.
 	srcName := pathutil.FileName(llPath)
 	file := &ast.File{}
 	d := newDecompiler()
+	for _, g := range module.Globals {
+		global := d.globalDecl(g)
+		file.Decls = append(file.Decls, global)
+	}
+
+	// Recover functions.
 	var hasMain bool
 	for _, f := range funcs {
 		if f.Name == "main" {
@@ -127,6 +131,7 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 		}
 		file.Decls = append(file.Decls, fn)
 	}
+
 	// Set package name.
 	if hasMain {
 		file.Name = ast.NewIdent("main")
@@ -152,6 +157,20 @@ type decompiler struct {
 // newDecompiler returns a new decompiler.
 func newDecompiler() *decompiler {
 	return &decompiler{}
+}
+
+// globalDecl converts the given LLVM IR global into a corresponding Go variable
+// declaration.
+func (d *decompiler) globalDecl(g *ir.Global) *ast.GenDecl {
+	spec := &ast.ValueSpec{
+		Names:  []*ast.Ident{d.global(g.Name)},
+		Type:   d.goType(g.Typ),
+		Values: []ast.Expr{d.value(g.Init)},
+	}
+	return &ast.GenDecl{
+		Tok:   token.VAR,
+		Specs: []ast.Spec{spec},
+	}
 }
 
 // funcDecl converts the given LLVM IR function into a corresponding Go function
