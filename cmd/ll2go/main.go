@@ -227,12 +227,19 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 // A decompiler keeps track of relevant information during the decompilation
 // process.
 type decompiler struct {
-	// Map from basic block label to conceptual basic block.
-	blocks map[string]*basicBlock
+	// Global states.
+
 	// Tracks use of integer types not part of Go builtin.
 	intSizes map[int]bool
 	// Tracks use of newIntNNN function calls.
 	newIntSizes map[int]bool
+
+	// Per function states.
+
+	// Map from basic block label to conceptual basic block.
+	blocks map[string]*basicBlock
+	// Track use of basic block labels.
+	labels map[string]bool
 }
 
 // newDecompiler returns a new decompiler.
@@ -298,6 +305,9 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 		return fn, nil
 	}
 
+	// Reset labels tracker.
+	d.labels = make(map[string]bool)
+
 	// Reset basic block mapping.
 	d.blocks = make(map[string]*basicBlock)
 	for _, block := range f.Blocks {
@@ -315,7 +325,7 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 			// statements to the predecessor basic blocks of the incoming values.
 			for _, inc := range phi.Incs {
 				pred := d.blocks[inc.Pred.Name]
-				assignStmt := d.assign(d.local(phi.Name), d.value(inc.X))
+				assignStmt := d.assign(phi.Name, d.value(inc.X))
 				pred.out = append(pred.out, assignStmt)
 			}
 		}
@@ -343,7 +353,17 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 		stmts = append(stmts, d.stmts(block)...)
 		block.stmts = append(block.stmts, d.term(block.Term))
 	}
-	// TODO: Insert labels of target branches into corresponding basic blocks.
+
+	// Insert labels of target branches into corresponding basic blocks.
+	//for label := range d.labels {
+	//	block, ok := d.blocks[label]
+	//	if !ok {
+	//		return nil, errors.Errorf("unable to locate basic block %q", label)
+	//	}
+	//	_ = block
+	//	// TODO: Implement.
+	//}
+
 	body := &ast.BlockStmt{
 		List: stmts,
 	}
@@ -354,15 +374,29 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 // global converts the given LLVM IR global identifier to a corresponding Go
 // identifier.
 func (d *decompiler) global(name string) *ast.Ident {
+	if isID(name) {
+		name = "_" + name
+	}
 	return ident(name)
 }
 
 // local converts the given LLVM IR local identifier to a corresponding Go
 // identifier.
 func (d *decompiler) local(name string) *ast.Ident {
-	name = "_" + name
-
+	if isID(name) {
+		name = "_" + name
+	}
 	return ident(name)
+}
+
+// isID reports if the given string is an unnamed identifier.
+func isID(s string) bool {
+	for _, r := range s {
+		if !strings.ContainsRune("0123456789", r) {
+			return false
+		}
+	}
+	return true
 }
 
 // ident returns a sanitized version of the given identifier.
