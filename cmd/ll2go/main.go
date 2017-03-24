@@ -15,7 +15,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"unicode"
 
 	"github.com/decomp/decomp/cfa/primitive"
 	"github.com/llir/llvm/asm"
@@ -101,15 +103,21 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 		funcs = append(funcs, f)
 	}
 
-	// TODO: Recover global variables.
-
-	// Decompile functions.
+	// Recover global variables.
 	srcName := pathutil.FileName(llPath)
-	file := &ast.File{
-		Name: ast.NewIdent(srcName),
-	}
+	file := &ast.File{}
 	d := newDecompiler()
+	for _, g := range module.Globals {
+		global := d.globalDecl(g)
+		file.Decls = append(file.Decls, global)
+	}
+
+	// Recover functions.
+	var hasMain bool
 	for _, f := range funcs {
+		if f.Name == "main" {
+			hasMain = true
+		}
 		var prims []*primitive.Primitive
 		if len(f.Blocks) > 0 {
 			prims, err = parsePrims(srcName, f.Name)
@@ -124,6 +132,90 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 		}
 		file.Decls = append(file.Decls, fn)
 	}
+
+	// Add newIntNNN function declarations.
+	var newIntSizes []int
+	for newIntSize := range d.newIntSizes {
+		newIntSizes = append(newIntSizes, newIntSize)
+	}
+	for _, newIntSize := range newIntSizes {
+		x := ast.NewIdent("x")
+		intType := ast.NewIdent(fmt.Sprintf("int%d", newIntSize))
+		param := &ast.Field{
+			Names: []*ast.Ident{x},
+			Type:  intType,
+		}
+		retType := &ast.StarExpr{X: intType}
+		result := &ast.Field{
+			Type: retType,
+		}
+		sig := &ast.FuncType{
+			Params:  &ast.FieldList{List: []*ast.Field{param}},
+			Results: &ast.FieldList{List: []*ast.Field{result}},
+		}
+		expr := &ast.UnaryExpr{
+			Op: token.AND,
+			X:  x,
+		}
+		returnStmt := &ast.ReturnStmt{
+			Results: []ast.Expr{expr},
+		}
+		body := &ast.BlockStmt{
+			List: []ast.Stmt{returnStmt},
+		}
+		name := fmt.Sprintf("newInt%d", newIntSize)
+		fn := &ast.FuncDecl{
+			Name: ast.NewIdent(name),
+			Type: sig,
+			Body: body,
+		}
+		file.Decls = append(file.Decls, fn)
+	}
+
+	// Add types not part of builtin.
+	var intSizes []int
+	for intSize := range d.intSizes {
+		switch intSize {
+		case 8, 16, 32, 64:
+			// already builtin type of Go.
+		default:
+			intSizes = append(intSizes, intSize)
+		}
+	}
+	sort.Ints(intSizes)
+	for _, intSize := range intSizes {
+		typeName := fmt.Sprintf("int%d", intSize)
+		var underlying string
+		switch {
+		case intSize < 8:
+			underlying = "int8"
+		case intSize < 16:
+			underlying = "int16"
+		case intSize < 32:
+			underlying = "int32"
+		case intSize < 64:
+			underlying = "int64"
+		default:
+			return errors.Errorf("support for integer type with bit size %d not yet implemented", intSize)
+		}
+		spec := &ast.TypeSpec{
+			Name: ast.NewIdent(typeName),
+			Type: ast.NewIdent(underlying),
+		}
+		typeDecl := &ast.GenDecl{
+			Tok:   token.TYPE,
+			Specs: []ast.Spec{spec},
+		}
+		file.Decls = append(file.Decls, typeDecl)
+	}
+
+	// Set package name.
+	if hasMain {
+		file.Name = ast.NewIdent("main")
+	} else {
+		file.Name = ident(srcName)
+	}
+
 	// TODO: Remove debug output.
 	if err := printer.Fprint(os.Stdout, token.NewFileSet(), file); err != nil {
 		return errors.WithStack(err)
@@ -137,11 +229,56 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 type decompiler struct {
 	// Map from basic block label to conceptual basic block.
 	blocks map[string]*basicBlock
+	// Tracks use of integer types not part of Go builtin.
+	intSizes map[int]bool
+	// Tracks use of newIntNNN function calls.
+	newIntSizes map[int]bool
 }
 
 // newDecompiler returns a new decompiler.
 func newDecompiler() *decompiler {
-	return &decompiler{}
+	return &decompiler{
+		intSizes:    make(map[int]bool),
+		newIntSizes: make(map[int]bool),
+	}
+}
+
+// globalDecl converts the given LLVM IR global into a corresponding Go variable
+// declaration.
+func (d *decompiler) globalDecl(g *ir.Global) *ast.GenDecl {
+	spec := &ast.ValueSpec{
+		Names:  []*ast.Ident{d.global(g.Name)},
+		Type:   d.goType(g.Typ),
+		Values: []ast.Expr{d.pointerToValue(g.Init)},
+	}
+	return &ast.GenDecl{
+		Tok:   token.VAR,
+		Specs: []ast.Spec{spec},
+	}
+}
+
+// pointerToValue converts the given LLVM IR value to a pointer to v and returns
+// the corresponding Go expression.
+func (d *decompiler) pointerToValue(v value.Value) ast.Expr {
+	switch v := v.(type) {
+	case *constant.Null:
+		// nothing to do.
+		return d.value(v)
+	case *constant.Int:
+		callee := fmt.Sprintf("newInt%d", v.Typ.Size)
+		d.newIntSizes[v.Typ.Size] = true
+		return &ast.CallExpr{
+			Fun:  ast.NewIdent(callee),
+			Args: []ast.Expr{d.value(v)},
+		}
+	case *constant.Array:
+		return &ast.UnaryExpr{
+			Op: token.AND,
+			X:  d.value(v),
+		}
+	default:
+		panic(fmt.Sprintf("support for value %T not yet implemented", v))
+	}
 }
 
 // funcDecl converts the given LLVM IR function into a corresponding Go function
@@ -217,21 +354,35 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 // global converts the given LLVM IR global identifier to a corresponding Go
 // identifier.
 func (d *decompiler) global(name string) *ast.Ident {
-	return ast.NewIdent(name)
+	return ident(name)
 }
 
 // local converts the given LLVM IR local identifier to a corresponding Go
 // identifier.
 func (d *decompiler) local(name string) *ast.Ident {
 	name = "_" + name
-	return ast.NewIdent(name)
+
+	return ident(name)
+}
+
+// ident returns a sanitized version of the given identifier.
+func ident(s string) *ast.Ident {
+	f := func(r rune) rune {
+		switch {
+		case unicode.IsLetter(r), unicode.IsNumber(r):
+			// valid rune in identifier.
+			return r
+		}
+		return '_'
+	}
+	return ast.NewIdent(strings.Map(f, s))
 }
 
 // label converts the given LLVM IR basic block label to a corresponding Go
 // identifier.
 func (d *decompiler) label(name string) *ast.Ident {
 	name = "block_" + name
-	return ast.NewIdent(name)
+	return ident(name)
 }
 
 // value converts the given LLVM IR value to a corresponding Go expression.

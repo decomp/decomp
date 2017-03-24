@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
+	"strconv"
 
 	irtypes "github.com/llir/llvm/ir/types"
 )
@@ -44,6 +46,7 @@ func (d *decompiler) goType(t irtypes.Type) ast.Expr {
 			Results: results,
 		}
 	case *irtypes.IntType:
+		d.intSizes[t.Size] = true
 		return &ast.Ident{
 			Name: fmt.Sprintf("int%d", t.Size),
 		}
@@ -60,7 +63,13 @@ func (d *decompiler) goType(t irtypes.Type) ast.Expr {
 	case *irtypes.MetadataType:
 		panic("support for *types.MetadataType not yet implemented")
 	case *irtypes.ArrayType:
-		panic("support for *types.ArrayType not yet implemented")
+		return &ast.ArrayType{
+			Len: &ast.BasicLit{
+				Kind:  token.INT,
+				Value: strconv.FormatInt(t.Len, 10),
+			},
+			Elt: d.goType(t.Elem),
+		}
 	case *irtypes.StructType:
 		panic("support for *types.StructType not yet implemented")
 	default:

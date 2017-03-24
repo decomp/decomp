@@ -24,7 +24,7 @@ func (d *decompiler) constant(c constant.Constant) ast.Expr {
 	case *constant.Vector:
 		panic("support for *constant.Vector not yet implemented")
 	case *constant.Array:
-		panic("support for *constant.Array not yet implemented")
+		return d.constArray(c)
 	case *constant.Struct:
 		panic("support for *constant.Struct not yet implemented")
 	case *constant.ZeroInitializer:
@@ -64,6 +64,19 @@ func (d *decompiler) constFloat(c *constant.Float) ast.Expr {
 // corresponding Go expression.
 func (d *decompiler) constNull(c *constant.Null) ast.Expr {
 	return ast.NewIdent("nil")
+}
+
+// constArray converts the given LLVM IR array constant constant to a
+// corresponding Go expression.
+func (d *decompiler) constArray(c *constant.Array) ast.Expr {
+	var elems []ast.Expr
+	for _, e := range c.Elems {
+		elems = append(elems, d.value(e))
+	}
+	return &ast.CompositeLit{
+		Type: d.goType(c.Typ),
+		Elts: elems,
+	}
 }
 
 // expr converts the given LLVM IR expression to a corresponding Go expression.
