@@ -1,27 +1,23 @@
 package cfg
 
 import (
+	"io/ioutil"
 	"strconv"
 	"strings"
 
 	"github.com/gonum/graph"
 	"github.com/gonum/graph/encoding/dot"
-	dotparser "github.com/gonum/graph/formats/dot"
 	"github.com/pkg/errors"
 )
 
 // ParseFile parses the given Graphviz DOT file into a control flow graph.
 func ParseFile(path string) (*Graph, error) {
-	file, err := dotparser.ParseFile(path)
+	g := newGraph()
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	if len(file.Graphs) != 1 {
-		return nil, errors.Errorf("invalid number of graphs in DOT file %q; expected 1, got %d", path, len(file.Graphs))
-	}
-	src := file.Graphs[0]
-	g := newGraph()
-	if err := dot.Copy(g, src); err != nil {
+	if err := dot.Unmarshal(data, g); err != nil {
 		return nil, errors.WithStack(err)
 	}
 	for _, n := range g.Nodes() {
