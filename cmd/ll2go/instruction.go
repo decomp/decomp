@@ -263,7 +263,7 @@ func (d *decompiler) instAlloca(inst *ir.InstAlloca) ast.Stmt {
 		Fun:  ast.NewIdent("new"),
 		Args: []ast.Expr{d.goType(inst.Elem)},
 	}
-	return d.define(inst.Name, expr)
+	return d.assign(inst.Name, expr)
 }
 
 // instLoad converts the given LLVM IR load instruction to a corresponding Go
