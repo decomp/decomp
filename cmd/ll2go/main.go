@@ -351,7 +351,7 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 	var stmts []ast.Stmt
 	for _, block := range d.blocks {
 		stmts = append(stmts, d.stmts(block)...)
-		block.stmts = append(block.stmts, d.term(block.Term))
+		stmts = append(stmts, d.term(block.Term))
 	}
 
 	// Insert labels of target branches into corresponding basic blocks.
