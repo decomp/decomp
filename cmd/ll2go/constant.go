@@ -60,15 +60,18 @@ func (d *decompiler) constFloat(c *constant.Float) ast.Expr {
 	}
 }
 
-// constNull converts the given LLVM IR null pointer constant constant to a
-// corresponding Go expression.
+// constNull converts the given LLVM IR null pointer constant to a corresponding
+// Go expression.
 func (d *decompiler) constNull(c *constant.Null) ast.Expr {
 	return ast.NewIdent("nil")
 }
 
-// constArray converts the given LLVM IR array constant constant to a
-// corresponding Go expression.
+// constArray converts the given LLVM IR array constant to a corresponding Go
+// expression.
 func (d *decompiler) constArray(c *constant.Array) ast.Expr {
+	if c.CharArray {
+		return d.constCharArray(c)
+	}
 	var elems []ast.Expr
 	for _, e := range c.Elems {
 		elems = append(elems, d.value(e))
@@ -76,6 +79,24 @@ func (d *decompiler) constArray(c *constant.Array) ast.Expr {
 	return &ast.CompositeLit{
 		Type: d.goType(c.Typ),
 		Elts: elems,
+	}
+}
+
+// constCharArray converts the given LLVM IR character array constant to a
+// corresponding Go expression.
+func (d *decompiler) constCharArray(c *constant.Array) ast.Expr {
+	var buf []byte
+	for _, e := range c.Elems {
+		elem, ok := e.(*constant.Int)
+		if !ok {
+			panic(fmt.Sprintf("invalid constant type; expected *constant.Int, got %T", e))
+		}
+		b := byte(elem.Int64())
+		buf = append(buf, b)
+	}
+	return &ast.BasicLit{
+		Kind:  token.STRING,
+		Value: fmt.Sprintf("%q", string(buf)),
 	}
 }
 
