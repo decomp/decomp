@@ -258,7 +258,12 @@ func (d *decompiler) instXor(inst *ir.InstXor) ast.Stmt {
 // instAlloca converts the given LLVM IR alloca instruction to a corresponding
 // Go statement.
 func (d *decompiler) instAlloca(inst *ir.InstAlloca) ast.Stmt {
-	panic("not yet implemented")
+	// TODO: Handle lists
+	expr := &ast.CallExpr{
+		Fun:  ast.NewIdent("new"),
+		Args: []ast.Expr{d.goType(inst.Elem)},
+	}
+	return d.define(inst.Name, expr)
 }
 
 // instLoad converts the given LLVM IR load instruction to a corresponding Go
