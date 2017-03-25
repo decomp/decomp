@@ -1,6 +1,3 @@
-// TODO: Fix PHI handling; don't introduce new variables. Potentially requires
-// information from data analysis.
-
 package main
 
 import (
@@ -355,19 +352,34 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 	}
 	sort.Sort(blocks)
 	for _, block := range blocks {
-		stmts = append(stmts, d.stmts(block)...)
+		blockStmts := d.stmts(block)
+		if d.labels[block.Name] {
+			// Insert label.
+			labelStmt := &ast.LabeledStmt{
+				Label: d.label(block.Name),
+			}
+			if len(blockStmts) > 0 {
+				stmt := blockStmts[0]
+				labelStmt.Stmt = stmt
+				blockStmts[0] = labelStmt
+			} else {
+				labelStmt.Stmt = &ast.EmptyStmt{}
+				blockStmts = append(blockStmts, labelStmt)
+			}
+		}
+		stmts = append(stmts, blockStmts...)
 		stmts = append(stmts, d.term(block.Term))
 	}
 
 	// Insert labels of target branches into corresponding basic blocks.
-	//for label := range d.labels {
-	//	block, ok := d.blocks[label]
-	//	if !ok {
-	//		return nil, errors.Errorf("unable to locate basic block %q", label)
-	//	}
-	//	_ = block
-	//	// TODO: Implement.
-	//}
+	for label := range d.labels {
+		block, ok := d.blocks[label]
+		if !ok {
+			return nil, errors.Errorf("unable to locate basic block %q", label)
+		}
+		_ = block
+		// TODO: Implement.
+	}
 
 	body := &ast.BlockStmt{
 		List: stmts,
