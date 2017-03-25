@@ -310,8 +310,8 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 
 	// Reset basic block mapping.
 	d.blocks = make(map[string]*basicBlock)
-	for _, block := range f.Blocks {
-		d.blocks[block.Name] = &basicBlock{BasicBlock: block}
+	for i, block := range f.Blocks {
+		d.blocks[block.Name] = &basicBlock{BasicBlock: block, num: i}
 	}
 
 	// Record outgoing PHI values.
@@ -349,7 +349,12 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 	// If more than one basic block remains, unstructured control flow is added
 	// using goto-statements.
 	var stmts []ast.Stmt
+	var blocks basicBlocks
 	for _, block := range d.blocks {
+		blocks = append(blocks, block)
+	}
+	sort.Sort(blocks)
+	for _, block := range blocks {
 		stmts = append(stmts, d.stmts(block)...)
 		stmts = append(stmts, d.term(block.Term))
 	}
@@ -445,7 +450,18 @@ type basicBlock struct {
 	// Outgoing values for PHI instructions. In other words, a list of assignment
 	// statements to appear at the end of the basic block.
 	out []ast.Stmt
+	// Track basic block number in f.Blocks slice, to be used for sorting basic
+	// blocks after incomplete control flow recovery.
+	num int
 }
+
+// basicBlocks implements the sort.Sort interface to sort basic blocks according
+// to their occurrence in f.Blocks.
+type basicBlocks []*basicBlock
+
+func (bs basicBlocks) Less(i, j int) bool { return bs[i].num < bs[j].num }
+func (bs basicBlocks) Len() int           { return len(bs) }
+func (bs basicBlocks) Swap(i, j int)      { bs[i], bs[j] = bs[j], bs[i] }
 
 // stmts converts the basic block instructions, recorded statements and outgoing
 // PHI values into a corresponding list of Go statements.

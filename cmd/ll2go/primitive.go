@@ -35,6 +35,7 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 			return nil, errors.WithStack(err)
 		}
 		block.Name = prim.Node
+		block.num = condBlock.num
 		return block, nil
 	case "if_else":
 		condName := prim.Nodes["cond"]
@@ -62,6 +63,7 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 			return nil, errors.WithStack(err)
 		}
 		block.Name = prim.Node
+		block.num = condBlock.num
 		return block, nil
 	case "if_return":
 		condName := prim.Nodes["cond"]
@@ -84,6 +86,7 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 			return nil, errors.WithStack(err)
 		}
 		block.Name = prim.Node
+		block.num = condBlock.num
 		return block, nil
 	case "pre_loop":
 		condName := prim.Nodes["cond"]
@@ -106,6 +109,7 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 			return nil, errors.WithStack(err)
 		}
 		block.Name = prim.Node
+		block.num = condBlock.num
 		return block, nil
 	case "post_loop":
 		condName := prim.Nodes["cond"]
@@ -123,6 +127,7 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 			return nil, errors.WithStack(err)
 		}
 		block.Name = prim.Node
+		block.num = condBlock.num
 		return block, nil
 	case "seq":
 		entryName := prim.Nodes["entry"]
@@ -140,6 +145,7 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 			return nil, errors.WithStack(err)
 		}
 		block.Name = prim.Node
+		block.num = entryBlock.num
 		return block, nil
 	default:
 		panic(fmt.Sprintf("support for primitive %q not yet implemented", prim.Prim))
