@@ -258,10 +258,16 @@ func (d *decompiler) instXor(inst *ir.InstXor) ast.Stmt {
 // instAlloca converts the given LLVM IR alloca instruction to a corresponding
 // Go statement.
 func (d *decompiler) instAlloca(inst *ir.InstAlloca) ast.Stmt {
-	// TODO: Handle lists
+	typ := d.goType(inst.Elem)
+	if inst.NElems != nil {
+		typ = &ast.ArrayType{
+			Len: d.value(inst.NElems),
+			Elt: typ,
+		}
+	}
 	expr := &ast.CallExpr{
 		Fun:  ast.NewIdent("new"),
-		Args: []ast.Expr{d.goType(inst.Elem)},
+		Args: []ast.Expr{typ},
 	}
 	return d.assign(inst.Name, expr)
 }
