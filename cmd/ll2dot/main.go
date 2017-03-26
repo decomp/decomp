@@ -72,7 +72,8 @@ func main() {
 		force bool
 		// funcs represents a comma-separated list of functions to parse.
 		funcs string
-		// img specifies whether to generate an image representation of the control flow graph.
+		// img specifies whether to generate an image representation of the
+		// control flow graph.
 		img bool
 		// quiet specifies whether to suppress non-error messages.
 		quiet bool
@@ -87,7 +88,7 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	// Parse specified functions if `-funcs` is set.
+	// Parse functions specified by the `-funcs` flag.
 	funcNames := make(map[string]bool)
 	for _, funcName := range strings.Split(funcs, ",") {
 		if len(funcName) == 0 {
