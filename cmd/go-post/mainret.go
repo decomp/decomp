@@ -22,7 +22,7 @@ var mainretFix = fix{
 
 func mainret(file *ast.File) bool {
 	fixed := false
-	needOS := false
+	hasOS := false
 
 	// Locate the "main" function.
 	mainFunc, ok := findMainFunc(file)
@@ -74,21 +74,19 @@ func mainret(file *ast.File) bool {
 				// Replace "return 0" with "return".
 				retStmt.Results = nil
 			} else {
+				// Add "os" import if needed.
+				if !hasOS {
+					addImport(file, "os")
+				}
 				// Replace "return 42" with "os.Exit(42)".
 				exit := createExit(result)
 				*stmt = exit
-				needOS = true
 			}
 			fixed = true
 		default:
 			log.Fatalf("invalid number of arguments to return; expected 1, got %d", len(retStmt.Results))
 		}
 	})
-
-	// Add "os" import if needed.
-	if needOS {
-		addImport(file, "os")
-	}
 
 	// Remove trailing blank return statement.
 	list := mainFunc.Body.List
