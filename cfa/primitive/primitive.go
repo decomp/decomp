@@ -12,6 +12,7 @@ type Primitive struct {
 	Node string `json:"node"`
 	// Node mapping; e.g. {"cond": "17", "body": "24", "exit": "32"}
 	Nodes map[string]string `json:"nodes"`
+	// TODO: Figure out how to represent edges.
 	// Entry node name.
 	Entry string `json:"entry"`
 	// Exit node name.

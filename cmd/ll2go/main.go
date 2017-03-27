@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	goerrors "errors"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -16,7 +17,10 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/decomp/decomp/cfa"
 	"github.com/decomp/decomp/cfa/primitive"
+	"github.com/decomp/decomp/graph/cfg"
+	"github.com/gonum/graph"
 	"github.com/llir/llvm/asm"
 	"github.com/llir/llvm/ir"
 	"github.com/llir/llvm/ir/constant"
@@ -75,19 +79,25 @@ func main() {
 
 	// Decompile LLVM IR files to Go source code.
 	for _, llPath := range flag.Args() {
-		if err := ll2go(llPath, funcNames); err != nil {
+		file, err := ll2go(llPath, funcNames)
+		if err != nil {
 			log.Fatalf("%+v", err)
 		}
+		// TODO: Remove debug output.
+		if err := printer.Fprint(os.Stdout, token.NewFileSet(), file); err != nil {
+			log.Fatalf("%+v", err)
+		}
+		fmt.Println()
 	}
 }
 
 // ll2go converts the given LLVM IR assembly file into a corresponding Go source
 // file.
-func ll2go(llPath string, funcNames map[string]bool) error {
+func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 	dbg.Printf("parsing file %q.", llPath)
 	module, err := asm.ParseFile(llPath)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
 	// Get functions set by `-funcs` or all functions if `-funcs` not used.
@@ -117,15 +127,32 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 		}
 		var prims []*primitive.Primitive
 		if len(f.Blocks) > 0 {
-			prims, err = parsePrims(srcName, f.Name)
+			// TODO: Clean up parsing of primitives.
+			//
+			//    1. Check if JSON file present on file system
+			//    2. If present, parse prims from file and log to dbg that
+			//       primitives are read from the JSON file.
+			//    3. If not present, perform control flow analysis in memory.
+			//
+			// Move parts shared between restructure and ll2go to decomp/cfa.
+
+			//prims, err = parsePrims(srcName, f.Name)
+			//if err != nil {
+			//	return nil, errors.WithStack(err)
+			//}
+			prims, err = genPrims(f)
 			if err != nil {
-				return errors.WithStack(err)
+				if errors.Cause(err) == ErrIncomplete {
+					dbg.Printf("WARNING: incomplete control flow recovery of %q", f.Name)
+				} else {
+					return nil, errors.WithStack(err)
+				}
 			}
 		}
 		dbg.Printf("decompiling function %q.", f.Name)
 		fn, err := d.funcDecl(f, prims)
 		if err != nil {
-			return errors.WithStack(err)
+			return nil, errors.WithStack(err)
 		}
 		file.Decls = append(file.Decls, fn)
 	}
@@ -193,7 +220,7 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 		case intSize < 64:
 			underlying = "int64"
 		default:
-			return errors.Errorf("support for integer type with bit size %d not yet implemented", intSize)
+			return nil, errors.Errorf("support for integer type with bit size %d not yet implemented", intSize)
 		}
 		spec := &ast.TypeSpec{
 			Name: ast.NewIdent(typeName),
@@ -213,12 +240,7 @@ func ll2go(llPath string, funcNames map[string]bool) error {
 		file.Name = ident(srcName)
 	}
 
-	// TODO: Remove debug output.
-	if err := printer.Fprint(os.Stdout, token.NewFileSet(), file); err != nil {
-		return errors.WithStack(err)
-	}
-	fmt.Println()
-	return nil
+	return file, nil
 }
 
 // A decompiler keeps track of relevant information during the decompilation
@@ -504,4 +526,68 @@ func parsePrims(srcName, funcName string) ([]*primitive.Primitive, error) {
 		return nil, errors.WithStack(err)
 	}
 	return prims, nil
+}
+
+// ErrIncomplete signals an incomplete control flow recovery.
+var ErrIncomplete = goerrors.New("incomplete control flow recovery")
+
+// locateEntryNode attempts to locate the entry node of the control flow graph
+// by searching for a single node in the control flow graph with no incoming
+// edges.
+func locateEntryNode(g *cfg.Graph) (graph.Node, error) {
+	var entry graph.Node
+	for _, n := range g.Nodes() {
+		preds := g.To(n)
+		if len(preds) == 0 {
+			if entry != nil {
+				return nil, errors.Errorf("more than one candidate for the entry node located; prev %q, new %q", label(entry), label(n))
+			}
+			entry = n
+		}
+	}
+	if entry == nil {
+		return nil, errors.Errorf("unable to locate entry node; try specifying an entry node label using the -entry flag")
+	}
+	return entry, nil
+}
+
+// genPrims returns the high-level primitives of the given function discovered
+// by control flow analysis.
+func genPrims(f *ir.Function) ([]*primitive.Primitive, error) {
+	g := cfg.New(f)
+	entry, err := locateEntryNode(g)
+	if err != nil {
+		log.Fatalf("%+v", err)
+	}
+	var prims []*primitive.Primitive
+	for len(g.Nodes()) > 1 {
+		// Locate primitive.
+		dom := cfg.NewDom(g, entry)
+		prim, err := cfa.FindPrim(g, dom)
+		if err != nil {
+			return prims, errors.Wrap(ErrIncomplete, err.Error())
+		}
+		prims = append(prims, prim)
+		// Merge the nodes of the primitive into a single node.
+		if err := cfa.Merge(g, prim); err != nil {
+			return nil, errors.WithStack(err)
+		}
+		// Handle special case where entry node has been replaced by primitive
+		// node.
+		if !g.Has(entry) {
+			entry = g.NodeByLabel(prim.Node)
+			if entry == nil {
+				return nil, errors.Errorf("unable to locate entry node %q", prim.Node)
+			}
+		}
+	}
+	return prims, nil
+}
+
+// label returns the label of the node.
+func label(n graph.Node) string {
+	if n, ok := n.(*cfg.Node); ok {
+		return n.Label
+	}
+	panic(fmt.Sprintf("invalid node type; expected *cfg.Node, got %T", n))
 }
