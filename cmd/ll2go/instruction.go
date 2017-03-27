@@ -316,104 +316,97 @@ func (d *decompiler) instGetElementPtr(inst *ir.InstGetElementPtr) ast.Stmt {
 // instTrunc converts the given LLVM IR trunc instruction to a corresponding Go
 // statement.
 func (d *decompiler) instTrunc(inst *ir.InstTrunc) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
+	panic("not yet implemented")
 	return d.assign(inst.Name, d.value(inst.From))
 }
 
 // instZExt converts the given LLVM IR zext instruction to a corresponding Go
 // statement.
 func (d *decompiler) instZExt(inst *ir.InstZExt) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
+	panic("not yet implemented")
 	return d.assign(inst.Name, d.value(inst.From))
 }
 
 // instSExt converts the given LLVM IR sext instruction to a corresponding Go
 // statement.
 func (d *decompiler) instSExt(inst *ir.InstSExt) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.assign(inst.Name, d.value(inst.From))
+	from := d.value(inst.From)
+	to := d.goType(inst.To)
+	// Type conversion represented as a Go call expression.
+	expr := &ast.CallExpr{
+		Fun:  to,
+		Args: []ast.Expr{from},
+	}
+	return d.assign(inst.Name, expr)
 }
 
 // instFPTrunc converts the given LLVM IR fptrunc instruction to a corresponding
 // Go statement.
 func (d *decompiler) instFPTrunc(inst *ir.InstFPTrunc) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
+	panic("not yet implemented")
 	return d.assign(inst.Name, d.value(inst.From))
 }
 
 // instFPExt converts the given LLVM IR fpext instruction to a corresponding Go
 // statement.
 func (d *decompiler) instFPExt(inst *ir.InstFPExt) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
+	panic("not yet implemented")
 	return d.assign(inst.Name, d.value(inst.From))
 }
 
 // instFPToUI converts the given LLVM IR fptoui instruction to a corresponding
 // Go statement.
 func (d *decompiler) instFPToUI(inst *ir.InstFPToUI) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
+	panic("not yet implemented")
 	return d.assign(inst.Name, d.value(inst.From))
 }
 
 // instFPToSI converts the given LLVM IR fptosi instruction to a corresponding
 // Go statement.
 func (d *decompiler) instFPToSI(inst *ir.InstFPToSI) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
+	panic("not yet implemented")
 	return d.assign(inst.Name, d.value(inst.From))
 }
 
 // instUIToFP converts the given LLVM IR uitofp instruction to a corresponding
 // Go statement.
 func (d *decompiler) instUIToFP(inst *ir.InstUIToFP) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
+	panic("not yet implemented")
 	return d.assign(inst.Name, d.value(inst.From))
 }
 
 // instSIToFP converts the given LLVM IR sitofp instruction to a corresponding
 // Go statement.
 func (d *decompiler) instSIToFP(inst *ir.InstSIToFP) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
+	panic("not yet implemented")
 	return d.assign(inst.Name, d.value(inst.From))
 }
 
 // instPtrToInt converts the given LLVM IR ptrtoint instruction to a
 // corresponding Go statement.
 func (d *decompiler) instPtrToInt(inst *ir.InstPtrToInt) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
+	panic("not yet implemented")
 	return d.assign(inst.Name, d.value(inst.From))
 }
 
 // instIntToPtr converts the given LLVM IR inttoptr instruction to a
 // corresponding Go statement.
 func (d *decompiler) instIntToPtr(inst *ir.InstIntToPtr) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
+	panic("not yet implemented")
 	return d.assign(inst.Name, d.value(inst.From))
 }
 
 // instBitCast converts the given LLVM IR bitcast instruction to a corresponding
 // Go statement.
 func (d *decompiler) instBitCast(inst *ir.InstBitCast) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
+	panic("not yet implemented")
 	return d.assign(inst.Name, d.value(inst.From))
 }
 
 // instAddrSpaceCast converts the given LLVM IR addrspacecast instruction to a
 // corresponding Go statement.
 func (d *decompiler) instAddrSpaceCast(inst *ir.InstAddrSpaceCast) ast.Stmt {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
+	panic("not yet implemented")
 	return d.assign(inst.Name, d.value(inst.From))
 }
 

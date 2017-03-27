@@ -115,7 +115,7 @@ func main() {
 		if errors.Cause(err) == ErrIncomplete {
 			// Do _not_ terminate on incomplete control flow recovery. Instead
 			// print partial results.
-			log.Printf("WARNING: %v", err)
+			dbg.Printf("WARNING: %v", err)
 		} else {
 			log.Fatalf("%+v", err)
 		}
