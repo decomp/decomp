@@ -77,7 +77,7 @@ func assignbinop(file *ast.File) bool {
 			case token.ADD, token.MUL, token.AND, token.OR, token.XOR:
 				// cumulative operation.
 			default:
-				// non-comulative operation.
+				// non-cumulative operation.
 				return
 			}
 			one = isOne(x)
