@@ -25,6 +25,7 @@ import (
 	"github.com/llir/llvm/ir"
 	"github.com/llir/llvm/ir/constant"
 	"github.com/llir/llvm/ir/value"
+	"github.com/mewkiz/pkg/osutil"
 	"github.com/mewkiz/pkg/pathutil"
 	"github.com/mewkiz/pkg/term"
 	"github.com/pkg/errors"
@@ -135,18 +136,9 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 			//    3. If not present, perform control flow analysis in memory.
 			//
 			// Move parts shared between restructure and ll2go to decomp/cfa.
-
-			//prims, err = parsePrims(srcName, f.Name)
-			//if err != nil {
-			//	return nil, errors.WithStack(err)
-			//}
-			prims, err = genPrims(f)
+			prims, err = parsePrims(srcName, f)
 			if err != nil {
-				if errors.Cause(err) == ErrIncomplete {
-					dbg.Printf("WARNING: incomplete control flow recovery of %q", f.Name)
-				} else {
-					return nil, errors.WithStack(err)
-				}
+				return nil, errors.WithStack(err)
 			}
 		}
 		dbg.Printf("decompiling function %q.", f.Name)
@@ -388,6 +380,7 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 				labelStmt.Stmt = &ast.EmptyStmt{}
 				blockStmts = append(blockStmts, labelStmt)
 			}
+			delete(d.labels, block.Name)
 		}
 		stmts = append(stmts, blockStmts...)
 		stmts = append(stmts, d.term(block.Term))
@@ -509,18 +502,34 @@ func (d *decompiler) stmts(block *basicBlock) []ast.Stmt {
 
 // parsePrims parses the JSON file containing a mapping of control flow
 // primitives for the given function.
-func parsePrims(srcName, funcName string) ([]*primitive.Primitive, error) {
-	// TODO: Generate prims if not present on file system.
+func parsePrims(srcName string, f *ir.Function) ([]*primitive.Primitive, error) {
 	graphsDir := fmt.Sprintf("%s_graphs", srcName)
-	jsonName := funcName + ".json"
+	jsonName := f.Name + ".json"
 	jsonPath := filepath.Join(graphsDir, jsonName)
-	var prims []*primitive.Primitive
-	f, err := os.Open(jsonPath)
+	// Generate primitives if not present on file system.
+	ok, err := osutil.Exists(jsonPath)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	defer f.Close()
-	r := bufio.NewReader(f)
+	if !ok {
+		prims, err := genPrims(f)
+		if err != nil {
+			if errors.Cause(err) == ErrIncomplete {
+				dbg.Printf("WARNING: incomplete control flow recovery of %q", f.Name)
+			} else {
+				return nil, errors.WithStack(err)
+			}
+		}
+		return prims, nil
+	}
+	// Parse primitives from file system.
+	var prims []*primitive.Primitive
+	fr, err := os.Open(jsonPath)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer fr.Close()
+	r := bufio.NewReader(fr)
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(&prims); err != nil {
 		return nil, errors.WithStack(err)
