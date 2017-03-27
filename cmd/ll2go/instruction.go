@@ -316,98 +316,79 @@ func (d *decompiler) instGetElementPtr(inst *ir.InstGetElementPtr) ast.Stmt {
 // instTrunc converts the given LLVM IR trunc instruction to a corresponding Go
 // statement.
 func (d *decompiler) instTrunc(inst *ir.InstTrunc) ast.Stmt {
-	panic("not yet implemented")
-	return d.assign(inst.Name, d.value(inst.From))
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instZExt converts the given LLVM IR zext instruction to a corresponding Go
 // statement.
 func (d *decompiler) instZExt(inst *ir.InstZExt) ast.Stmt {
-	panic("not yet implemented")
-	return d.assign(inst.Name, d.value(inst.From))
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instSExt converts the given LLVM IR sext instruction to a corresponding Go
 // statement.
 func (d *decompiler) instSExt(inst *ir.InstSExt) ast.Stmt {
-	from := d.value(inst.From)
-	to := d.goType(inst.To)
-	// Type conversion represented as a Go call expression.
-	expr := &ast.CallExpr{
-		Fun:  to,
-		Args: []ast.Expr{from},
-	}
-	return d.assign(inst.Name, expr)
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instFPTrunc converts the given LLVM IR fptrunc instruction to a corresponding
 // Go statement.
 func (d *decompiler) instFPTrunc(inst *ir.InstFPTrunc) ast.Stmt {
-	panic("not yet implemented")
-	return d.assign(inst.Name, d.value(inst.From))
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instFPExt converts the given LLVM IR fpext instruction to a corresponding Go
 // statement.
 func (d *decompiler) instFPExt(inst *ir.InstFPExt) ast.Stmt {
-	panic("not yet implemented")
-	return d.assign(inst.Name, d.value(inst.From))
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instFPToUI converts the given LLVM IR fptoui instruction to a corresponding
 // Go statement.
 func (d *decompiler) instFPToUI(inst *ir.InstFPToUI) ast.Stmt {
-	panic("not yet implemented")
-	return d.assign(inst.Name, d.value(inst.From))
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instFPToSI converts the given LLVM IR fptosi instruction to a corresponding
 // Go statement.
 func (d *decompiler) instFPToSI(inst *ir.InstFPToSI) ast.Stmt {
-	panic("not yet implemented")
-	return d.assign(inst.Name, d.value(inst.From))
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instUIToFP converts the given LLVM IR uitofp instruction to a corresponding
 // Go statement.
 func (d *decompiler) instUIToFP(inst *ir.InstUIToFP) ast.Stmt {
-	panic("not yet implemented")
-	return d.assign(inst.Name, d.value(inst.From))
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instSIToFP converts the given LLVM IR sitofp instruction to a corresponding
 // Go statement.
 func (d *decompiler) instSIToFP(inst *ir.InstSIToFP) ast.Stmt {
-	panic("not yet implemented")
-	return d.assign(inst.Name, d.value(inst.From))
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instPtrToInt converts the given LLVM IR ptrtoint instruction to a
 // corresponding Go statement.
 func (d *decompiler) instPtrToInt(inst *ir.InstPtrToInt) ast.Stmt {
-	panic("not yet implemented")
-	return d.assign(inst.Name, d.value(inst.From))
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instIntToPtr converts the given LLVM IR inttoptr instruction to a
 // corresponding Go statement.
 func (d *decompiler) instIntToPtr(inst *ir.InstIntToPtr) ast.Stmt {
-	panic("not yet implemented")
-	return d.assign(inst.Name, d.value(inst.From))
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instBitCast converts the given LLVM IR bitcast instruction to a corresponding
 // Go statement.
 func (d *decompiler) instBitCast(inst *ir.InstBitCast) ast.Stmt {
-	panic("not yet implemented")
-	return d.assign(inst.Name, d.value(inst.From))
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instAddrSpaceCast converts the given LLVM IR addrspacecast instruction to a
 // corresponding Go statement.
 func (d *decompiler) instAddrSpaceCast(inst *ir.InstAddrSpaceCast) ast.Stmt {
-	panic("not yet implemented")
-	return d.assign(inst.Name, d.value(inst.From))
+	return d.convert(inst.Name, inst.From, inst.To)
 }
 
 // instICmp converts the given LLVM IR icmp instruction to a corresponding Go
@@ -487,6 +468,17 @@ func (d *decompiler) binaryOp(x value.Value, op token.Token, y value.Value) ast.
 		Op: op,
 		Y:  d.value(y),
 	}
+}
+
+// convert returns a Go statement for converting the given LLVM IR value into
+// the specified type, storing the result in a local variable.
+func (d *decompiler) convert(name string, from value.Value, to irtypes.Type) ast.Stmt {
+	// Type conversion represented as a Go call expression.
+	expr := &ast.CallExpr{
+		Fun:  d.goType(to),
+		Args: []ast.Expr{d.value(from)},
+	}
+	return d.assign(name, expr)
 }
 
 // assign returns an assignment statement, assigning expr to the given local
