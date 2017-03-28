@@ -22,7 +22,7 @@ func (d *decompiler) constant(c constant.Constant) ast.Expr {
 		return d.constNull(c)
 	// Complex constants
 	case *constant.Vector:
-		panic("support for *constant.Vector not yet implemented")
+		return d.constVector(c)
 	case *constant.Array:
 		return d.constArray(c)
 	case *constant.Struct:
@@ -66,6 +66,19 @@ func (d *decompiler) constNull(c *constant.Null) ast.Expr {
 	return ast.NewIdent("nil")
 }
 
+// constVector converts the given LLVM IR vector constant to a corresponding Go
+// expression.
+func (d *decompiler) constVector(c *constant.Vector) ast.Expr {
+	var elems []ast.Expr
+	for _, e := range c.Elems {
+		elems = append(elems, d.constant(e))
+	}
+	return &ast.CompositeLit{
+		Type: d.goType(c.Typ),
+		Elts: elems,
+	}
+}
+
 // constArray converts the given LLVM IR array constant to a corresponding Go
 // expression.
 func (d *decompiler) constArray(c *constant.Array) ast.Expr {
@@ -74,7 +87,7 @@ func (d *decompiler) constArray(c *constant.Array) ast.Expr {
 	}
 	var elems []ast.Expr
 	for _, e := range c.Elems {
-		elems = append(elems, d.value(e))
+		elems = append(elems, d.constant(e))
 	}
 	return &ast.CompositeLit{
 		Type: d.goType(c.Typ),
@@ -294,12 +307,12 @@ func (d *decompiler) exprXor(expr *constant.ExprXor) ast.Expr {
 // exprGetElementPtr converts the given LLVM IR getelementptr expression to a
 // corresponding Go statement.
 func (d *decompiler) exprGetElementPtr(expr *constant.ExprGetElementPtr) ast.Expr {
-	src := d.value(expr.Src)
+	src := d.constant(expr.Src)
 	// TODO: Validate if index expressions should be added in reverse order.
 	for _, index := range expr.Indices {
 		src = &ast.IndexExpr{
 			X:     src,
-			Index: d.value(index),
+			Index: d.constant(index),
 		}
 	}
 	e := &ast.UnaryExpr{

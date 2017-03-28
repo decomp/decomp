@@ -57,7 +57,13 @@ func (d *decompiler) goType(t irtypes.Type) ast.Expr {
 			X: d.goType(t.Elem),
 		}
 	case *irtypes.VectorType:
-		panic("support for *types.VectorType not yet implemented")
+		return &ast.ArrayType{
+			Len: &ast.BasicLit{
+				Kind:  token.INT,
+				Value: strconv.FormatInt(t.Len, 10),
+			},
+			Elt: d.goType(t.Elem),
+		}
 	case *irtypes.LabelType:
 		panic("support for *types.LabelType not yet implemented")
 	case *irtypes.MetadataType:
