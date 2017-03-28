@@ -24,6 +24,7 @@ import (
 	"github.com/llir/llvm/asm"
 	"github.com/llir/llvm/ir"
 	"github.com/llir/llvm/ir/constant"
+	irtypes "github.com/llir/llvm/ir/types"
 	"github.com/llir/llvm/ir/value"
 	"github.com/mewkiz/pkg/osutil"
 	"github.com/mewkiz/pkg/pathutil"
@@ -111,10 +112,16 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 		funcs = append(funcs, f)
 	}
 
-	// Recover global variables.
+	// Recover type declarations.
 	srcName := pathutil.FileName(llPath)
 	file := &ast.File{}
 	d := newDecompiler()
+	for _, t := range module.Types {
+		typ := d.typeDecl(t)
+		file.Decls = append(file.Decls, typ)
+	}
+
+	// Recover global variables.
 	for _, g := range module.Globals {
 		global := d.globalDecl(g)
 		file.Decls = append(file.Decls, global)
@@ -261,11 +268,24 @@ func newDecompiler() *decompiler {
 	}
 }
 
+// typeDecl converts the given LLVM IR type into a corresponding Go type
+// declaration.
+func (d *decompiler) typeDecl(t irtypes.Type) *ast.GenDecl {
+	spec := &ast.TypeSpec{
+		Name: d.typeIdent(t.GetName()),
+		Type: d.goType(t),
+	}
+	return &ast.GenDecl{
+		Tok:   token.TYPE,
+		Specs: []ast.Spec{spec},
+	}
+}
+
 // globalDecl converts the given LLVM IR global into a corresponding Go variable
 // declaration.
 func (d *decompiler) globalDecl(g *ir.Global) *ast.GenDecl {
 	spec := &ast.ValueSpec{
-		Names:  []*ast.Ident{d.global(g.Name)},
+		Names:  []*ast.Ident{d.globalIdent(g.Name)},
 		Type:   d.goType(g.Typ),
 		Values: []ast.Expr{d.pointerToValue(g.Init)},
 	}
@@ -309,7 +329,7 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 	typ := d.goType(f.Sig)
 	sig := typ.(*ast.FuncType)
 	fn := &ast.FuncDecl{
-		Name: d.global(f.Name),
+		Name: d.globalIdent(f.Name),
 		Type: sig,
 	}
 	if len(f.Blocks) == 0 {
@@ -398,18 +418,27 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 	return fn, nil
 }
 
-// global converts the given LLVM IR global identifier to a corresponding Go
+// globalIdent converts the given LLVM IR type identifier to a corresponding Go
 // identifier.
-func (d *decompiler) global(name string) *ast.Ident {
+func (d *decompiler) typeIdent(name string) *ast.Ident {
 	if isID(name) {
 		name = "_" + name
 	}
 	return ident(name)
 }
 
-// local converts the given LLVM IR local identifier to a corresponding Go
+// globalIdent converts the given LLVM IR global identifier to a corresponding
+// Go identifier.
+func (d *decompiler) globalIdent(name string) *ast.Ident {
+	if isID(name) {
+		name = "_" + name
+	}
+	return ident(name)
+}
+
+// localIdent converts the given LLVM IR local identifier to a corresponding Go
 // identifier.
-func (d *decompiler) local(name string) *ast.Ident {
+func (d *decompiler) localIdent(name string) *ast.Ident {
 	if isID(name) {
 		name = "_" + name
 	}
@@ -452,9 +481,9 @@ func (d *decompiler) value(v value.Value) ast.Expr {
 	case value.Named:
 		switch v.(type) {
 		case *ir.Global, *ir.Function:
-			return d.global(v.GetName())
+			return d.globalIdent(v.GetName())
 		default:
-			return d.local(v.GetName())
+			return d.localIdent(v.GetName())
 		}
 	case constant.Constant:
 		return d.constant(v)

@@ -27,7 +27,7 @@ func (d *decompiler) goType(t irtypes.Type) ast.Expr {
 				Type: d.goType(p.Typ),
 			}
 			if len(p.Name) > 0 {
-				param.Names = append(param.Names, d.local(p.Name))
+				param.Names = append(param.Names, d.localIdent(p.Name))
 			}
 			params.List = append(params.List, param)
 		}

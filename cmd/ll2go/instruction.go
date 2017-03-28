@@ -425,7 +425,7 @@ func (d *decompiler) instFCmp(inst *ir.InstFCmp) ast.Stmt {
 // Go statement.
 func (d *decompiler) instSelect(inst *ir.InstSelect) []ast.Stmt {
 	spec := &ast.ValueSpec{
-		Names: []*ast.Ident{d.local(inst.Name)},
+		Names: []*ast.Ident{d.localIdent(inst.Name)},
 		Type:  d.goType(inst.X.Type()),
 	}
 	declStmt := &ast.DeclStmt{
@@ -453,10 +453,10 @@ func (d *decompiler) instCall(inst *ir.InstCall) ast.Stmt {
 	switch c := inst.Callee.(type) {
 	case *ir.Function:
 		// global function identifier.
-		callee = d.global(c.Name)
+		callee = d.globalIdent(c.Name)
 	case *irtypes.Param:
 		// local function identifier.
-		callee = d.local(c.Name)
+		callee = d.localIdent(c.Name)
 	case *constant.ExprBitCast:
 		callee = d.value(c)
 	default:
@@ -500,7 +500,7 @@ func (d *decompiler) convert(from value.Value, to irtypes.Type) ast.Expr {
 // variable.
 func (d *decompiler) assign(name string, expr ast.Expr) *ast.AssignStmt {
 	return &ast.AssignStmt{
-		Lhs: []ast.Expr{d.local(name)},
+		Lhs: []ast.Expr{d.localIdent(name)},
 		Tok: token.ASSIGN,
 		Rhs: []ast.Expr{expr},
 	}

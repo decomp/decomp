@@ -26,14 +26,14 @@ func (d *decompiler) constant(c constant.Constant) ast.Expr {
 	case *constant.Array:
 		return d.constArray(c)
 	case *constant.Struct:
-		panic("support for *constant.Struct not yet implemented")
+		return d.constStruct(c)
 	case *constant.ZeroInitializer:
 		panic("support for *constant.ZeroInitializer not yet implemented")
 	// Global variable and function addresses
 	case *ir.Global:
-		return d.global(c.Name)
+		return d.globalIdent(c.Name)
 	case *ir.Function:
-		return d.global(c.Name)
+		return d.globalIdent(c.Name)
 	// Constant expressions
 	case constant.Expr:
 		return d.expr(c)
@@ -92,6 +92,19 @@ func (d *decompiler) constArray(c *constant.Array) ast.Expr {
 	return &ast.CompositeLit{
 		Type: d.goType(c.Typ),
 		Elts: elems,
+	}
+}
+
+// constStruct converts the given LLVM IR struct constant to a corresponding Go
+// expression.
+func (d *decompiler) constStruct(c *constant.Struct) ast.Expr {
+	var fields []ast.Expr
+	for _, field := range c.Fields {
+		fields = append(fields, d.constant(field))
+	}
+	return &ast.CompositeLit{
+		Type: d.goType(c.Typ),
+		Elts: fields,
 	}
 }
 
