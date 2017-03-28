@@ -2,6 +2,15 @@
 
 Translate machine code (e.g. x86 assembly) to LLVM IR.
 
+## rev.ng
+
+https://github.com/revng/revamb
+
+Supported:
+* x86_64 -> LLVM IR
+* ARM -> LLVM IR
+* MIPS -> LLVM IR
+
 ## MC-Semantics
 
 https://github.com/trailofbits/mcsema
