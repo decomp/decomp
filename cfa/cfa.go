@@ -46,8 +46,8 @@ func FindPrim(g graph.Directed, dom cfg.Dom) (*primitive.Primitive, error) {
 	return nil, errors.New("unable to locate control flow primitive")
 }
 
-// Merge merges the nodes of the primitive into a single node, the label of
-// which is stored in prim.Node.
+// Merge merges the nodes of the primitive into a single node, which is assigned
+// the label of the entry node.
 func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
 	// Locate nodes to merge.
 	var nodes []graph.Node
@@ -68,16 +68,8 @@ func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
 	}
 
 	// Add new node for primitive.
-	var label string
-	for i := 0; ; i++ {
-		label = fmt.Sprintf("%s_%d", prim.Prim, i)
-		if g.NodeByLabel(label) == nil {
-			// unique label identified.
-			break
-		}
-	}
-	prim.Node = label
-	p := g.NewNodeWithLabel(label)
+	entryLabel := entry.Label
+	p := g.NewNode()
 
 	// Connect incoming edges to entry.
 	for _, from := range g.To(entry) {
@@ -102,6 +94,11 @@ func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
 	// Remove old nodes.
 	for _, node := range nodes {
 		g.RemoveNode(node)
+	}
+
+	// Set label of new primitive to the label of the entry node.
+	if err := g.SetLabel(p, entryLabel); err != nil {
+		return errors.WithStack(err)
 	}
 
 	return nil

@@ -204,16 +204,16 @@ func restructure(g *cfg.Graph, entry graph.Node, steps bool, name string) ([]*pr
 		// Handle special case where entry node has been replaced by primitive
 		// node.
 		if !g.Has(entry) {
-			entry = g.NodeByLabel(prim.Node)
+			entry = g.NodeByLabel(prim.Entry)
 			if entry == nil {
-				return nil, errors.Errorf("unable to locate entry node %q", prim.Node)
+				return nil, errors.Errorf("unable to locate entry node %q", prim.Entry)
 			}
 		}
 
 		// Output post-merge intermediate CFG.
 		if steps {
 			path := fmt.Sprintf("%s_%04db.dot", name, step)
-			highlight := []string{prim.Node}
+			highlight := []string{prim.Entry}
 			if err := storeStep(g, name, path, highlight); err != nil {
 				return nil, errors.WithStack(err)
 			}

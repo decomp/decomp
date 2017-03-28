@@ -38,9 +38,6 @@ func (prim PreLoop) Prim() *primitive.Primitive {
 	cond, body, exit := label(prim.Cond), label(prim.Body), label(prim.Exit)
 	return &primitive.Primitive{
 		Prim: "pre_loop",
-		// Note, the primitive node name should be set to a unique node ID when
-		// merged into the CFG.
-		Node: "",
 		Nodes: map[string]string{
 			"cond": cond,
 			"body": body,

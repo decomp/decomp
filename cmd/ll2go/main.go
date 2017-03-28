@@ -359,43 +359,38 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 	// A single remaining basic block indicates successful control flow recovery.
 	// If more than one basic block remains, unstructured control flow is added
 	// using goto-statements.
-	var stmts []ast.Stmt
 	var blocks basicBlocks
 	for _, block := range d.blocks {
 		blocks = append(blocks, block)
 	}
 	sort.Sort(blocks)
 	for _, block := range blocks {
-		blockStmts := d.stmts(block)
-		if d.labels[block.Name] {
-			// Insert label.
-			labelStmt := &ast.LabeledStmt{
-				Label: d.label(block.Name),
-			}
-			if len(blockStmts) > 0 {
-				stmt := blockStmts[0]
-				labelStmt.Stmt = stmt
-				blockStmts[0] = labelStmt
-			} else {
-				labelStmt.Stmt = &ast.EmptyStmt{}
-				blockStmts = append(blockStmts, labelStmt)
-			}
-			delete(d.labels, block.Name)
-		}
-		stmts = append(stmts, blockStmts...)
-		stmts = append(stmts, d.term(block.Term))
+		block.stmts = d.stmts(block)
+		block.stmts = append(block.stmts, d.term(block.Term))
 	}
 
 	// Insert labels of target branches into corresponding basic blocks.
 	for label := range d.labels {
+		// Insert label.
 		block, ok := d.blocks[label]
 		if !ok {
 			return nil, errors.Errorf("unable to locate basic block %q", label)
 		}
-		_ = block
-		// TODO: Implement.
+		if len(block.stmts) < 1 {
+			// A terminator statement should always be present.
+			return nil, errors.New("empty basic block; expected at least 1 statement")
+		}
+		labelStmt := &ast.LabeledStmt{
+			Label: d.label(block.Name),
+			Stmt:  block.stmts[0],
+		}
+		block.stmts[0] = labelStmt
 	}
 
+	var stmts []ast.Stmt
+	for _, block := range blocks {
+		stmts = append(stmts, block.stmts...)
+	}
 	body := &ast.BlockStmt{
 		List: stmts,
 	}
@@ -584,9 +579,9 @@ func genPrims(f *ir.Function) ([]*primitive.Primitive, error) {
 		// Handle special case where entry node has been replaced by primitive
 		// node.
 		if !g.Has(entry) {
-			entry = g.NodeByLabel(prim.Node)
+			entry = g.NodeByLabel(prim.Entry)
 			if entry == nil {
-				return nil, errors.Errorf("unable to locate entry node %q", prim.Node)
+				return nil, errors.Errorf("unable to locate entry node %q", prim.Entry)
 			}
 		}
 	}
