@@ -6,6 +6,7 @@ import (
 	"go/token"
 
 	"github.com/llir/llvm/ir"
+	"github.com/llir/llvm/ir/constant"
 	irtypes "github.com/llir/llvm/ir/types"
 	"github.com/llir/llvm/ir/value"
 )
@@ -443,6 +444,8 @@ func (d *decompiler) instCall(inst *ir.InstCall) ast.Stmt {
 	case *irtypes.Param:
 		// local function identifier.
 		callee = d.local(c.Name)
+	case *constant.ExprBitCast:
+		callee = d.value(c)
 	default:
 		panic(fmt.Sprintf("support for callee type %T not yet implemented", c))
 	}
