@@ -77,7 +77,21 @@ func (d *decompiler) goType(t irtypes.Type) ast.Expr {
 			Elt: d.goType(t.Elem),
 		}
 	case *irtypes.StructType:
-		panic("support for *types.StructType not yet implemented")
+		var fs []*ast.Field
+		for i, f := range t.Fields {
+			name := fmt.Sprintf("field_%d", i)
+			field := &ast.Field{
+				Names: []*ast.Ident{d.localIdent(name)},
+				Type:  d.goType(f),
+			}
+			fs = append(fs, field)
+		}
+		fields := &ast.FieldList{
+			List: fs,
+		}
+		return &ast.StructType{
+			Fields: fields,
+		}
 	default:
 		panic(fmt.Sprintf("support for type %T not yet implemented", t))
 	}
