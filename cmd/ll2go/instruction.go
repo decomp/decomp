@@ -317,79 +317,92 @@ func (d *decompiler) instGetElementPtr(inst *ir.InstGetElementPtr) ast.Stmt {
 // instTrunc converts the given LLVM IR trunc instruction to a corresponding Go
 // statement.
 func (d *decompiler) instTrunc(inst *ir.InstTrunc) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instZExt converts the given LLVM IR zext instruction to a corresponding Go
 // statement.
 func (d *decompiler) instZExt(inst *ir.InstZExt) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instSExt converts the given LLVM IR sext instruction to a corresponding Go
 // statement.
 func (d *decompiler) instSExt(inst *ir.InstSExt) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instFPTrunc converts the given LLVM IR fptrunc instruction to a corresponding
 // Go statement.
 func (d *decompiler) instFPTrunc(inst *ir.InstFPTrunc) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instFPExt converts the given LLVM IR fpext instruction to a corresponding Go
 // statement.
 func (d *decompiler) instFPExt(inst *ir.InstFPExt) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instFPToUI converts the given LLVM IR fptoui instruction to a corresponding
 // Go statement.
 func (d *decompiler) instFPToUI(inst *ir.InstFPToUI) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instFPToSI converts the given LLVM IR fptosi instruction to a corresponding
 // Go statement.
 func (d *decompiler) instFPToSI(inst *ir.InstFPToSI) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instUIToFP converts the given LLVM IR uitofp instruction to a corresponding
 // Go statement.
 func (d *decompiler) instUIToFP(inst *ir.InstUIToFP) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instSIToFP converts the given LLVM IR sitofp instruction to a corresponding
 // Go statement.
 func (d *decompiler) instSIToFP(inst *ir.InstSIToFP) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instPtrToInt converts the given LLVM IR ptrtoint instruction to a
 // corresponding Go statement.
 func (d *decompiler) instPtrToInt(inst *ir.InstPtrToInt) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instIntToPtr converts the given LLVM IR inttoptr instruction to a
 // corresponding Go statement.
 func (d *decompiler) instIntToPtr(inst *ir.InstIntToPtr) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instBitCast converts the given LLVM IR bitcast instruction to a corresponding
 // Go statement.
 func (d *decompiler) instBitCast(inst *ir.InstBitCast) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instAddrSpaceCast converts the given LLVM IR addrspacecast instruction to a
 // corresponding Go statement.
 func (d *decompiler) instAddrSpaceCast(inst *ir.InstAddrSpaceCast) ast.Stmt {
-	return d.convert(inst.Name, inst.From, inst.To)
+	expr := d.convert(inst.From, inst.To)
+	return d.assign(inst.Name, expr)
 }
 
 // instICmp converts the given LLVM IR icmp instruction to a corresponding Go
@@ -474,14 +487,13 @@ func (d *decompiler) binaryOp(x value.Value, op token.Token, y value.Value) ast.
 }
 
 // convert returns a Go statement for converting the given LLVM IR value into
-// the specified type, storing the result in a local variable.
-func (d *decompiler) convert(name string, from value.Value, to irtypes.Type) ast.Stmt {
+// the specified type.
+func (d *decompiler) convert(from value.Value, to irtypes.Type) ast.Expr {
 	// Type conversion represented as a Go call expression.
-	expr := &ast.CallExpr{
+	return &ast.CallExpr{
 		Fun:  d.goType(to),
 		Args: []ast.Expr{d.value(from)},
 	}
-	return d.assign(name, expr)
 }
 
 // assign returns an assignment statement, assigning expr to the given local

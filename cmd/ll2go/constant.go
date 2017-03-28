@@ -312,105 +312,79 @@ func (d *decompiler) exprGetElementPtr(expr *constant.ExprGetElementPtr) ast.Exp
 // exprTrunc converts the given LLVM IR trunc expression to a corresponding Go
 // statement.
 func (d *decompiler) exprTrunc(expr *constant.ExprTrunc) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprZExt converts the given LLVM IR zext expression to a corresponding Go
 // statement.
 func (d *decompiler) exprZExt(expr *constant.ExprZExt) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprSExt converts the given LLVM IR sext expression to a corresponding Go
 // statement.
 func (d *decompiler) exprSExt(expr *constant.ExprSExt) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprFPTrunc converts the given LLVM IR fptrunc expression to a corresponding
 // Go statement.
 func (d *decompiler) exprFPTrunc(expr *constant.ExprFPTrunc) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprFPExt converts the given LLVM IR fpext expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFPExt(expr *constant.ExprFPExt) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprFPToUI converts the given LLVM IR fptoui expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFPToUI(expr *constant.ExprFPToUI) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprFPToSI converts the given LLVM IR fptosi expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFPToSI(expr *constant.ExprFPToSI) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprUIToFP converts the given LLVM IR uitofp expression to a corresponding Go
 // statement.
 func (d *decompiler) exprUIToFP(expr *constant.ExprUIToFP) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprSIToFP converts the given LLVM IR sitofp expression to a corresponding Go
 // statement.
 func (d *decompiler) exprSIToFP(expr *constant.ExprSIToFP) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprPtrToInt converts the given LLVM IR ptrtoint expression to a
 // corresponding Go statement.
 func (d *decompiler) exprPtrToInt(expr *constant.ExprPtrToInt) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprIntToPtr converts the given LLVM IR inttoptr expression to a
 // corresponding Go statement.
 func (d *decompiler) exprIntToPtr(expr *constant.ExprIntToPtr) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprBitCast converts the given LLVM IR bitcast expression to a corresponding
 // Go statement.
 func (d *decompiler) exprBitCast(expr *constant.ExprBitCast) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprAddrSpaceCast converts the given LLVM IR addrspacecast expression to a
 // corresponding Go statement.
 func (d *decompiler) exprAddrSpaceCast(expr *constant.ExprAddrSpaceCast) ast.Expr {
-	// TODO: Add proper support for type conversion. For now, simply return the
-	// original value.
-	return d.value(expr.From)
+	return d.convert(expr.From, expr.To)
 }
 
 // exprICmp converts the given LLVM IR icmp expression to a corresponding Go
