@@ -65,6 +65,9 @@ func (d *decompiler) goTypeDef(t irtypes.Type) ast.Expr {
 			return ast.NewIdent("float32")
 		case irtypes.FloatKindIEEE_64:
 			return ast.NewIdent("float64")
+		case irtypes.FloatKindIEEE_16, irtypes.FloatKindIEEE_128, irtypes.FloatKindDoubleExtended_80, irtypes.FloatKindDoubleDouble_128:
+			// TODO: Add proper support for non-builtin float types.
+			return ast.NewIdent("float64")
 		default:
 			panic(fmt.Sprintf("support for floating-point kind %v not yet implemented", t.Kind))
 		}
