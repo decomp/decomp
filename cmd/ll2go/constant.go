@@ -28,7 +28,7 @@ func (d *decompiler) constant(c constant.Constant) ast.Expr {
 	case *constant.Struct:
 		return d.constStruct(c)
 	case *constant.ZeroInitializer:
-		panic("support for *constant.ZeroInitializer not yet implemented")
+		return d.constZeroInitializer(c)
 	// Global variable and function addresses
 	case *ir.Global:
 		return d.globalIdent(c.Name)
@@ -95,19 +95,6 @@ func (d *decompiler) constArray(c *constant.Array) ast.Expr {
 	}
 }
 
-// constStruct converts the given LLVM IR struct constant to a corresponding Go
-// expression.
-func (d *decompiler) constStruct(c *constant.Struct) ast.Expr {
-	var fields []ast.Expr
-	for _, field := range c.Fields {
-		fields = append(fields, d.constant(field))
-	}
-	return &ast.CompositeLit{
-		Type: d.goType(c.Typ),
-		Elts: fields,
-	}
-}
-
 // constCharArray converts the given LLVM IR character array constant to a
 // corresponding Go expression.
 func (d *decompiler) constCharArray(c *constant.Array) ast.Expr {
@@ -124,6 +111,25 @@ func (d *decompiler) constCharArray(c *constant.Array) ast.Expr {
 		Kind:  token.STRING,
 		Value: fmt.Sprintf("%q", string(buf)),
 	}
+}
+
+// constStruct converts the given LLVM IR struct constant to a corresponding Go
+// expression.
+func (d *decompiler) constStruct(c *constant.Struct) ast.Expr {
+	var fields []ast.Expr
+	for _, field := range c.Fields {
+		fields = append(fields, d.constant(field))
+	}
+	return &ast.CompositeLit{
+		Type: d.goType(c.Typ),
+		Elts: fields,
+	}
+}
+
+// constZeroInitializer converts the given LLVM IR zero initializer constant to
+// a corresponding Go expression.
+func (d *decompiler) constZeroInitializer(c *constant.ZeroInitializer) ast.Expr {
+	panic("not yet implemented")
 }
 
 // expr converts the given LLVM IR expression to a corresponding Go expression.
