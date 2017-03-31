@@ -129,7 +129,16 @@ func (d *decompiler) constStruct(c *constant.Struct) ast.Expr {
 // constZeroInitializer converts the given LLVM IR zero initializer constant to
 // a corresponding Go expression.
 func (d *decompiler) constZeroInitializer(c *constant.ZeroInitializer) ast.Expr {
-	panic("not yet implemented")
+	// Somewhat of a hack, but works :)
+	//
+	//    *new(T)
+	expr := &ast.CallExpr{
+		Fun:  ast.NewIdent("new"),
+		Args: []ast.Expr{d.goType(c.Typ)},
+	}
+	return &ast.StarExpr{
+		X: expr,
+	}
 }
 
 // expr converts the given LLVM IR expression to a corresponding Go expression.
