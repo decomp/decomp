@@ -325,9 +325,11 @@ func (d *decompiler) pointerToConst(c constant.Constant) ast.Expr {
 		}
 	// Global variable and function addresses
 	case *ir.Global:
-		panic("support for value *ir.Global not yet implemented")
+		// TODO: Check if `&g` should be returned instead of `g`.
+		return d.globalIdent(c.Name)
 	case *ir.Function:
-		panic("support for value *ir.Function not yet implemented")
+		// TODO: Check if `&f` should be returned instead of `f`.
+		return d.globalIdent(c.Name)
 	// Constant expressions
 	case constant.Expr:
 		panic("support for value constant.Expr not yet implemented")
