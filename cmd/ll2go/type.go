@@ -9,8 +9,17 @@ import (
 	irtypes "github.com/llir/llvm/ir/types"
 )
 
-// goType converts the given LLVM IR type to a corresponding Go type.
+// goType converts the LLVM IR type into a corresponding Go expression.
 func (d *decompiler) goType(t irtypes.Type) ast.Expr {
+	if name := t.GetName(); len(name) > 0 {
+		return d.typeIdent(name)
+	}
+	return d.goTypeDef(t)
+}
+
+// goTypeDef returns the definitions of the given LLVM IR type as a
+// corresponding Go type.
+func (d *decompiler) goTypeDef(t irtypes.Type) ast.Expr {
 	switch t := t.(type) {
 	case *irtypes.VoidType:
 		// The void type is only valid as a function return type in LLVM IR, or as

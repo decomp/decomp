@@ -112,12 +112,12 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 		funcs = append(funcs, f)
 	}
 
-	// Recover type declarations.
+	// Recover type definitions.
 	srcName := pathutil.FileName(llPath)
 	file := &ast.File{}
 	d := newDecompiler()
 	for _, t := range module.Types {
-		typ := d.typeDecl(t)
+		typ := d.typeDef(t)
 		file.Decls = append(file.Decls, typ)
 	}
 
@@ -268,12 +268,12 @@ func newDecompiler() *decompiler {
 	}
 }
 
-// typeDecl converts the given LLVM IR type into a corresponding Go type
-// declaration.
-func (d *decompiler) typeDecl(t irtypes.Type) *ast.GenDecl {
+// typeDef converts the given LLVM IR type into a corresponding Go type
+// definition.
+func (d *decompiler) typeDef(t irtypes.Type) *ast.GenDecl {
 	spec := &ast.TypeSpec{
 		Name: d.typeIdent(t.GetName()),
-		Type: d.goType(t),
+		Type: d.goTypeDef(t),
 	}
 	return &ast.GenDecl{
 		Tok:   token.TYPE,
