@@ -287,7 +287,7 @@ func (d *decompiler) globalDecl(g *ir.Global) *ast.GenDecl {
 	spec := &ast.ValueSpec{
 		Names:  []*ast.Ident{d.globalIdent(g.Name)},
 		Type:   d.goType(g.Typ),
-		Values: []ast.Expr{d.pointerToValue(g.Init)},
+		Values: []ast.Expr{d.pointerToConst(g.Init)},
 	}
 	return &ast.GenDecl{
 		Tok:   token.VAR,
@@ -295,27 +295,44 @@ func (d *decompiler) globalDecl(g *ir.Global) *ast.GenDecl {
 	}
 }
 
-// pointerToValue converts the given LLVM IR value to a pointer to v and returns
-// the corresponding Go expression.
-func (d *decompiler) pointerToValue(v value.Value) ast.Expr {
-	switch v := v.(type) {
-	case *constant.Null:
-		// nothing to do.
-		return d.value(v)
+// pointerToConst converts the given LLVM IR constant to a pointer to c and
+// returns the corresponding Go expression.
+func (d *decompiler) pointerToConst(c constant.Constant) ast.Expr {
+	switch c := c.(type) {
+	// Simple constants
 	case *constant.Int:
-		callee := fmt.Sprintf("newInt%d", v.Typ.Size)
-		d.newIntSizes[v.Typ.Size] = true
+		callee := fmt.Sprintf("newInt%d", c.Typ.Size)
+		d.newIntSizes[c.Typ.Size] = true
 		return &ast.CallExpr{
 			Fun:  ast.NewIdent(callee),
-			Args: []ast.Expr{d.value(v)},
+			Args: []ast.Expr{d.value(c)},
 		}
-	case *constant.Array:
+	case *constant.Float:
+		panic("support for value *constant.Float not yet implemented")
+	case *constant.Null:
+		// nothing to do.
+		return d.value(c)
+	// Complex constants
+	case *constant.Vector, *constant.Array, *constant.Struct:
 		return &ast.UnaryExpr{
 			Op: token.AND,
-			X:  d.value(v),
+			X:  d.value(c),
 		}
+	case *constant.ZeroInitializer:
+		return &ast.CallExpr{
+			Fun:  ast.NewIdent("new"),
+			Args: []ast.Expr{d.goType(c.Typ)},
+		}
+	// Global variable and function addresses
+	case *ir.Global:
+		panic("support for value *ir.Global not yet implemented")
+	case *ir.Function:
+		panic("support for value *ir.Function not yet implemented")
+	// Constant expressions
+	case constant.Expr:
+		panic("support for value constant.Expr not yet implemented")
 	default:
-		panic(fmt.Sprintf("support for value %T not yet implemented", v))
+		panic(fmt.Sprintf("support for value %T not yet implemented", c))
 	}
 }
 
