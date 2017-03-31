@@ -83,7 +83,24 @@ func (d *decompiler) termCondBr(term *ir.TermCondBr) ast.Stmt {
 // statement.
 func (d *decompiler) termSwitch(term *ir.TermSwitch) ast.Stmt {
 	// Use goto-statements as a fallback for incomplete control flow recovery.
-	panic("not yet implemented")
+	var cases []ast.Stmt
+	for _, c := range term.Cases {
+		gotoStmt := &ast.BranchStmt{
+			Tok:   token.GOTO,
+			Label: d.localIdent(c.Target.Name),
+		}
+		cc := &ast.CaseClause{
+			List: []ast.Expr{d.value(c.X)},
+			Body: []ast.Stmt{gotoStmt},
+		}
+		cases = append(cases, cc)
+	}
+	return &ast.SwitchStmt{
+		Tag: d.value(term.X),
+		Body: &ast.BlockStmt{
+			List: cases,
+		},
+	}
 }
 
 // termUnreachable converts the given LLVM IR unreachable termiantor to a
