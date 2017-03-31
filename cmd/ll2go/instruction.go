@@ -459,6 +459,8 @@ func (d *decompiler) instCall(inst *ir.InstCall) ast.Stmt {
 		callee = d.localIdent(c.Name)
 	case *constant.ExprBitCast:
 		callee = d.value(c)
+	case *ir.InstLoad:
+		callee = d.value(c)
 	default:
 		panic(fmt.Sprintf("support for callee type %T not yet implemented", c))
 	}
