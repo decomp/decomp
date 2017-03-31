@@ -187,11 +187,23 @@ func (d *decompiler) primIf(condBlock, bodyBlock, exitBlock *basicBlock) (*basic
 // corresponding conceputal basic block for the primitive.
 func (d *decompiler) primIfElse(condBlock, bodyTrueBlock, bodyFalseBlock, exitBlock *basicBlock) (*basicBlock, error) {
 	// Handle terminators.
-	condTerm, ok := condBlock.Term.(*ir.TermCondBr)
-	if !ok {
+	var cond ast.Expr
+	switch condTerm := condBlock.Term.(type) {
+	case *ir.TermCondBr:
+		cond = d.value(condTerm.Cond)
+	case *ir.TermSwitch:
+		cases := condTerm.Cases
+		if len(cases) != 1 {
+			return nil, errors.Errorf("invalid number of switch cases in if_else primitive; expected 1, got %d", len(cases))
+		}
+		cond = &ast.BinaryExpr{
+			X:  d.value(condTerm.X),
+			Op: token.EQL,
+			Y:  d.constant(cases[0].X),
+		}
+	default:
 		return nil, errors.Errorf("invalid cond terminator type; expected *ir.TermCondBr, got %T", condBlock.Term)
 	}
-	cond := d.value(condTerm.Cond)
 	// TODO: Figure out a clean way to check if the body_true basic block is the
 	// true branch or the false branch. If body_true is the false branch, use
 	// body_true for the else body of the if-statement.
