@@ -60,7 +60,14 @@ func (d *decompiler) goTypeDef(t irtypes.Type) ast.Expr {
 			Name: fmt.Sprintf("int%d", t.Size),
 		}
 	case *irtypes.FloatType:
-		panic("support for *types.FloatType not yet implemented")
+		switch t.Kind {
+		case irtypes.FloatKindIEEE_32:
+			return ast.NewIdent("float32")
+		case irtypes.FloatKindIEEE_64:
+			return ast.NewIdent("float64")
+		default:
+			panic(fmt.Sprintf("support for floating-point kind %v not yet implemented", t.Kind))
+		}
 	case *irtypes.PointerType:
 		return &ast.StarExpr{
 			X: d.goType(t.Elem),
