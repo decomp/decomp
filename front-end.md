@@ -26,6 +26,13 @@ Supported:
 * x86 -> LLVM IR
 * x86_64 -> LLVM IR
 
+## fcd
+
+https://github.com/zneak/fcd
+
+Supported:
+* x86_64 -> LLVM IR
+
 ## Fracture
 
 https://github.com/draperlaboratory/fracture
