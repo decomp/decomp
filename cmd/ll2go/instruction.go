@@ -122,6 +122,10 @@ func (d *decompiler) inst(inst ir.Instruction) ast.Stmt {
 		panic(fmt.Sprintf("unexpected select instruction `%v`", inst))
 	case *ir.InstCall:
 		return d.instCall(inst)
+	case *ir.InstExtractValue:
+		return d.instExtractValue(inst)
+	case *ir.InstExtractElement:
+		return d.instExtractElement(inst)
 	default:
 		panic(fmt.Sprintf("support for instruction %T not yet implemented", inst))
 	}
@@ -313,6 +317,26 @@ func (d *decompiler) instGetElementPtr(inst *ir.InstGetElementPtr) ast.Stmt {
 	}
 	return d.assign(inst.Name, expr)
 }
+
+func (d *decompiler) instExtractValue(inst *ir.InstExtractValue) ast.Stmt {
+	src := d.value(inst.X)
+	for _, index := range inst.Indices {
+		src = &ast.IndexExpr{
+			X:     src,
+			Index: d.int(index),
+		}
+	}
+	return d.assign(inst.Name, src)
+}
+
+func (d *decompiler) instExtractElement(inst *ir.InstExtractElement) ast.Stmt {
+	src := &ast.IndexExpr{
+		X:     d.value(inst.X),
+		Index: d.value(inst.Index),
+	}
+	return d.assign(inst.Name, src)
+}
+
 
 // instTrunc converts the given LLVM IR trunc instruction to a corresponding Go
 // statement.
