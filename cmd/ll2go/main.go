@@ -218,8 +218,8 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 			underlying = "int32"
 		case intSize < 64:
 			underlying = "int64"
-		default: // math.Big
-			underlying =  "Int"
+		default:
+			return nil, errors.Errorf("support for integer type with bit size %d not yet implemented", intSize)
 		}
 		spec := &ast.TypeSpec{
 			Name: ast.NewIdent(typeName),
@@ -511,7 +511,8 @@ func (d *decompiler) value(v value.Value) ast.Expr {
 	}
 }
 
-func (d *decompiler) int(i int64) ast.Expr {
+// intLit converts the given integer literal into a corresponding Go expression.
+func (d *decompiler) intLit(i int64) ast.Expr {
 	return &ast.BasicLit{
 		Kind:  token.INT,
 		Value: fmt.Sprintf("%d", i),
