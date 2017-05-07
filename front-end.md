@@ -79,3 +79,11 @@ https://github.com/dslab-epfl/s2e/blob/revgen/docs/Tools/StaticTranslator.rst
 Supported:
 
 * x86 -> LLVM IR
+
+## Clang
+
+https://clang.llvm.org/
+
+Supported:
+* C -> LLVM IR
+* C++ -> LLVM IR
