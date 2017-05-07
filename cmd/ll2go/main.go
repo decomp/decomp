@@ -511,6 +511,15 @@ func (d *decompiler) value(v value.Value) ast.Expr {
 	}
 }
 
+// intLit converts the given integer literal into a corresponding Go expression.
+func (d *decompiler) intLit(i int64) ast.Expr {
+	return &ast.BasicLit{
+		Kind:  token.INT,
+		Value: fmt.Sprintf("%d", i),
+	}
+}
+
+
 // basicBlock represents a conceptual basic block, that may contain both LLVM IR
 // instructions and Go statements.
 type basicBlock struct {
