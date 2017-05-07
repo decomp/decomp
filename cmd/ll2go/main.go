@@ -519,7 +519,6 @@ func (d *decompiler) intLit(i int64) ast.Expr {
 	}
 }
 
-
 // basicBlock represents a conceptual basic block, that may contain both LLVM IR
 // instructions and Go statements.
 type basicBlock struct {

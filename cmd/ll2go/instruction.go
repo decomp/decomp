@@ -73,6 +73,18 @@ func (d *decompiler) inst(inst ir.Instruction) ast.Stmt {
 		return d.instOr(inst)
 	case *ir.InstXor:
 		return d.instXor(inst)
+	// Vector instructions
+	case *ir.InstExtractElement:
+		return d.instExtractElement(inst)
+	case *ir.InstInsertElement:
+		return d.instInsertElement(inst)
+	case *ir.InstShuffleVector:
+		return d.instShuffleVector(inst)
+	// Aggregate instructions
+	case *ir.InstExtractValue:
+		return d.instExtractValue(inst)
+	case *ir.InstInsertValue:
+		return d.instInsertValue(inst)
 	// Memory instructions
 	case *ir.InstAlloca:
 		return d.instAlloca(inst)
@@ -122,10 +134,6 @@ func (d *decompiler) inst(inst ir.Instruction) ast.Stmt {
 		panic(fmt.Sprintf("unexpected select instruction `%v`", inst))
 	case *ir.InstCall:
 		return d.instCall(inst)
-	case *ir.InstExtractValue:
-		return d.instExtractValue(inst)
-	case *ir.InstExtractElement:
-		return d.instExtractElement(inst)
 	default:
 		panic(fmt.Sprintf("support for instruction %T not yet implemented", inst))
 	}
@@ -260,6 +268,50 @@ func (d *decompiler) instXor(inst *ir.InstXor) ast.Stmt {
 	return d.assign(inst.Name, expr)
 }
 
+// instExtractElement converts the given LLVM IR extractelement instruction to a
+// corresponding Go statement.
+func (d *decompiler) instExtractElement(inst *ir.InstExtractElement) ast.Stmt {
+	src := &ast.IndexExpr{
+		X:     d.value(inst.X),
+		Index: d.value(inst.Index),
+	}
+	return d.assign(inst.Name, src)
+}
+
+// instInsertElement converts the given LLVM IR insertelement instruction to a
+// corresponding Go statement.
+func (d *decompiler) instInsertElement(inst *ir.InstInsertElement) ast.Stmt {
+	// TODO: Implement insertelement.
+	panic("not yet implemented")
+}
+
+// instShuffleVector converts the given LLVM IR shufflevector instruction to a
+// corresponding Go statement.
+func (d *decompiler) instShuffleVector(inst *ir.InstShuffleVector) ast.Stmt {
+	// TODO: Implement shufflevector.
+	panic("not yet implemented")
+}
+
+// instExtractValue converts the given LLVM IR extractvalue instruction to a
+// corresponding Go statement.
+func (d *decompiler) instExtractValue(inst *ir.InstExtractValue) ast.Stmt {
+	src := d.value(inst.X)
+	for _, index := range inst.Indices {
+		src = &ast.IndexExpr{
+			X:     src,
+			Index: d.intLit(index),
+		}
+	}
+	return d.assign(inst.Name, src)
+}
+
+// instInsertValue converts the given LLVM IR insertvalue instruction to a
+// corresponding Go statement.
+func (d *decompiler) instInsertValue(inst *ir.InstInsertValue) ast.Stmt {
+	// TODO: Implement insertvalue.
+	panic("not yet implemented")
+}
+
 // instAlloca converts the given LLVM IR alloca instruction to a corresponding
 // Go statement.
 func (d *decompiler) instAlloca(inst *ir.InstAlloca) ast.Stmt {
@@ -317,26 +369,6 @@ func (d *decompiler) instGetElementPtr(inst *ir.InstGetElementPtr) ast.Stmt {
 	}
 	return d.assign(inst.Name, expr)
 }
-
-func (d *decompiler) instExtractValue(inst *ir.InstExtractValue) ast.Stmt {
-	src := d.value(inst.X)
-	for _, index := range inst.Indices {
-		src = &ast.IndexExpr{
-			X:     src,
-			Index: d.intLit(index),
-		}
-	}
-	return d.assign(inst.Name, src)
-}
-
-func (d *decompiler) instExtractElement(inst *ir.InstExtractElement) ast.Stmt {
-	src := &ast.IndexExpr{
-		X:     d.value(inst.X),
-		Index: d.value(inst.Index),
-	}
-	return d.assign(inst.Name, src)
-}
-
 
 // instTrunc converts the given LLVM IR trunc instruction to a corresponding Go
 // statement.
