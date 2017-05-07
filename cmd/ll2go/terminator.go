@@ -41,9 +41,6 @@ func (d *decompiler) termRet(term *ir.TermRet) ast.Stmt {
 // statement.
 func (d *decompiler) termBr(term *ir.TermBr) ast.Stmt {
 	// Use goto-statements as a fallback for incomplete control flow recovery.
-
-	// TODO: Track and update target basic block name, if the target has been
-	// merged into a high-level primitive.
 	d.labels[term.Target.Name] = true
 	return &ast.BranchStmt{
 		Tok:   token.GOTO,
@@ -55,9 +52,6 @@ func (d *decompiler) termBr(term *ir.TermBr) ast.Stmt {
 // corresponding Go statement.
 func (d *decompiler) termCondBr(term *ir.TermCondBr) ast.Stmt {
 	// Use goto-statements as a fallback for incomplete control flow recovery.
-
-	// TODO: Track and update target basic block name, if the target has been
-	// merged into a high-level primitive.
 	d.labels[term.TargetTrue.Name] = true
 	d.labels[term.TargetFalse.Name] = true
 	gotoTrueStmt := &ast.BranchStmt{

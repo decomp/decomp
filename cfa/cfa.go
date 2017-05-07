@@ -38,6 +38,11 @@ func FindPrim(g graph.Directed, dom cfg.Dom) (*primitive.Primitive, error) {
 		return prim.Prim(), nil
 	}
 
+	// TODO: Locate n-way conditionals.
+	//if prim, ok := FindSwitch(g, dom); ok {
+	//	return prim.Prim(), nil
+	//}
+
 	// Locate sequences of two statements.
 	if prim, ok := FindSeq(g, dom); ok {
 		return prim.Prim(), nil

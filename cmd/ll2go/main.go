@@ -550,11 +550,7 @@ func parsePrims(srcName string, f *ir.Function) ([]*primitive.Primitive, error) 
 	jsonName := f.Name + ".json"
 	jsonPath := filepath.Join(graphsDir, jsonName)
 	// Generate primitives if not present on file system.
-	ok, err := osutil.Exists(jsonPath)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	if !ok {
+	if !osutil.Exists(jsonPath) {
 		prims, err := genPrims(f)
 		if err != nil {
 			if errors.Cause(err) == ErrIncomplete {
