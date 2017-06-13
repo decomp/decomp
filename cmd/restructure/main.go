@@ -28,6 +28,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	goerrors "errors"
 	"flag"
 	"fmt"
 	"io"
@@ -111,7 +112,13 @@ func main() {
 	// Perform control flow analysis.
 	prims, err := restructure(g, entry, steps, name)
 	if err != nil {
-		log.Fatalf("%+v", err)
+		if errors.Cause(err) == ErrIncomplete {
+			// Do _not_ terminate on incomplete control flow recovery. Instead
+			// print partial results.
+			dbg.Printf("WARNING: %v", err)
+		} else {
+			log.Fatalf("%+v", err)
+		}
 	}
 
 	// Store JSON output.
@@ -156,6 +163,9 @@ func locateEntryNode(g *cfg.Graph, entryLabel string) (graph.Node, error) {
 	return entry, nil
 }
 
+// ErrIncomplete signals an incomplete control flow recovery.
+var ErrIncomplete = goerrors.New("incomplete control flow recovery")
+
 // restructure attempts to recover the control flow primitives of a given
 // control flow graph. It does so by repeatedly locating and merging structured
 // subgraphs (graph representations of control flow primitives) into single
@@ -163,14 +173,15 @@ func locateEntryNode(g *cfg.Graph, entryLabel string) (graph.Node, error) {
 // subgraphs may be located. The steps argument specifies whether to record the
 // intermediate CFGs at each step. The returned list of primitives is ordered in
 // the same sequence as they were located.
-func restructure(g *cfg.Graph, entry graph.Node, steps bool, name string) (prims []*primitive.Primitive, err error) {
+func restructure(g *cfg.Graph, entry graph.Node, steps bool, name string) ([]*primitive.Primitive, error) {
+	prims := make([]*primitive.Primitive, 0)
 	// Locate control flow primitives.
 	for step := 1; len(g.Nodes()) > 1; step++ {
 		// Locate primitive.
 		dom := cfg.NewDom(g, entry)
 		prim, err := cfa.FindPrim(g, dom)
 		if err != nil {
-			return nil, errors.WithStack(err)
+			return prims, errors.Wrap(ErrIncomplete, err.Error())
 		}
 		prims = append(prims, prim)
 
@@ -193,16 +204,16 @@ func restructure(g *cfg.Graph, entry graph.Node, steps bool, name string) (prims
 		// Handle special case where entry node has been replaced by primitive
 		// node.
 		if !g.Has(entry) {
-			entry = g.NodeByLabel(prim.Node)
+			entry = g.NodeByLabel(prim.Entry)
 			if entry == nil {
-				return nil, errors.Errorf("unable to locate entry node %q", prim.Node)
+				return nil, errors.Errorf("unable to locate entry node %q", prim.Entry)
 			}
 		}
 
 		// Output post-merge intermediate CFG.
 		if steps {
 			path := fmt.Sprintf("%s_%04db.dot", name, step)
-			highlight := []string{prim.Node}
+			highlight := []string{prim.Entry}
 			if err := storeStep(g, name, path, highlight); err != nil {
 				return nil, errors.WithStack(err)
 			}

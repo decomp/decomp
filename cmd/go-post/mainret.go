@@ -6,10 +6,7 @@ package main
 
 import (
 	"go/ast"
-	"go/token"
 	"log"
-
-	"golang.org/x/tools/go/ast/astutil"
 )
 
 func init() {
@@ -25,9 +22,7 @@ var mainretFix = fix{
 
 func mainret(file *ast.File) bool {
 	fixed := false
-
-	// Add "os" import.
-	addImport(file, "os")
+	hasOS := false
 
 	// Locate the "main" function.
 	mainFunc, ok := findMainFunc(file)
@@ -79,6 +74,10 @@ func mainret(file *ast.File) bool {
 				// Replace "return 0" with "return".
 				retStmt.Results = nil
 			} else {
+				// Add "os" import if needed.
+				if !hasOS {
+					addImport(file, "os")
+				}
 				// Replace "return 42" with "os.Exit(42)".
 				exit := createExit(result)
 				*stmt = exit
@@ -88,11 +87,6 @@ func mainret(file *ast.File) bool {
 			log.Fatalf("invalid number of arguments to return; expected 1, got %d", len(retStmt.Results))
 		}
 	})
-
-	// Remove "os" import if not required.
-	if !astutil.UsesImport(file, "os") {
-		astutil.DeleteImport(token.NewFileSet(), file, "os")
-	}
 
 	// Remove trailing blank return statement.
 	list := mainFunc.Body.List

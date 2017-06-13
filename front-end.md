@@ -2,6 +2,15 @@
 
 Translate machine code (e.g. x86 assembly) to LLVM IR.
 
+## rev.ng
+
+https://github.com/revng/revamb
+
+Supported:
+* x86_64 -> LLVM IR
+* ARM -> LLVM IR
+* MIPS -> LLVM IR
+
 ## MC-Semantics
 
 https://github.com/trailofbits/mcsema
@@ -16,6 +25,39 @@ https://github.com/trailofbits/remill
 Supported:
 * x86 -> LLVM IR
 * x86_64 -> LLVM IR
+
+## fcd
+
+https://github.com/zneak/fcd
+
+Supported:
+* x86_64 -> LLVM IR
+
+## Dagger
+
+http://dagger.repzret.org/
+
+Supported:
+* x86 -> LLVM IR
+
+Future:
+* ARM -> LLVM IR
+
+## RevGen
+
+https://github.com/dslab-epfl/s2e/blob/revgen/docs/Tools/StaticTranslator.rst
+
+Supported:
+
+* x86 -> LLVM IR
+
+## Clang
+
+https://clang.llvm.org/
+
+Supported:
+* C -> LLVM IR
+* C++ -> LLVM IR
 
 ## Fracture
 
@@ -34,16 +76,6 @@ Future:
 * x86 -> LLVM IR
 * x86_64 -> LLVM IR
 
-## Dagger
-
-http://dagger.repzret.org/
-
-Supported:
-* x86 -> LLVM IR
-
-Future:
-* ARM -> LLVM IR
-
 ## OpenREIL
 
 https://github.com/Cr4sh/openreil
@@ -55,11 +87,3 @@ Supported:
 Future:
 * x86_64 -> REIL
 * REIL -> LLVM IR
-
-## RevGen
-
-https://github.com/dslab-epfl/s2e/blob/revgen/docs/Tools/StaticTranslator.rst
-
-Supported:
-
-* x86 -> LLVM IR

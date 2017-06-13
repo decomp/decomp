@@ -68,11 +68,18 @@ func assignbinop(file *ast.File) bool {
 		one := false
 		switch {
 		case isName(x, ident.Name):
-			// x = x + y
+			// a = a + b
 			one = isOne(y)
 			rhs = []ast.Expr{y}
 		case isName(y, ident.Name):
-			// x = y + x
+			// a = b + a
+			switch binExpr.Op {
+			case token.ADD, token.MUL, token.AND, token.OR, token.XOR:
+				// cumulative operation.
+			default:
+				// non-cumulative operation.
+				return
+			}
 			one = isOne(x)
 			rhs = []ast.Expr{x}
 		default:

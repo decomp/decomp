@@ -43,9 +43,6 @@ func (prim IfElse) Prim() *primitive.Primitive {
 	cond, bodyTrue, bodyFalse, exit := label(prim.Cond), label(prim.BodyTrue), label(prim.BodyFalse), label(prim.Exit)
 	return &primitive.Primitive{
 		Prim: "if_else",
-		// Note, the primitive node name should be set to a unique node ID when
-		// merged into the CFG.
-		Node: "",
 		Nodes: map[string]string{
 			"cond":       cond,
 			"body_true":  bodyTrue,

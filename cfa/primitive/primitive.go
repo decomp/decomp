@@ -8,10 +8,9 @@ package primitive
 type Primitive struct {
 	// Primitive name; e.g. "if", "pre_loop", ...
 	Prim string `json:"prim"`
-	// Node name of the primitive; e.g. "33".
-	Node string `json:"node"`
 	// Node mapping; e.g. {"cond": "17", "body": "24", "exit": "32"}
 	Nodes map[string]string `json:"nodes"`
+	// TODO: Figure out how to represent edges.
 	// Entry node name.
 	Entry string `json:"entry"`
 	// Exit node name.

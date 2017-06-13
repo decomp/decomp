@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/gonum/graph/encoding/dot"
@@ -19,6 +20,9 @@ func (a Attrs) DOTAttributes() []dot.Attribute {
 	sort.Strings(keys)
 	for _, key := range keys {
 		val := a[key]
+		if key == "label" {
+			val = fmt.Sprintf("%q", val)
+		}
 		attr := dot.Attribute{
 			Key:   key,
 			Value: val,

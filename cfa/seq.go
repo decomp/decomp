@@ -33,9 +33,6 @@ func (prim Seq) Prim() *primitive.Primitive {
 	entry, exit := label(prim.Entry), label(prim.Exit)
 	return &primitive.Primitive{
 		Prim: "seq",
-		// Note, the primitive node name should be set to a unique node ID when
-		// merged into the CFG.
-		Node: "",
 		Nodes: map[string]string{
 			"entry": entry,
 			"exit":  exit,

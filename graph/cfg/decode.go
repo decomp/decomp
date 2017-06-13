@@ -1,30 +1,28 @@
 package cfg
 
 import (
+	"io/ioutil"
 	"strconv"
 	"strings"
 
 	"github.com/gonum/graph"
-	"github.com/graphism/dot"
-	"github.com/graphism/dot/ast"
+	"github.com/gonum/graph/encoding/dot"
 	"github.com/pkg/errors"
 )
 
 // ParseFile parses the given Graphviz DOT file into a control flow graph.
 func ParseFile(path string) (*Graph, error) {
-	file, err := dot.ParseFile(path)
+	g := newGraph()
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	if len(file.Graphs) != 1 {
-		return nil, errors.Errorf("invalid number of graphs in DOT file %q; expected 1, got %d", path, len(file.Graphs))
+	if err := dot.Unmarshal(data, g); err != nil {
+		return nil, errors.WithStack(err)
 	}
-	src := file.Graphs[0]
-	g := newGraph()
-	dot.CopyDirected(g, src)
 	for _, n := range g.Nodes() {
 		if n, ok := n.(*Node); ok {
-			if len(n.Label) < 1 {
+			if len(n.Label) == 0 {
 				return nil, errors.Errorf("invalid node %#v; missing node label", n)
 			}
 			if prev, ok := g.nodes[n.Label]; ok {
@@ -48,13 +46,14 @@ func (g *Graph) NewEdge(from, to graph.Node) graph.Edge {
 }
 
 // UnmarshalDOTAttr decodes a single DOT attribute.
-func (n *Node) UnmarshalDOTAttr(attr *ast.Attr) error {
+func (n *Node) UnmarshalDOTAttr(attr dot.Attribute) error {
+	n.Attrs[attr.Key] = attr.Value
 	switch attr.Key {
 	case "label":
-		s := attr.Val
+		s := attr.Value
 		if strings.HasPrefix(s, `"`) && strings.HasSuffix(s, `"`) {
 			var err error
-			s, err = strconv.Unquote(attr.Val)
+			s, err = strconv.Unquote(attr.Value)
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -67,13 +66,14 @@ func (n *Node) UnmarshalDOTAttr(attr *ast.Attr) error {
 }
 
 // UnmarshalDOTAttr decodes a single DOT attribute.
-func (e *Edge) UnmarshalDOTAttr(attr *ast.Attr) error {
+func (e *Edge) UnmarshalDOTAttr(attr dot.Attribute) error {
+	e.Attrs[attr.Key] = attr.Value
 	switch attr.Key {
 	case "label":
-		s := attr.Val
+		s := attr.Value
 		if strings.HasPrefix(s, `"`) && strings.HasSuffix(s, `"`) {
 			var err error
-			s, err = strconv.Unquote(attr.Val)
+			s, err = strconv.Unquote(attr.Value)
 			if err != nil {
 				return errors.WithStack(err)
 			}

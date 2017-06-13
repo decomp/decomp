@@ -34,9 +34,6 @@ func (prim PostLoop) Prim() *primitive.Primitive {
 	cond, exit := label(prim.Cond), label(prim.Exit)
 	return &primitive.Primitive{
 		Prim: "post_loop",
-		// Note, the primitive node name should be set to a unique node ID when
-		// merged into the CFG.
-		Node: "",
 		Nodes: map[string]string{
 			"cond": cond,
 			"exit": exit,

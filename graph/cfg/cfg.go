@@ -7,6 +7,7 @@ import (
 	"github.com/gonum/graph"
 	"github.com/gonum/graph/simple"
 	"github.com/llir/llvm/ir"
+	"github.com/pkg/errors"
 )
 
 // New returns a new control flow graph based on the given function.
@@ -128,6 +129,20 @@ func (g *Graph) NewEdgeWithLabel(from, to graph.Node, label string) *Edge {
 		e.Attrs["label"] = label
 	}
 	return e
+}
+
+// SetLabel sets the label of the given node.
+func (g *Graph) SetLabel(n graph.Node, label string) error {
+	if _, ok := g.nodes[label]; ok {
+		return errors.Errorf("node %q already present in graph", label)
+	}
+	node, ok := n.(*Node)
+	if !ok {
+		return errors.Errorf("expected node type *cfa.Node, got %T", n)
+	}
+	node.Label = label
+	g.nodes[label] = node
+	return nil
 }
 
 // Node represents a node of a control flow graph.
