@@ -7,6 +7,12 @@
 
 The aim of this project is to implement a decompilation pipeline composed of independent components interacting through well-defined interfaces, as further described in the [design documents](https://github.com/decomp/doc) of the project.
 
+## Installation
+
+```bash
+go get github.com/decomp/decomp/...
+```
+
 ## Decompilation pipeline
 
 From a high-level perspective, the components of the decompilation pipeline are conceptually grouped into three modules. Firstly, the [front-end](#front-end) translates a source language (e.g. x86 assembly) into [LLVM IR](http://llvm.org/docs/LangRef.html); a platform-independent low-level intermediate representation. Secondly, the [middle-end](#middle-end) structures the LLVM IR by identifying high-level control flow primitives (e.g. pre-test loops, 2-way conditionals). Lastly, the [back-end](#back-end) translates the structured LLVM IR into a high-level target programming language (e.g. [Go](https://golang.org/)).
