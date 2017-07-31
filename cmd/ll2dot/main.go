@@ -38,13 +38,13 @@ import (
 	"strings"
 
 	"github.com/decomp/decomp/graph/cfg"
-	"gonum.org/v1/gonum/graph"
-	"gonum.org/v1/gonum/graph/encoding/dot"
 	"github.com/llir/llvm/asm"
 	"github.com/llir/llvm/ir"
 	"github.com/mewkiz/pkg/pathutil"
 	"github.com/mewkiz/pkg/term"
 	"github.com/pkg/errors"
+	"gonum.org/v1/gonum/graph"
+	"gonum.org/v1/gonum/graph/encoding/dot"
 )
 
 // dbg represents a logger with the "ll2dot:" prefix, which logs debug messages

@@ -20,7 +20,6 @@ import (
 	"github.com/decomp/decomp/cfa"
 	"github.com/decomp/decomp/cfa/primitive"
 	"github.com/decomp/decomp/graph/cfg"
-	"gonum.org/v1/gonum/graph"
 	"github.com/llir/llvm/asm"
 	"github.com/llir/llvm/ir"
 	"github.com/llir/llvm/ir/constant"
@@ -30,6 +29,7 @@ import (
 	"github.com/mewkiz/pkg/pathutil"
 	"github.com/mewkiz/pkg/term"
 	"github.com/pkg/errors"
+	"gonum.org/v1/gonum/graph"
 )
 
 // dbg represents a logger with the "ll2go:" prefix, which logs debug messages

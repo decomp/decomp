@@ -6,8 +6,8 @@ import (
 
 	"github.com/decomp/decomp/cfa/primitive"
 	"github.com/decomp/decomp/graph/cfg"
-	"gonum.org/v1/gonum/graph"
 	"github.com/pkg/errors"
+	"gonum.org/v1/gonum/graph"
 )
 
 // FindPrim locates a control flow primitive in the provided control flow graph

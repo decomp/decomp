@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding/dot"
-	"github.com/pkg/errors"
 )
 
 // ParseFile parses the given Graphviz DOT file into a control flow graph.
