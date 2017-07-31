@@ -20,7 +20,7 @@ import (
 	"github.com/decomp/decomp/cfa"
 	"github.com/decomp/decomp/cfa/primitive"
 	"github.com/decomp/decomp/graph/cfg"
-	"github.com/gonum/graph"
+	"gonum.org/v1/gonum/graph"
 	"github.com/llir/llvm/asm"
 	"github.com/llir/llvm/ir"
 	"github.com/llir/llvm/ir/constant"

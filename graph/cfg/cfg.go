@@ -4,10 +4,10 @@ package cfg
 import (
 	"fmt"
 
-	"github.com/gonum/graph"
-	"github.com/gonum/graph/simple"
+	"github.com/graphism/simple"
 	"github.com/llir/llvm/ir"
 	"github.com/pkg/errors"
+	"gonum.org/v1/gonum/graph"
 )
 
 // New returns a new control flow graph based on the given function.
@@ -78,9 +78,8 @@ func (g *Graph) NodeByLabel(label string) *Node {
 
 // newNode returns a new node with a unique node ID in the graph.
 func (g *Graph) newNode() *Node {
-	id := g.NewNodeID()
 	n := &Node{
-		Node:  simple.Node(id),
+		Node:  g.NewNode(),
 		Attrs: make(Attrs),
 	}
 	g.AddNode(n)
@@ -147,7 +146,7 @@ func (g *Graph) SetLabel(n graph.Node, label string) error {
 
 // Node represents a node of a control flow graph.
 type Node struct {
-	simple.Node
+	graph.Node
 	// Node label.
 	Label string
 	// DOT attributes.

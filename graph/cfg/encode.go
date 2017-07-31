@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/gonum/graph/encoding/dot"
+	"gonum.org/v1/gonum/graph/encoding/dot"
 )
 
 // Attrs specifies a set of DOT attributes as key-value pairs.

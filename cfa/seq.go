@@ -5,7 +5,7 @@ import (
 
 	"github.com/decomp/decomp/cfa/primitive"
 	"github.com/decomp/decomp/graph/cfg"
-	"github.com/gonum/graph"
+	"gonum.org/v1/gonum/graph"
 )
 
 // Seq represents a sequence of two statements.

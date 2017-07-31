@@ -1,12 +1,12 @@
 package cfg
 
 import (
-	"github.com/gonum/graph"
-	"github.com/gonum/graph/path"
+	"gonum.org/v1/gonum/graph"
+	"gonum.org/v1/gonum/graph/path"
 )
 
 // A Dom represents a dominator tree.
-type Dom map[int]interface {
+type Dom map[int64]interface {
 	Has(graph.Node) bool
 }
 

@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gonum/graph"
-	"github.com/gonum/graph/encoding/dot"
+	"gonum.org/v1/gonum/graph"
+	"gonum.org/v1/gonum/graph/encoding/dot"
 	"github.com/pkg/errors"
 )
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/decomp/decomp/cfa/primitive"
 	"github.com/decomp/decomp/graph/cfg"
-	"github.com/gonum/graph"
+	"gonum.org/v1/gonum/graph"
 )
 
 // IfReturn represents a 1-way conditional with a body return statement.
