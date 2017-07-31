@@ -17,6 +17,7 @@ https://github.com/trailofbits/mcsema
 
 Supported:
 * x86 -> LLVM IR
+* x86_64 -> LLVM IR
 
 ## Remill
 
