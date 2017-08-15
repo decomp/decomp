@@ -40,9 +40,14 @@ var doDiff = flag.Bool("diff", false, "display diffs instead of rewriting files"
 const debug = false // display incorrectly reformatted source and exit
 
 const use = `
-Usage: go-post [-diff] [-r fixname,...] [-force fixname,...] [path ...]
+Post-processe Go source code to make it more idiomatic.
 
-Flags:`
+Usage:
+
+	go-post [-diff] [-r fixname,...] [-force fixname,...] [FILE...]
+
+Flags:
+`
 
 func usage() {
 	fmt.Fprintln(os.Stderr, use[1:])
