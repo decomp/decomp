@@ -10,8 +10,8 @@ import (
 // Attrs specifies a set of DOT attributes as key-value pairs.
 type Attrs map[string]string
 
-// DOTAttributes returns the DOT attributes of a node or edge.
-func (a Attrs) DOTAttributes() []encoding.Attribute {
+// Attributes returns the DOT attributes of a node or edge.
+func (a Attrs) Attributes() []encoding.Attribute {
 	var attrs []encoding.Attribute
 	var keys []string
 	for key := range a {
