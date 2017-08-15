@@ -79,7 +79,7 @@ func (g *Graph) NodeByLabel(label string) *Node {
 // newNode returns a new node with a unique node ID in the graph.
 func (g *Graph) newNode() *Node {
 	n := &Node{
-		Node:  g.NewNode(),
+		Node:  g.DirectedGraph.NewNode(),
 		Attrs: make(Attrs),
 	}
 	g.AddNode(n)

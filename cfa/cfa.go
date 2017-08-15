@@ -74,7 +74,7 @@ func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
 
 	// Add new node for primitive.
 	entryLabel := entry.Label
-	p := g.NewNode()
+	p := g.DirectedGraph.NewNode()
 
 	// Connect incoming edges to entry.
 	for _, from := range g.To(entry) {
