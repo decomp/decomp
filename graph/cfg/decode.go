@@ -13,11 +13,11 @@ import (
 
 // ParseFile parses the given Graphviz DOT file into a control flow graph.
 func ParseFile(path string) (*Graph, error) {
-	g := newGraph()
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	g := newGraph()
 	if err := dot.Unmarshal(data, g); err != nil {
 		return nil, errors.WithStack(err)
 	}

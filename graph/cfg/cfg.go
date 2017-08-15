@@ -82,7 +82,6 @@ func (g *Graph) newNode() *Node {
 		Node:  g.DirectedGraph.NewNode(),
 		Attrs: make(Attrs),
 	}
-	g.AddNode(n)
 	return n
 }
 
