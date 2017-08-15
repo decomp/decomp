@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
+	"gonum.org/v1/gonum/graph/encoding"
 	"gonum.org/v1/gonum/graph/encoding/dot"
 )
 
@@ -46,7 +47,7 @@ func (g *Graph) NewEdge(from, to graph.Node) graph.Edge {
 }
 
 // UnmarshalDOTAttr decodes a single DOT attribute.
-func (n *Node) UnmarshalDOTAttr(attr dot.Attribute) error {
+func (n *Node) UnmarshalDOTAttr(attr encoding.Attribute) error {
 	n.Attrs[attr.Key] = attr.Value
 	switch attr.Key {
 	case "label":
@@ -66,7 +67,7 @@ func (n *Node) UnmarshalDOTAttr(attr dot.Attribute) error {
 }
 
 // UnmarshalDOTAttr decodes a single DOT attribute.
-func (e *Edge) UnmarshalDOTAttr(attr dot.Attribute) error {
+func (e *Edge) UnmarshalDOTAttr(attr encoding.Attribute) error {
 	e.Attrs[attr.Key] = attr.Value
 	switch attr.Key {
 	case "label":

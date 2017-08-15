@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"sort"
 
-	"gonum.org/v1/gonum/graph/encoding/dot"
+	"gonum.org/v1/gonum/graph/encoding"
 )
 
 // Attrs specifies a set of DOT attributes as key-value pairs.
 type Attrs map[string]string
 
 // DOTAttributes returns the DOT attributes of a node or edge.
-func (a Attrs) DOTAttributes() []dot.Attribute {
-	var attrs []dot.Attribute
+func (a Attrs) DOTAttributes() []encoding.Attribute {
+	var attrs []encoding.Attribute
 	var keys []string
 	for key := range a {
 		keys = append(keys, key)
@@ -23,7 +23,7 @@ func (a Attrs) DOTAttributes() []dot.Attribute {
 		if key == "label" {
 			val = fmt.Sprintf("%q", val)
 		}
-		attr := dot.Attribute{
+		attr := encoding.Attribute{
 			Key:   key,
 			Value: val,
 		}
