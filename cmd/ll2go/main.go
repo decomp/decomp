@@ -1,3 +1,17 @@
+// The ll2go tool decompiles LLVM IR assembly to Go source code (*.ll -> *.go).
+//
+// The input of ll2go is LLVM IR assembly and the output is unpolished Go source
+// code.
+//
+// Usage:
+//
+//    ll2go [OPTION]... FILE.ll...
+//
+// Flags:
+//
+//    -funcs string
+//          comma-separated list of functions to parse
+//    -q    suppress non-error messages
 package main
 
 import (
