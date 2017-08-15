@@ -1,12 +1,4 @@
-## WIP
-
-This project is a *work in progress*. The implementation is *incomplete* and subject to change. The documentation can be inaccurate.
-
 # go-post
-
-[![Build Status](https://travis-ci.org/decomp/go-post.svg?branch=master)](https://travis-ci.org/decomp/go-post)
-[![Coverage Status](https://img.shields.io/coveralls/decomp/go-post.svg)](https://coveralls.io/r/decomp/go-post?branch=master)
-[![GoDoc](https://godoc.org/decomp.org/decomp/cmd/go-post?status.svg)](https://godoc.org/decomp.org/decomp/cmd/go-post)
 
 `go-post` is a tool which post-processes Go source code to make it more idiomatic.
 
@@ -15,7 +7,7 @@ The development of `go-post` started with an unmodified copy of [gofix](https://
 ## Installation
 
 ```shell
-go get decomp.org/decomp/cmd/go-post
+go get github.com/decomp/decomp/cmd/go-post
 ```
 
 ## Usage
