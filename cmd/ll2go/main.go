@@ -490,6 +490,7 @@ func isID(s string) bool {
 
 // ident returns a sanitized version of the given identifier.
 func ident(s string) *ast.Ident {
+	s = strings.Replace(s, ".", "dot", -1)
 	f := func(r rune) rune {
 		switch {
 		case unicode.IsLetter(r), unicode.IsNumber(r):
