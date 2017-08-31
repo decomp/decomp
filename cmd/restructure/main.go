@@ -141,8 +141,8 @@ func main() {
 // control flow graph with no incoming edges.
 func locateEntryNode(g *cfg.Graph, entryLabel string) (graph.Node, error) {
 	if len(entryLabel) > 0 {
-		entry := g.NodeByLabel(entryLabel)
-		if entry == nil {
+		entry, ok := g.NodeByLabel(entryLabel)
+		if !ok {
 			return nil, errors.Errorf("unable to locate entry node with node label %q", entryLabel)
 		}
 		return entry, nil
@@ -204,8 +204,9 @@ func restructure(g *cfg.Graph, entry graph.Node, steps bool, name string) ([]*pr
 		// Handle special case where entry node has been replaced by primitive
 		// node.
 		if !g.Has(entry) {
-			entry = g.NodeByLabel(prim.Entry)
-			if entry == nil {
+			var ok bool
+			entry, ok = g.NodeByLabel(prim.Entry)
+			if !ok {
 				return nil, errors.Errorf("unable to locate entry node %q", prim.Entry)
 			}
 		}
@@ -226,8 +227,8 @@ func restructure(g *cfg.Graph, entry graph.Node, steps bool, name string) ([]*pr
 // highlighted in red.
 func storeStep(g *cfg.Graph, name, path string, highlight []string) error {
 	for _, h := range highlight {
-		n := g.NodeByLabel(h)
-		if n == nil {
+		n, ok := g.NodeByLabel(h)
+		if !ok {
 			return errors.Errorf("unable to located node %q to be highlighted", h)
 		}
 		n.Attrs["style"] = "filled"
@@ -238,8 +239,8 @@ func storeStep(g *cfg.Graph, name, path string, highlight []string) error {
 		return errors.WithStack(err)
 	}
 	for _, h := range highlight {
-		n := g.NodeByLabel(h)
-		if n == nil {
+		n, ok := g.NodeByLabel(h)
+		if !ok {
 			return errors.Errorf("unable to located node %q to be highlighted", h)
 		}
 		delete(n.Attrs, "style")

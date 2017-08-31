@@ -52,29 +52,29 @@ func FindPrim(g graph.Directed, dom cfg.Dom) (*primitive.Primitive, error) {
 }
 
 // Merge merges the nodes of the primitive into a single node, which is assigned
-// the label of the entry node.
+// the basic block label of the entry node.
 func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
 	// Locate nodes to merge.
 	var nodes []graph.Node
 	for _, label := range prim.Nodes {
-		node := g.NodeByLabel(label)
-		if node == nil {
+		node, ok := g.NodeByLabel(label)
+		if !ok {
 			return errors.Errorf("unable to locate pre-merge node label %q", label)
 		}
 		nodes = append(nodes, node)
 	}
-	entry := g.NodeByLabel(prim.Entry)
-	if entry == nil {
+	entry, ok := g.NodeByLabel(prim.Entry)
+	if !ok {
 		return errors.Errorf("unable to locate entry node label %q", prim.Entry)
 	}
-	exit := g.NodeByLabel(prim.Exit)
-	if exit == nil {
+	exit, ok := g.NodeByLabel(prim.Exit)
+	if !ok {
 		return errors.Errorf("unable to locate exit node label %q", prim.Exit)
 	}
 
 	// Add new node for primitive.
 	entryLabel := entry.Label
-	p := g.NewNode()
+	p := g.NewNodeWithLabel(fmt.Sprintf("prim_node_of_%s", entryLabel))
 
 	// Connect incoming edges to entry.
 	for _, from := range g.To(entry) {
@@ -102,9 +102,7 @@ func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
 	}
 
 	// Set label of new primitive to the label of the entry node.
-	if err := g.SetLabel(p, entryLabel); err != nil {
-		return errors.WithStack(err)
-	}
+	g.SetNodeLabel(p, entryLabel)
 
 	return nil
 }

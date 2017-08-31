@@ -1,7 +1,6 @@
 package cfg
 
 import (
-	"fmt"
 	"sort"
 
 	"gonum.org/v1/gonum/graph/encoding"
@@ -12,20 +11,16 @@ type Attrs map[string]string
 
 // Attributes returns the DOT attributes of a node or edge.
 func (a Attrs) Attributes() []encoding.Attribute {
-	var attrs []encoding.Attribute
 	var keys []string
 	for key := range a {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
+	var attrs []encoding.Attribute
 	for _, key := range keys {
-		val := a[key]
-		if key == "label" {
-			val = fmt.Sprintf("%q", val)
-		}
 		attr := encoding.Attribute{
 			Key:   key,
-			Value: val,
+			Value: a[key],
 		}
 		attrs = append(attrs, attr)
 	}

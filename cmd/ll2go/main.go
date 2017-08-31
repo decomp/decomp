@@ -645,8 +645,9 @@ func genPrims(f *ir.Function) ([]*primitive.Primitive, error) {
 		// Handle special case where entry node has been replaced by primitive
 		// node.
 		if !g.Has(entry) {
-			entry = g.NodeByLabel(prim.Entry)
-			if entry == nil {
+			var ok bool
+			entry, ok = g.NodeByLabel(prim.Entry)
+			if !ok {
 				return nil, errors.Errorf("unable to locate entry node %q", prim.Entry)
 			}
 		}

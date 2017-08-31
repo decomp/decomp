@@ -172,7 +172,7 @@ func createDotDir(llPath string, force bool) (string, error) {
 }
 
 // storeCFG stores the given control flow graph as a DOT file. If `-img` is set,
-// it also stores an image representation of the CFG.
+// it also stores an image representation of the control flow graph.
 //
 // For a source file "foo.ll" containing the functions "bar" and "baz" the
 // following DOT files will be created:

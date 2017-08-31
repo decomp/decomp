@@ -2,12 +2,9 @@ package cfg
 
 import (
 	"io/ioutil"
-	"strconv"
-	"strings"
 
+	"github.com/graphism/simple"
 	"github.com/pkg/errors"
-	"gonum.org/v1/gonum/graph"
-	"gonum.org/v1/gonum/graph/encoding"
 	"gonum.org/v1/gonum/graph/encoding/dot"
 )
 
@@ -17,7 +14,10 @@ func ParseFile(path string) (*Graph, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	g := newGraph()
+	g := &Graph{
+		DirectedGraph: simple.NewDirectedGraph(),
+		nodes:         make(map[string]*Node),
+	}
 	if err := dot.Unmarshal(data, g); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -33,55 +33,4 @@ func ParseFile(path string) (*Graph, error) {
 		}
 	}
 	return g, nil
-}
-
-// NewNode returns a new node with a unique node ID in the graph.
-func (g *Graph) NewNode() graph.Node {
-	return g.newNode()
-}
-
-// NewEdge returns a new edge from the source to the destination node in the
-// graph, or the existing edge if already present.
-func (g *Graph) NewEdge(from, to graph.Node) graph.Edge {
-	return g.newEdge(from, to)
-}
-
-// SetAttribute sets a single DOT attribute.
-func (n *Node) SetAttribute(attr encoding.Attribute) error {
-	n.Attrs[attr.Key] = attr.Value
-	switch attr.Key {
-	case "label":
-		s := attr.Value
-		if strings.HasPrefix(s, `"`) && strings.HasSuffix(s, `"`) {
-			var err error
-			s, err = strconv.Unquote(attr.Value)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-		}
-		n.Label = s
-	default:
-		return errors.Errorf("support for decoding attribute with key %q not yet implemented", attr.Key)
-	}
-	return nil
-}
-
-// SetAttribute sets a single DOT attribute.
-func (e *Edge) SetAttribute(attr encoding.Attribute) error {
-	e.Attrs[attr.Key] = attr.Value
-	switch attr.Key {
-	case "label":
-		s := attr.Value
-		if strings.HasPrefix(s, `"`) && strings.HasSuffix(s, `"`) {
-			var err error
-			s, err = strconv.Unquote(attr.Value)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-		}
-		e.Label = s
-	default:
-		return errors.Errorf("support for decoding attribute with key %q not yet implemented", attr.Key)
-	}
-	return nil
 }
