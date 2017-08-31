@@ -108,11 +108,11 @@ func mainret(file *ast.File) bool {
 	}
 
 	// Update function signature.
-	if len(mainFunc.Type.Results.List) > 0 {
+	if mainFunc.Type.Results != nil && len(mainFunc.Type.Results.List) > 0 {
 		mainFunc.Type.Results = nil
 		fixed = true
 	}
-	if len(mainFunc.Type.Params.List) > 0 {
+	if mainFunc.Type.Params != nil && len(mainFunc.Type.Params.List) > 0 {
 		mainFunc.Type.Params = nil
 		fixed = true
 	}
