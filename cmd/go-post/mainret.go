@@ -55,6 +55,15 @@ func mainret(file *ast.File) bool {
 	//    // to:
 	//    func main() {
 	//    }
+	//
+	// 4)
+	//    // from:
+	//    func main(_0 int32, _1 **int8) int32 {
+	//    }
+	//
+	//    // to:
+	//    func main() {
+	//    }
 	walk(mainFunc, func(n interface{}) {
 		stmt, ok := n.(*ast.Stmt)
 		if !ok {
@@ -96,6 +105,16 @@ func mainret(file *ast.File) bool {
 			mainFunc.Body.List = list[:n-1]
 			fixed = true
 		}
+	}
+
+	// Update function signature.
+	if len(mainFunc.Type.Results.List) > 0 {
+		mainFunc.Type.Results = nil
+		fixed = true
+	}
+	if len(mainFunc.Type.Params.List) > 0 {
+		mainFunc.Type.Params = nil
+		fixed = true
 	}
 
 	return fixed
