@@ -388,20 +388,6 @@ func warn(pos token.Pos, msg string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, msg+"\n", args...)
 }
 
-// countUses returns the number of uses of the identifier x in scope.
-func countUses(x *ast.Ident, scope []ast.Stmt) int {
-	count := 0
-	ff := func(n interface{}) {
-		if n, ok := n.(ast.Node); ok && refersTo(n, x) {
-			count++
-		}
-	}
-	for _, n := range scope {
-		walk(n, ff)
-	}
-	return count
-}
-
 // rewriteUses replaces all uses of the identifier x and !x in scope
 // with f(x.Pos()) and fnot(x.Pos()).
 func rewriteUses(x *ast.Ident, f, fnot func(token.Pos) ast.Expr, scope []ast.Stmt) {

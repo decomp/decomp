@@ -66,15 +66,6 @@ func localid(file *ast.File) bool {
 		if name := ident.Name; isLocalID(name) {
 			// Check use count of ident. Only rewrite if used exactly once.
 			scope := getScope(file, ident)
-			count := countUses(ident, scope)
-			// Check if count is two; to verify that the identifier is defined once
-			// and used once.
-
-			// TODO: Validate that the identifier is actually defined once and used
-			// once. It may be defined twice or used twice.
-			if count != 2 {
-				return
-			}
 
 			rhs := assignStmt.Rhs[0]
 			// TODO: Make use of &ast.ParenExpr{} and implement a simplification
@@ -114,12 +105,28 @@ func getScope(file *ast.File, ident *ast.Ident) []ast.Stmt {
 		if _, ok := stmt.(*ast.BlockStmt); ok {
 			return
 		}
-		if countUses(ident, []ast.Stmt{stmt}) > 0 {
+		if containsIdent(stmt, ident) {
 			scope = append(scope, stmt)
 		}
 	}
 	walk(file, f)
 	return scope
+}
+
+// containsIdent reports if the statement contains the given identifier.
+func containsIdent(stmt ast.Stmt, ident *ast.Ident) bool {
+	found := false
+	f := func(n interface{}) {
+		expr, ok := n.(ast.Expr)
+		if !ok {
+			return
+		}
+		if refersTo(expr, ident) {
+			found = true
+		}
+	}
+	walk(stmt, f)
+	return found
 }
 
 // isLocalID returns true if the given variable name is a local ID (e.g. "_42").
