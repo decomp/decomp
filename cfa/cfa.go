@@ -103,6 +103,7 @@ func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
 
 	// Set label of new primitive to the label of the entry node.
 	g.SetNodeLabel(p, entryLabel)
+	g.SetEntry(p)
 
 	return nil
 }

@@ -23,6 +23,10 @@ func ParseFile(path string) (*Graph, error) {
 	}
 	for _, n := range g.Nodes() {
 		if n, ok := n.(*Node); ok {
+			if n.entry {
+				// Store entry node.
+				g.entry = n
+			}
 			if len(n.Label) == 0 {
 				return nil, errors.Errorf("invalid node %#v; missing node label", n)
 			}

@@ -13,6 +13,7 @@ import (
 // Graph represents a control flow graph.
 type Graph struct {
 	*simple.DirectedGraph
+	entry graph.Node
 	// nodes maps from basic block label to graph node.
 	nodes map[string]*Node
 }
@@ -25,8 +26,12 @@ func New(f *ir.Function) *Graph {
 	}
 	// Force generate local IDs.
 	_ = f.String()
-	for _, block := range f.Blocks {
+	for i, block := range f.Blocks {
 		from := g.NewNodeWithLabel(block.Name)
+		if i == 0 {
+			// Store entry node.
+			g.entry = from
+		}
 		switch term := block.Term.(type) {
 		case *ir.TermRet:
 			// nothing to do.
@@ -53,6 +58,16 @@ func New(f *ir.Function) *Graph {
 		}
 	}
 	return g
+}
+
+// Entry returns the entry node of the control flow graph.
+func (g *Graph) Entry() graph.Node {
+	return g.entry
+}
+
+// SetEntry sets the entry node of the control flow graph.
+func (g *Graph) SetEntry(entry graph.Node) {
+	g.entry = entry
 }
 
 // NodeByLabel returns the node with the given basic block label in the graph.
@@ -97,6 +112,8 @@ type Node struct {
 	Label string
 	// DOT attributes.
 	Attrs
+	// entry specifies if the node is the entry node of the control flow graph.
+	entry bool
 }
 
 // NewNode returns a new graph node with a unique arbitrary ID.
@@ -131,6 +148,20 @@ func (n *Node) DOTID() string {
 // SetDOTID sets the DOT node ID of the node.
 func (n *Node) SetDOTID(id string) {
 	n.Label = id
+}
+
+// SetAttribute sets the attribute of the node.
+func (n *Node) SetAttribute(attr encoding.Attribute) error {
+	switch attr.Key {
+	case "label":
+		if attr.Value == "entry" {
+			n.entry = true
+		}
+		n.Attrs[attr.Key] = attr.Value
+	default:
+		// ignore attribute.
+	}
+	return nil
 }
 
 // Edge represents an edge of a control flow graph.
