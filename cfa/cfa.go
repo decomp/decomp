@@ -12,7 +12,7 @@ import (
 
 // FindPrim locates a control flow primitive in the provided control flow graph
 // and merges its nodes into a single node.
-func FindPrim(g graph.Directed, dom cfg.Dom) (*primitive.Primitive, error) {
+func FindPrim(g graph.Directed, dom cfg.DominatorTree) (*primitive.Primitive, error) {
 	// Locate pre-test loops.
 	if prim, ok := FindPreLoop(g, dom); ok {
 		return prim.Prim(), nil

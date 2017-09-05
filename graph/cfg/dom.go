@@ -5,23 +5,20 @@ import (
 	"gonum.org/v1/gonum/graph/path"
 )
 
-// A Dom represents a dominator tree.
-type Dom map[int64]interface {
-	Has(graph.Node) bool
+// A DominatorTree represents a dominator tree.
+type DominatorTree struct {
+	path.DominatorTree
 }
 
 // NewDom returns a new dominator tree based on the given graph.
-func NewDom(g graph.Directed, entry graph.Node) Dom {
-	ds := path.Dominators(entry, g)
-	d := make(Dom)
-	for key, val := range ds {
-		d[key] = val
+func NewDom(g graph.Directed, entry graph.Node) DominatorTree {
+	dt := path.Dominators(entry, g)
+	return DominatorTree{
+		DominatorTree: dt,
 	}
-	return d
 }
 
 // Dominates reports whether A dominates B.
-func (d Dom) Dominates(a, b graph.Node) bool {
-	bDoms := d[b.ID()]
-	return bDoms.Has(a)
+func (dt DominatorTree) Dominates(a, b graph.Node) bool {
+	return a == dt.DominatorTree.DominatorOf(b)
 }

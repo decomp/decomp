@@ -78,7 +78,7 @@ digraph if_else {
 
 // FindIfElse returns the first occurrence of a 2-way conditional statement in
 // g, and a boolean indicating if such a primitive was found.
-func FindIfElse(g graph.Directed, dom cfg.Dom) (prim IfElse, ok bool) {
+func FindIfElse(g graph.Directed, dom cfg.DominatorTree) (prim IfElse, ok bool) {
 	// Range through cond node candidates.
 	for _, cond := range g.Nodes() {
 		// Verify that cond has two successors (body_true and body_false).
@@ -116,7 +116,7 @@ func FindIfElse(g graph.Directed, dom cfg.Dom) (prim IfElse, ok bool) {
 //    body_true      body_false
 //             ↘    ↙
 //              exit
-func (prim IfElse) IsValid(g graph.Directed, dom cfg.Dom) bool {
+func (prim IfElse) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 	// Dominator sanity check.
 	cond, bodyTrue, bodyFalse, exit := prim.Cond, prim.BodyTrue, prim.BodyFalse, prim.Exit
 	if !dom.Dominates(cond, bodyTrue) || !dom.Dominates(cond, bodyFalse) || !dom.Dominates(cond, exit) {

@@ -70,7 +70,7 @@ digraph pre_loop {
 
 // FindPreLoop returns the first occurrence of a pre-test loop in g, and a
 // boolean indicating if such a primitive was found.
-func FindPreLoop(g graph.Directed, dom cfg.Dom) (prim PreLoop, ok bool) {
+func FindPreLoop(g graph.Directed, dom cfg.DominatorTree) (prim PreLoop, ok bool) {
 	// Range through cond node candidates.
 	for _, cond := range g.Nodes() {
 		// Verify that cond has two successors (body and exit).
@@ -105,7 +105,7 @@ func FindPreLoop(g graph.Directed, dom cfg.Dom) (prim PreLoop, ok bool) {
 //    ↓   body
 //    ↓
 //    exit
-func (prim PreLoop) IsValid(g graph.Directed, dom cfg.Dom) bool {
+func (prim PreLoop) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 	// Dominator sanity check.
 	cond, body, exit := prim.Cond, prim.Body, prim.Exit
 	if !dom.Dominates(cond, body) || !dom.Dominates(cond, exit) {

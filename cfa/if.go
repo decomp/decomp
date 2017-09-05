@@ -70,7 +70,7 @@ digraph if {
 
 // FindIf returns the first occurrence of a 1-way conditional statement in g,
 // and a boolean indicating if such a primitive was found.
-func FindIf(g graph.Directed, dom cfg.Dom) (prim If, ok bool) {
+func FindIf(g graph.Directed, dom cfg.DominatorTree) (prim If, ok bool) {
 	// Range through cond node candidates.
 	for _, cond := range g.Nodes() {
 		// Verify that cond has two successors (body and exit).
@@ -105,7 +105,7 @@ func FindIf(g graph.Directed, dom cfg.Dom) (prim If, ok bool) {
 //    ↓    body
 //    ↓   ↙
 //    exit
-func (prim If) IsValid(g graph.Directed, dom cfg.Dom) bool {
+func (prim If) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 	// Dominator sanity check.
 	cond, body, exit := prim.Cond, prim.Body, prim.Exit
 	if !dom.Dominates(cond, body) || !dom.Dominates(cond, exit) {

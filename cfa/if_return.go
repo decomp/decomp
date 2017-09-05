@@ -70,7 +70,7 @@ digraph if_return {
 // FindIfReturn returns the first occurrence of a 1-way conditional with a body
 // return statement in g, and a boolean indicating if such a primitive was
 // found.
-func FindIfReturn(g graph.Directed, dom cfg.Dom) (prim IfReturn, ok bool) {
+func FindIfReturn(g graph.Directed, dom cfg.DominatorTree) (prim IfReturn, ok bool) {
 	// Range through cond node candidates.
 	for _, cond := range g.Nodes() {
 		// Verify that cond has two successors (body and exit).
@@ -105,7 +105,7 @@ func FindIfReturn(g graph.Directed, dom cfg.Dom) (prim IfReturn, ok bool) {
 //    ↓    body
 //    ↓
 //    exit
-func (prim IfReturn) IsValid(g graph.Directed, dom cfg.Dom) bool {
+func (prim IfReturn) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 	// Dominator sanity check.
 	cond, body, exit := prim.Cond, prim.Body, prim.Exit
 	if !dom.Dominates(cond, body) || !dom.Dominates(cond, exit) {

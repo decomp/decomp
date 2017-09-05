@@ -63,7 +63,7 @@ digraph post_loop {
 
 // FindPostLoop returns the first occurrence of a post-test loop in g, and a
 // boolean indicating if such a primitive was found.
-func FindPostLoop(g graph.Directed, dom cfg.Dom) (prim PostLoop, ok bool) {
+func FindPostLoop(g graph.Directed, dom cfg.DominatorTree) (prim PostLoop, ok bool) {
 	// Range through cond node candidates.
 	for _, cond := range g.Nodes() {
 		// Verify that cond has two successors (cond and exit).
@@ -97,7 +97,7 @@ func FindPostLoop(g graph.Directed, dom cfg.Dom) (prim PostLoop, ok bool) {
 //    ↓   ↖↲
 //    ↓
 //    exit
-func (prim PostLoop) IsValid(g graph.Directed, dom cfg.Dom) bool {
+func (prim PostLoop) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 	// Dominator sanity check.
 	cond, exit := prim.Cond, prim.Exit
 	if !dom.Dominates(cond, exit) {

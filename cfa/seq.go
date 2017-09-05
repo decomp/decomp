@@ -60,7 +60,7 @@ digraph seq {
 
 // FindSeq returns the first occurrence of a sequence of two statements in g,
 // and a boolean indicating if such a primitive was found.
-func FindSeq(g graph.Directed, dom cfg.Dom) (prim Seq, ok bool) {
+func FindSeq(g graph.Directed, dom cfg.DominatorTree) (prim Seq, ok bool) {
 	// Range through entry node candidates.
 	for _, entry := range g.Nodes() {
 		// Verify that entry has one successor (exit).
@@ -87,7 +87,7 @@ func FindSeq(g graph.Directed, dom cfg.Dom) (prim Seq, ok bool) {
 //    entry
 //    ↓
 //    exit
-func (prim Seq) IsValid(g graph.Directed, dom cfg.Dom) bool {
+func (prim Seq) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 	// Dominator sanity check.
 	entry, exit := prim.Entry, prim.Exit
 	if !dom.Dominates(entry, exit) {
