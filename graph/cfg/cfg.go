@@ -30,7 +30,7 @@ func New(f *ir.Function) *Graph {
 		from := g.NewNodeWithLabel(block.Name)
 		if i == 0 {
 			// Store entry node.
-			g.entry = from
+			g.SetEntry(from)
 		}
 		switch term := block.Term.(type) {
 		case *ir.TermRet:
@@ -67,6 +67,10 @@ func (g *Graph) Entry() graph.Node {
 
 // SetEntry sets the entry node of the control flow graph.
 func (g *Graph) SetEntry(entry graph.Node) {
+	n, ok := entry.(*Node)
+	if ok {
+		n.entry = true
+	}
 	g.entry = entry
 }
 
@@ -150,6 +154,14 @@ func (n *Node) SetDOTID(id string) {
 	n.Label = id
 }
 
+// Attributes returns the DOT attributes of the node.
+func (n *Node) Attributes() []encoding.Attribute {
+	if n.entry {
+		n.Attrs["label"] = "entry"
+	}
+	return n.Attrs.Attributes()
+}
+
 // SetAttribute sets the attribute of the node.
 func (n *Node) SetAttribute(attr encoding.Attribute) error {
 	switch attr.Key {
@@ -157,7 +169,6 @@ func (n *Node) SetAttribute(attr encoding.Attribute) error {
 		if attr.Value == "entry" {
 			n.entry = true
 		}
-		n.Attrs[attr.Key] = attr.Value
 	default:
 		// ignore attribute.
 	}

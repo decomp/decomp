@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"github.com/graphism/simple"
@@ -35,6 +36,9 @@ func ParseFile(path string) (*Graph, error) {
 			}
 			g.nodes[n.Label] = n
 		}
+	}
+	if g.entry == nil {
+		panic(fmt.Errorf(`unable to locate entry node; missing DOT node label attribute "entry"`))
 	}
 	return g, nil
 }
