@@ -210,10 +210,8 @@ func (g *Graph) NewEdgeWithLabel(from, to graph.Node, label string) *Edge {
 func (e *Edge) Attributes() []encoding.Attribute {
 	if len(e.Label) > 0 {
 		val := e.Label
-		fmt.Println("val:", val)
 		if !(strings.HasPrefix(val, `"`) && strings.HasSuffix(val, `"`)) && strings.ContainsAny(val, "\t ") {
 			val = strconv.Quote(val)
-			fmt.Println("val post:", val)
 		}
 		return []encoding.Attribute{{Key: "label", Value: val}}
 	}
