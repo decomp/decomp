@@ -74,7 +74,7 @@ func forloop(file *ast.File) bool {
 				continue
 			}
 			postPos := postIndex(forStmt.Body.List, x)
-			if initPos == -1 {
+			if postPos == -1 {
 				continue
 			}
 			// Remove "i := 0" from the block statement list.
