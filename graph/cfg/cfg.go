@@ -3,9 +3,12 @@ package cfg
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/graphism/simple"
 	"github.com/llir/llvm/ir"
+	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding"
 )
@@ -206,7 +209,13 @@ func (g *Graph) NewEdgeWithLabel(from, to graph.Node, label string) *Edge {
 // Attributes returns the attributes of the edge.
 func (e *Edge) Attributes() []encoding.Attribute {
 	if len(e.Label) > 0 {
-		return []encoding.Attribute{{Key: "label", Value: e.Label}}
+		val := e.Label
+		fmt.Println("val:", val)
+		if !(strings.HasPrefix(val, `"`) && strings.HasSuffix(val, `"`)) && strings.ContainsAny(val, "\t ") {
+			val = strconv.Quote(val)
+			fmt.Println("val post:", val)
+		}
+		return []encoding.Attribute{{Key: "label", Value: val}}
 	}
 	return nil
 }
@@ -215,6 +224,14 @@ func (e *Edge) Attributes() []encoding.Attribute {
 func (e *Edge) SetAttribute(attr encoding.Attribute) error {
 	switch attr.Key {
 	case "label":
+		val := attr.Value
+		if strings.HasPrefix(val, `"`) && strings.HasSuffix(val, `"`) {
+			var err error
+			val, err = strconv.Unquote(val)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+		}
 		e.Label = attr.Value
 	default:
 		// ignore attribute.
