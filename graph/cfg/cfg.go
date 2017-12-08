@@ -63,6 +63,19 @@ func New(f *ir.Function) *Graph {
 	return g
 }
 
+// AddNode adds the given node to the graph. If the node is an entry node, the
+// graph entry node is updated.
+func (g *Graph) AddNode(n graph.Node) {
+	nn, ok := n.(*Node)
+	if !ok {
+		panic(fmt.Errorf("invalid node type; expected *cfg.Node, got %T", n))
+	}
+	g.DirectedGraph.AddNode(nn)
+	if nn.entry {
+		g.entry = nn
+	}
+}
+
 // Entry returns the entry node of the control flow graph.
 func (g *Graph) Entry() graph.Node {
 	return g.entry
@@ -70,8 +83,7 @@ func (g *Graph) Entry() graph.Node {
 
 // SetEntry sets the entry node of the control flow graph.
 func (g *Graph) SetEntry(entry graph.Node) {
-	n, ok := entry.(*Node)
-	if ok {
+	if n, ok := entry.(*Node); ok {
 		n.entry = true
 	}
 	g.entry = entry
@@ -224,13 +236,13 @@ func (e *Edge) SetAttribute(attr encoding.Attribute) error {
 	case "label":
 		val := attr.Value
 		if strings.HasPrefix(val, `"`) && strings.HasSuffix(val, `"`) {
-			var err error
-			val, err = strconv.Unquote(val)
+			s, err := strconv.Unquote(val)
 			if err != nil {
 				return errors.WithStack(err)
 			}
+			val = s
 		}
-		e.Label = attr.Value
+		e.Label = val
 	default:
 		// ignore attribute.
 	}

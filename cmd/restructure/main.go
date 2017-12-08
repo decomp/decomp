@@ -35,6 +35,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/decomp/decomp/cfa"
 	"github.com/decomp/decomp/cfa/primitive"
@@ -234,7 +235,7 @@ func storeStep(g *cfg.Graph, name, path string, highlight []string) error {
 		n.Attrs["style"] = "filled"
 		n.Attrs["fillcolor"] = "red"
 	}
-	buf, err := dot.Marshal(g, name, "", "\t", false)
+	buf, err := dot.Marshal(g, strconv.Quote(name), "", "\t", false)
 	if err != nil {
 		return errors.WithStack(err)
 	}
