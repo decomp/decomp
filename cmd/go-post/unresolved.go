@@ -17,7 +17,7 @@ var unresolvedFix = fix{
 	"unresolved",
 	"2015-03-11",
 	unresolved,
-	`Replace assignment statements with declare and initialize statements at the first occurance of an unresolved identifier.`,
+	`Replace assignment statements with declare and initialize statements at the first occurrence of an unresolved identifier.`,
 }
 
 func unresolved(file *ast.File) bool {

@@ -26,7 +26,7 @@ func (d *decompiler) term(term ir.Terminator) ast.Stmt {
 	}
 }
 
-// termRet converts the given LLVM IR ret termiantor to a corresponding Go
+// termRet converts the given LLVM IR ret terminator to a corresponding Go
 // statement.
 func (d *decompiler) termRet(term *ir.TermRet) ast.Stmt {
 	if term.X == nil {
@@ -37,7 +37,7 @@ func (d *decompiler) termRet(term *ir.TermRet) ast.Stmt {
 	}
 }
 
-// termBr converts the given LLVM IR br termiantor to a corresponding Go
+// termBr converts the given LLVM IR br terminator to a corresponding Go
 // statement.
 func (d *decompiler) termBr(term *ir.TermBr) ast.Stmt {
 	// Use goto-statements as a fallback for incomplete control flow recovery.
@@ -48,7 +48,7 @@ func (d *decompiler) termBr(term *ir.TermBr) ast.Stmt {
 	}
 }
 
-// termCondBr converts the given LLVM IR conditional br termiantor to a
+// termCondBr converts the given LLVM IR conditional br terminator to a
 // corresponding Go statement.
 func (d *decompiler) termCondBr(term *ir.TermCondBr) ast.Stmt {
 	// Use goto-statements as a fallback for incomplete control flow recovery.
@@ -73,7 +73,7 @@ func (d *decompiler) termCondBr(term *ir.TermCondBr) ast.Stmt {
 	}
 }
 
-// termSwitch converts the given LLVM IR switch termiantor to a corresponding Go
+// termSwitch converts the given LLVM IR switch terminator to a corresponding Go
 // statement.
 func (d *decompiler) termSwitch(term *ir.TermSwitch) ast.Stmt {
 	// Use goto-statements as a fallback for incomplete control flow recovery.
@@ -97,7 +97,7 @@ func (d *decompiler) termSwitch(term *ir.TermSwitch) ast.Stmt {
 	}
 }
 
-// termUnreachable converts the given LLVM IR unreachable termiantor to a
+// termUnreachable converts the given LLVM IR unreachable terminator to a
 // corresponding Go statement.
 func (d *decompiler) termUnreachable(term *ir.TermUnreachable) ast.Stmt {
 	unreachable := &ast.BasicLit{
