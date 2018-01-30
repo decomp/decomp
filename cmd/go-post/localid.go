@@ -12,7 +12,9 @@ import (
 )
 
 func init() {
-	register(localidFix)
+	// TODO: re-register localid when proper data-flow analysis has been
+	// implemented.
+	//register(localidFix)
 }
 
 var localidFix = fix{
