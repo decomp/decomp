@@ -97,17 +97,23 @@ For further background, refer to the design documents at https://github.com/deco
 
 ### Version 0.3 (to be released)
 
-Primary focus of version 0.3: *fault tolerance*.
+Primary focus of version 0.3: *control flow analysis*.
+
+*Decompilers should recover high-level control flow primities.*
+
+One of the primary differences between low-level assembly and high-level source code is the use of control flow primities.
+
+Version 0.3 seeks to recover high-level control flow primities using robust control flow analysis algorithms.
+
+### Version 0.4 (to be released)
+
+Primary focus of version 0.4: *fault tolerance*.
 
 *Decompilers should be robust.*
 
 Decompilation components should respond well to unexpected states and incomplete analysis.
 
-Version 0.3 focuses on stability, and seeks to stress test the decompilation pipeline using semi-real world software (see the [challenge issue series](https://github.com/decomp/decomp/labels/challenge)).
-
-### Version 0.4 (to be released)
-
-Primary focus of version 0.4: *control flow analysis*.
+Version 0.4 focuses on stability, and seeks to stress test the decompilation pipeline using semi-real world software (see the [challenge issue series](https://github.com/decomp/decomp/labels/challenge)).
 
 ### Version 0.5 (to be released)
 
