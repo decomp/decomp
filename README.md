@@ -69,6 +69,16 @@ Go post-processing tool.
 
 ## Release history
 
+### Version 0.2 (2018-01-30)
+
+Primary focus of version 0.2: *project-wide compilation speed*.
+
+*Developing decompilation components should be fun.*
+
+There seem to be an inverse correlation between depending on a huge C++ library and having fun developing decompilation components.
+
+Version 0.2 of the decompilation pipeline strives to resolve this issue by leveraging an [LLVM IR library](https://github.com/llir/llvm) written in pure Go. Prior to the v0.2 release, project-wide compilation could take several hours to complete. Now, they complete in less than 1 minute -- the established *hard limit* for all future releases.
+
 ### Version 0.1 (2015-04-21)
 
 Initial release.
@@ -84,16 +94,6 @@ Version 0.1 of the decomp project explores the feasibility of composing a decomp
 For further background, refer to the design documents at https://github.com/decomp/doc
 
 ## Roadmap
-
-### Version 0.2 (to be released)
-
-Primary focus of version 0.2: *project-wide compilation speed*.
-
-*Developing decompilation components should be fun.*
-
-There seem to be an inverse correlation between depending on a huge C++ library and having fun developing decompilation components.
-
-Version 0.2 of the decompilation pipeline seeks to resolve this issue.
 
 ### Version 0.3 (to be released)
 
