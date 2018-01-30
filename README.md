@@ -99,11 +99,11 @@ For further background, refer to the design documents at https://github.com/deco
 
 Primary focus of version 0.3: *control flow analysis*.
 
-*Decompilers should recover high-level control flow primities.*
+*Decompilers should recover high-level control flow primitives.*
 
-One of the primary differences between low-level assembly and high-level source code is the use of control flow primities.
+One of the primary differences between low-level assembly and high-level source code is the use of control flow primitives.
 
-Version 0.3 seeks to recover high-level control flow primities using robust control flow analysis algorithms.
+Version 0.3 seeks to recover high-level control flow primitives using robust control flow analysis algorithms.
 
 ### Version 0.4 (to be released)
 
