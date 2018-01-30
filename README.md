@@ -77,7 +77,7 @@ Primary focus of version 0.2: *project-wide compilation speed*.
 
 There seem to be an inverse correlation between depending on a huge C++ library and having fun developing decompilation components.
 
-Version 0.2 of the decompilation pipeline strives to resolve this issue by leveraging an [LLVM IR library](https://github.com/llir/llvm) written in pure Go. Prior to the v0.2 release, project-wide compilation could take several hours to complete. Now, they complete in less than 1 minute -- the established *hard limit* for all future releases.
+Version 0.2 of the decompilation pipeline strives to resolve this issue by leveraging an [LLVM IR library](https://github.com/llir/llvm) written in pure Go. Prior to this release, project-wide compilation could take several hours to complete. Now, they complete in less than 1 minute -- the established *hard limit* for all future releases.
 
 ### Version 0.1 (2015-04-21)
 
