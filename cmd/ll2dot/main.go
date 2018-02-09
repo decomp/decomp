@@ -37,7 +37,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/decomp/decomp/graph/cfg"
+	"github.com/graphism/exp/cfg"
 	"github.com/llir/llvm/asm"
 	"github.com/llir/llvm/ir"
 	"github.com/mewkiz/pkg/pathutil"
@@ -141,7 +141,7 @@ func ll2dot(llPath string, funcNames map[string]bool, force, img bool) error {
 
 		// Generate control flow graph.
 		dbg.Printf("parsing function %q.", f.Name)
-		g := cfg.New(f)
+		g := cfg.NewGraphFromFunc(f)
 
 		// Store DOT graph.
 		if err := storeCFG(g, f.Name, dotDir, img); err != nil {
