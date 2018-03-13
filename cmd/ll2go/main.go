@@ -346,7 +346,7 @@ func (d *decompiler) pointerToConst(c constant.Constant) ast.Expr {
 		return d.globalIdent(c.Name)
 	// Constant expressions
 	case constant.Expr:
-		panic("support for value constant.Expr not yet implemented")
+		return d.expr(c)
 	default:
 		panic(fmt.Sprintf("support for value %T not yet implemented", c))
 	}
