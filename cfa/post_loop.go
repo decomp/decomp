@@ -67,7 +67,7 @@ func FindPostLoop(g graph.Directed, dom cfg.DominatorTree) (prim PostLoop, ok bo
 	// Range through cond node candidates.
 	for _, cond := range g.Nodes() {
 		// Verify that cond has two successors (cond and exit).
-		condSuccs := g.From(cond)
+		condSuccs := g.From(cond.ID())
 		if len(condSuccs) != 2 {
 			continue
 		}
@@ -105,12 +105,12 @@ func (prim PostLoop) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 	}
 
 	// Verify that cond has two successors (cond and exit).
-	condSuccs := g.From(cond)
-	if len(condSuccs) != 2 || !g.HasEdgeFromTo(cond, cond) || !g.HasEdgeFromTo(cond, exit) {
+	condSuccs := g.From(cond.ID())
+	if len(condSuccs) != 2 || !g.HasEdgeFromTo(cond.ID(), cond.ID()) || !g.HasEdgeFromTo(cond.ID(), exit.ID()) {
 		return false
 	}
 
 	// Verify that exit has one predecessor (cond).
-	exitPreds := g.To(exit)
+	exitPreds := g.To(exit.ID())
 	return len(exitPreds) == 1
 }

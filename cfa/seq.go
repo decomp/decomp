@@ -64,7 +64,7 @@ func FindSeq(g graph.Directed, dom cfg.DominatorTree) (prim Seq, ok bool) {
 	// Range through entry node candidates.
 	for _, entry := range g.Nodes() {
 		// Verify that entry has one successor (exit).
-		entrySuccs := g.From(entry)
+		entrySuccs := g.From(entry.ID())
 		if len(entrySuccs) != 1 {
 			continue
 		}
@@ -95,12 +95,12 @@ func (prim Seq) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 	}
 
 	// Verify that entry has one successor (exit).
-	entrySuccs := g.From(entry)
-	if len(entrySuccs) != 1 || !g.HasEdgeFromTo(entry, exit) {
+	entrySuccs := g.From(entry.ID())
+	if len(entrySuccs) != 1 || !g.HasEdgeFromTo(entry.ID(), exit.ID()) {
 		return false
 	}
 
 	// Verify that exit has one predecessor (entry).
-	exitPreds := g.To(exit)
+	exitPreds := g.To(exit.ID())
 	return len(exitPreds) == 1
 }

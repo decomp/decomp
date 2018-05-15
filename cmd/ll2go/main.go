@@ -608,7 +608,7 @@ var ErrIncomplete = goerrors.New("incomplete control flow recovery")
 func locateEntryNode(g *cfg.Graph) (graph.Node, error) {
 	var entry graph.Node
 	for _, n := range g.Nodes() {
-		preds := g.To(n)
+		preds := g.To(n.ID())
 		if len(preds) == 0 {
 			if entry != nil {
 				return nil, errors.Errorf("more than one candidate for the entry node located; prev %q, new %q", label(entry), label(n))
@@ -645,7 +645,7 @@ func genPrims(f *ir.Function) ([]*primitive.Primitive, error) {
 		}
 		// Handle special case where entry node has been replaced by primitive
 		// node.
-		if !g.Has(entry) {
+		if !g.Has(entry.ID()) {
 			var ok bool
 			entry, ok = g.NodeByLabel(prim.Entry)
 			if !ok {

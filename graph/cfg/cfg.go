@@ -121,7 +121,7 @@ func (g *Graph) RemoveNode(n graph.Node) {
 		panic(fmt.Errorf("invalid node type; expected *cfg.Node, got %T", n))
 	}
 	delete(g.nodes, nn.Label)
-	g.DirectedGraph.RemoveNode(n)
+	g.DirectedGraph.RemoveNode(n.ID())
 }
 
 // Node represents a node of a control flow graph.
@@ -207,7 +207,7 @@ func (g *Graph) NewEdge(from, to graph.Node) graph.Edge {
 // NewEdgeWithLabel returns a new edge from the source to the destination node
 // in the graph, or the existing edge if already present.
 func (g *Graph) NewEdgeWithLabel(from, to graph.Node, label string) *Edge {
-	if e := g.Edge(from, to); e != nil {
+	if e := g.Edge(from.ID(), to.ID()); e != nil {
 		return e.(*Edge)
 	}
 	e := &Edge{

@@ -74,7 +74,7 @@ func FindIf(g graph.Directed, dom cfg.DominatorTree) (prim If, ok bool) {
 	// Range through cond node candidates.
 	for _, cond := range g.Nodes() {
 		// Verify that cond has two successors (body and exit).
-		condSuccs := g.From(cond)
+		condSuccs := g.From(cond.ID())
 		if len(condSuccs) != 2 {
 			continue
 		}
@@ -113,19 +113,19 @@ func (prim If) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 	}
 
 	// Verify that cond has two successors (body and exit).
-	condSuccs := g.From(cond)
-	if len(condSuccs) != 2 || !g.HasEdgeFromTo(cond, body) || !g.HasEdgeFromTo(cond, exit) {
+	condSuccs := g.From(cond.ID())
+	if len(condSuccs) != 2 || !g.HasEdgeFromTo(cond.ID(), body.ID()) || !g.HasEdgeFromTo(cond.ID(), exit.ID()) {
 		return false
 	}
 
 	// Verify that body has one predecessor (cond) and one successor (exit).
-	bodyPreds := g.To(body)
-	bodySuccs := g.From(body)
-	if len(bodyPreds) != 1 || len(bodySuccs) != 1 || !g.HasEdgeFromTo(body, exit) {
+	bodyPreds := g.To(body.ID())
+	bodySuccs := g.From(body.ID())
+	if len(bodyPreds) != 1 || len(bodySuccs) != 1 || !g.HasEdgeFromTo(body.ID(), exit.ID()) {
 		return false
 	}
 
 	// Verify that exit has two predecessors (cond and body).
-	exitPreds := g.To(exit)
+	exitPreds := g.To(exit.ID())
 	return len(exitPreds) == 2
 }

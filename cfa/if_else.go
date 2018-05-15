@@ -82,7 +82,7 @@ func FindIfElse(g graph.Directed, dom cfg.DominatorTree) (prim IfElse, ok bool) 
 	// Range through cond node candidates.
 	for _, cond := range g.Nodes() {
 		// Verify that cond has two successors (body_true and body_false).
-		condSuccs := g.From(cond)
+		condSuccs := g.From(cond.ID())
 		if len(condSuccs) != 2 {
 			continue
 		}
@@ -92,7 +92,7 @@ func FindIfElse(g graph.Directed, dom cfg.DominatorTree) (prim IfElse, ok bool) 
 		prim.BodyTrue, prim.BodyFalse = condSuccs[0], condSuccs[1]
 
 		// Verify that body_true has one successor (exit).
-		bodyTrueSuccs := g.From(prim.BodyTrue)
+		bodyTrueSuccs := g.From(prim.BodyTrue.ID())
 		if len(bodyTrueSuccs) != 1 {
 			continue
 		}
@@ -124,26 +124,26 @@ func (prim IfElse) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 	}
 
 	// Verify that cond has two successors (body_true and body_false).
-	condSuccs := g.From(cond)
-	if len(condSuccs) != 2 || !g.HasEdgeFromTo(cond, bodyTrue) || !g.HasEdgeFromTo(cond, bodyFalse) {
+	condSuccs := g.From(cond.ID())
+	if len(condSuccs) != 2 || !g.HasEdgeFromTo(cond.ID(), bodyTrue.ID()) || !g.HasEdgeFromTo(cond.ID(), bodyFalse.ID()) {
 		return false
 	}
 
 	// Verify that body_true has one predecessor (cond) and one successor (exit).
-	bodyTrueSuccs := g.From(bodyTrue)
-	bodyTruePreds := g.To(bodyTrue)
-	if len(bodyTruePreds) != 1 || len(bodyTrueSuccs) != 1 || !g.HasEdgeFromTo(bodyTrue, exit) {
+	bodyTrueSuccs := g.From(bodyTrue.ID())
+	bodyTruePreds := g.To(bodyTrue.ID())
+	if len(bodyTruePreds) != 1 || len(bodyTrueSuccs) != 1 || !g.HasEdgeFromTo(bodyTrue.ID(), exit.ID()) {
 		return false
 	}
 
 	// Verify that body_false has one predecessor (cond) and one successor (exit).
-	bodyFalseSuccs := g.From(bodyFalse)
-	bodyFalsePreds := g.To(bodyFalse)
-	if len(bodyFalsePreds) != 1 || len(bodyFalseSuccs) != 1 || !g.HasEdgeFromTo(bodyFalse, exit) {
+	bodyFalseSuccs := g.From(bodyFalse.ID())
+	bodyFalsePreds := g.To(bodyFalse.ID())
+	if len(bodyFalsePreds) != 1 || len(bodyFalseSuccs) != 1 || !g.HasEdgeFromTo(bodyFalse.ID(), exit.ID()) {
 		return false
 	}
 
 	// Verify that exit has two predecessor (body_true and body_false).
-	exitPreds := g.To(exit)
+	exitPreds := g.To(exit.ID())
 	return len(exitPreds) == 2
 }
