@@ -27,6 +27,13 @@ Supported:
 * x86 -> LLVM IR
 * x86_64 -> LLVM IR
 
+## bin2llvm
+
+https://github.com/cojocar/bin2llvm
+
+Supported:
+* ARM
+
 ## fcd
 
 https://github.com/zneak/fcd
