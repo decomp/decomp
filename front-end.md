@@ -2,6 +2,13 @@
 
 Translate machine code (e.g. x86 assembly) to LLVM IR.
 
+## reopt
+
+https://github.com/GaloisInc/reopt
+
+Supported:
+* x86_64 -> LLVM IR
+
 ## rev.ng
 
 https://github.com/revng/revamb
