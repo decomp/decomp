@@ -4,7 +4,7 @@ Translate machine code (e.g. x86 assembly) to LLVM IR.
 
 ## llvm-mctoll
 
-https://github.com/mewbak/llvm-mctoll
+https://github.com/Microsoft/llvm-mctoll
 
 Supported:
 * x86_64 -> LLVM IR
