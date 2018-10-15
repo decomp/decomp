@@ -2,6 +2,17 @@
 
 Translate machine code (e.g. x86 assembly) to LLVM IR.
 
+## RetDec
+
+https://github.com/avast-tl/retdec
+
+Supported:
+* x86 -> LLVM IR
+* ARM -> LLVM IR
+* MIPS -> LLVM IR
+* PIC32 -> LLVM IR
+* PowerPC -> LLVM IR
+
 ## llvm-mctoll
 
 https://github.com/Microsoft/llvm-mctoll
