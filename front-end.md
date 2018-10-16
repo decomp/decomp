@@ -69,7 +69,7 @@ Supported:
 
 ## Dagger
 
-http://dagger.repzret.org/
+https://github.com/repzret/dagger
 
 Supported:
 * x86 -> LLVM IR
