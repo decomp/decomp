@@ -79,7 +79,7 @@ Future:
 
 ## RevGen
 
-https://github.com/dslab-epfl/s2e/blob/revgen/docs/Tools/StaticTranslator.rst
+https://github.com/S2E/tools
 
 Supported:
 
