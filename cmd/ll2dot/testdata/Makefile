@@ -12,8 +12,6 @@ prepare: $(LL_SRC)
 %.ll: %.c
 	clang -S -emit-llvm -o $@ $<
 	opt -S --mem2reg -o $@ $@
-	# TODO: Remove once the llir/llvm parser matures.
-	../../../../../llir/llvm/asm/internal/testdata/strip.sh $@
 
 clean:
 	rm -f *.ll
