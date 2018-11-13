@@ -119,8 +119,8 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 	// Get functions set by `-funcs` or all functions if `-funcs` not used.
 	var funcs []*ir.Function
 	for _, f := range module.Funcs {
-		if len(funcNames) > 0 && !funcNames[f.Name] {
-			dbg.Printf("skipping function %q.", f.Name)
+		if len(funcNames) > 0 && !funcNames[f.GlobalName] {
+			dbg.Printf("skipping function %q.", f.Ident())
 			continue
 		}
 		funcs = append(funcs, f)
@@ -130,7 +130,7 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 	srcName := pathutil.FileName(llPath)
 	file := &ast.File{}
 	d := newDecompiler()
-	for _, t := range module.Types {
+	for _, t := range module.TypeDefs {
 		typ := d.typeDef(t)
 		file.Decls = append(file.Decls, typ)
 	}
@@ -144,7 +144,7 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 	// Recover functions.
 	var hasMain bool
 	for _, f := range funcs {
-		if f.Name == "main" {
+		if f.GlobalName == "main" {
 			hasMain = true
 		}
 		var prims []*primitive.Primitive
@@ -171,7 +171,7 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 	}
 
 	// Add newIntNNN function declarations.
-	var newIntSizes []int
+	var newIntSizes []int64
 	for newIntSize := range d.newIntSizes {
 		newIntSizes = append(newIntSizes, newIntSize)
 	}
@@ -210,7 +210,7 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 	}
 
 	// Add types not part of builtin.
-	var intSizes []int
+	var intSizes []int64
 	for intSize := range d.intSizes {
 		switch intSize {
 		case 8, 16, 32, 64:
@@ -219,7 +219,9 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 			intSizes = append(intSizes, intSize)
 		}
 	}
-	sort.Ints(intSizes)
+	sort.Slice(intSizes, func(i, j int) bool {
+		return intSizes[i] < intSizes[j]
+	})
 	for _, intSize := range intSizes {
 		typeName := fmt.Sprintf("int%d", intSize)
 		var underlying string
@@ -262,9 +264,9 @@ type decompiler struct {
 	// Global states.
 
 	// Tracks use of integer types not part of Go builtin.
-	intSizes map[int]bool
+	intSizes map[int64]bool
 	// Tracks use of newIntNNN function calls.
-	newIntSizes map[int]bool
+	newIntSizes map[int64]bool
 
 	// Per function states.
 
@@ -277,8 +279,8 @@ type decompiler struct {
 // newDecompiler returns a new decompiler.
 func newDecompiler() *decompiler {
 	return &decompiler{
-		intSizes:    make(map[int]bool),
-		newIntSizes: make(map[int]bool),
+		intSizes:    make(map[int64]bool),
+		newIntSizes: make(map[int64]bool),
 	}
 }
 
@@ -286,7 +288,7 @@ func newDecompiler() *decompiler {
 // definition.
 func (d *decompiler) typeDef(t irtypes.Type) *ast.GenDecl {
 	spec := &ast.TypeSpec{
-		Name: d.typeIdent(t.GetName()),
+		Name: d.typeIdent(t.Name()),
 		Type: d.goTypeDef(t),
 	}
 	return &ast.GenDecl{
@@ -299,7 +301,7 @@ func (d *decompiler) typeDef(t irtypes.Type) *ast.GenDecl {
 // declaration.
 func (d *decompiler) globalDecl(g *ir.Global) *ast.GenDecl {
 	spec := &ast.ValueSpec{
-		Names:  []*ast.Ident{d.globalIdent(g.Name)},
+		Names:  []*ast.Ident{d.globalIdent(g.GlobalName)},
 		Type:   d.goType(g.Typ),
 		Values: []ast.Expr{d.pointerToConst(g.Init)},
 	}
@@ -315,8 +317,8 @@ func (d *decompiler) pointerToConst(c constant.Constant) ast.Expr {
 	switch c := c.(type) {
 	// Simple constants
 	case *constant.Int:
-		callee := fmt.Sprintf("newInt%d", c.Typ.Size)
-		d.newIntSizes[c.Typ.Size] = true
+		callee := fmt.Sprintf("newInt%d", c.Typ.BitSize)
+		d.newIntSizes[c.Typ.BitSize] = true
 		return &ast.CallExpr{
 			Fun:  ast.NewIdent(callee),
 			Args: []ast.Expr{d.value(c)},
@@ -340,12 +342,12 @@ func (d *decompiler) pointerToConst(c constant.Constant) ast.Expr {
 	// Global variable and function addresses
 	case *ir.Global:
 		// TODO: Check if `&g` should be returned instead of `g`.
-		return d.globalIdent(c.Name)
+		return d.globalIdent(c.GlobalName)
 	case *ir.Function:
 		// TODO: Check if `&f` should be returned instead of `f`.
-		return d.globalIdent(c.Name)
+		return d.globalIdent(c.GlobalName)
 	// Constant expressions
-	case constant.Expr:
+	case constant.Expression:
 		return d.expr(c)
 	default:
 		panic(fmt.Sprintf("support for value %T not yet implemented", c))
@@ -362,7 +364,7 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 	typ := d.goType(f.Sig)
 	sig := typ.(*ast.FuncType)
 	fn := &ast.FuncDecl{
-		Name: d.globalIdent(f.Name),
+		Name: d.globalIdent(f.GlobalName),
 		Type: sig,
 	}
 	if len(f.Blocks) == 0 {
@@ -375,7 +377,7 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 	// Reset basic block mapping.
 	d.blocks = make(map[string]*basicBlock)
 	for i, block := range f.Blocks {
-		d.blocks[block.Name] = &basicBlock{BasicBlock: block, num: i}
+		d.blocks[block.LocalName] = &basicBlock{BasicBlock: block, num: i}
 	}
 
 	// Record outgoing PHI values.
@@ -388,8 +390,8 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 			// The incoming values of PHI instructions are propagated as assignment
 			// statements to the predecessor basic blocks of the incoming values.
 			for _, inc := range phi.Incs {
-				pred := d.blocks[inc.Pred.Name]
-				assignStmt := d.assign(phi.Name, d.value(inc.X))
+				pred := d.blocks[inc.Pred.LocalName]
+				assignStmt := d.assign(phi.LocalName, d.value(inc.X))
 				pred.out = append(pred.out, assignStmt)
 			}
 		}
@@ -406,7 +408,7 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 			delete(d.blocks, node)
 		}
 		// Add primitive basic block.
-		d.blocks[block.Name] = block
+		d.blocks[block.LocalName] = block
 	}
 
 	// A single remaining basic block indicates successful control flow recovery.
@@ -434,7 +436,7 @@ func (d *decompiler) funcDecl(f *ir.Function, prims []*primitive.Primitive) (*as
 			return nil, errors.New("empty basic block; expected at least 1 statement")
 		}
 		labelStmt := &ast.LabeledStmt{
-			Label: d.label(block.Name),
+			Label: d.label(block.LocalName),
 			Stmt:  block.stmts[0],
 		}
 		block.stmts[0] = labelStmt
@@ -515,9 +517,9 @@ func (d *decompiler) value(v value.Value) ast.Expr {
 	case value.Named:
 		switch v.(type) {
 		case *ir.Global, *ir.Function:
-			return d.globalIdent(v.GetName())
+			return d.globalIdent(v.Name())
 		default:
-			return d.localIdent(v.GetName())
+			return d.localIdent(v.Name())
 		}
 	case constant.Constant:
 		return d.constant(v)
@@ -570,7 +572,7 @@ func (d *decompiler) stmts(block *basicBlock) []ast.Stmt {
 // primitives for the given function.
 func parsePrims(srcName string, f *ir.Function) ([]*primitive.Primitive, error) {
 	graphsDir := fmt.Sprintf("%s_graphs", srcName)
-	jsonName := f.Name + ".json"
+	jsonName := f.GlobalName + ".json"
 	jsonPath := filepath.Join(graphsDir, jsonName)
 	// Generate primitives if not present on file system.
 	if !osutil.Exists(jsonPath) {

@@ -11,7 +11,7 @@ import (
 
 // goType converts the LLVM IR type into a corresponding Go expression.
 func (d *decompiler) goType(t irtypes.Type) ast.Expr {
-	if name := t.GetName(); len(name) > 0 {
+	if name := t.Name(); len(name) > 0 {
 		return d.typeIdent(name)
 	}
 	return d.goTypeDef(t)
@@ -33,17 +33,18 @@ func (d *decompiler) goTypeDef(t irtypes.Type) ast.Expr {
 		params := &ast.FieldList{}
 		for _, p := range t.Params {
 			param := &ast.Field{
-				Type: d.goType(p.Typ),
+				Type: d.goType(p),
 			}
-			if len(p.Name) > 0 {
-				param.Names = append(param.Names, d.localIdent(p.Name))
-			}
+			// TODO: figure out how to handle function parameter name.
+			//if len(p.Name) > 0 {
+			//	param.Names = append(param.Names, d.localIdent(p.Name))
+			//}
 			params.List = append(params.List, param)
 		}
 		var results *ast.FieldList
-		if !irtypes.Equal(t.Ret, irtypes.Void) {
+		if !irtypes.Equal(t.RetType, irtypes.Void) {
 			result := &ast.Field{
-				Type: d.goType(t.Ret),
+				Type: d.goType(t.RetType),
 			}
 			results = &ast.FieldList{
 				List: []*ast.Field{result},
@@ -55,17 +56,17 @@ func (d *decompiler) goTypeDef(t irtypes.Type) ast.Expr {
 			Results: results,
 		}
 	case *irtypes.IntType:
-		d.intSizes[t.Size] = true
+		d.intSizes[t.BitSize] = true
 		return &ast.Ident{
-			Name: fmt.Sprintf("int%d", t.Size),
+			Name: fmt.Sprintf("int%d", t.BitSize),
 		}
 	case *irtypes.FloatType:
 		switch t.Kind {
-		case irtypes.FloatKindIEEE_32:
+		case irtypes.FloatKindFloat:
 			return ast.NewIdent("float32")
-		case irtypes.FloatKindIEEE_64:
+		case irtypes.FloatKindDouble:
 			return ast.NewIdent("float64")
-		case irtypes.FloatKindIEEE_16, irtypes.FloatKindIEEE_128, irtypes.FloatKindDoubleExtended_80, irtypes.FloatKindDoubleDouble_128:
+		case irtypes.FloatKindHalf, irtypes.FloatKindFP128, irtypes.FloatKindX86FP80, irtypes.FloatKindPPCFP128:
 			// TODO: Add proper support for non-builtin float types.
 			return ast.NewIdent("float64")
 		default:
@@ -73,7 +74,7 @@ func (d *decompiler) goTypeDef(t irtypes.Type) ast.Expr {
 		}
 	case *irtypes.PointerType:
 		return &ast.StarExpr{
-			X: d.goType(t.Elem),
+			X: d.goType(t.ElemType),
 		}
 	case *irtypes.VectorType:
 		return &ast.ArrayType{
@@ -81,7 +82,7 @@ func (d *decompiler) goTypeDef(t irtypes.Type) ast.Expr {
 				Kind:  token.INT,
 				Value: strconv.FormatInt(t.Len, 10),
 			},
-			Elt: d.goType(t.Elem),
+			Elt: d.goType(t.ElemType),
 		}
 	case *irtypes.LabelType:
 		panic("support for *types.LabelType not yet implemented")
@@ -93,7 +94,7 @@ func (d *decompiler) goTypeDef(t irtypes.Type) ast.Expr {
 				Kind:  token.INT,
 				Value: strconv.FormatInt(t.Len, 10),
 			},
-			Elt: d.goType(t.Elem),
+			Elt: d.goType(t.ElemType),
 		}
 	case *irtypes.StructType:
 		var fs []*ast.Field

@@ -7,6 +7,7 @@ import (
 
 	"github.com/llir/llvm/ir"
 	"github.com/llir/llvm/ir/constant"
+	"github.com/llir/llvm/ir/enum"
 	irtypes "github.com/llir/llvm/ir/types"
 	"github.com/llir/llvm/ir/value"
 )
@@ -143,35 +144,35 @@ func (d *decompiler) inst(inst ir.Instruction) ast.Stmt {
 // statement.
 func (d *decompiler) instAdd(inst *ir.InstAdd) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.ADD, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instFAdd converts the given LLVM IR fadd instruction to a corresponding Go
 // statement.
 func (d *decompiler) instFAdd(inst *ir.InstFAdd) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.ADD, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instSub converts the given LLVM IR sub instruction to a corresponding Go
 // statement.
 func (d *decompiler) instSub(inst *ir.InstSub) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.SUB, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instFSub converts the given LLVM IR fsub instruction to a corresponding Go
 // statement.
 func (d *decompiler) instFSub(inst *ir.InstFSub) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.SUB, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instMul converts the given LLVM IR mul instruction to a corresponding Go
 // statement.
 func (d *decompiler) instMul(inst *ir.InstMul) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.MUL, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 
 }
 
@@ -179,63 +180,63 @@ func (d *decompiler) instMul(inst *ir.InstMul) ast.Stmt {
 // statement.
 func (d *decompiler) instFMul(inst *ir.InstFMul) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.MUL, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instUDiv converts the given LLVM IR udiv instruction to a corresponding Go
 // statement.
 func (d *decompiler) instUDiv(inst *ir.InstUDiv) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.QUO, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instSDiv converts the given LLVM IR sdiv instruction to a corresponding Go
 // statement.
 func (d *decompiler) instSDiv(inst *ir.InstSDiv) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.QUO, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instFDiv converts the given LLVM IR fdiv instruction to a corresponding Go
 // statement.
 func (d *decompiler) instFDiv(inst *ir.InstFDiv) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.QUO, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instURem converts the given LLVM IR urem instruction to a corresponding Go
 // statement.
 func (d *decompiler) instURem(inst *ir.InstURem) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.REM, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instSRem converts the given LLVM IR srem instruction to a corresponding Go
 // statement.
 func (d *decompiler) instSRem(inst *ir.InstSRem) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.REM, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instFRem converts the given LLVM IR frem instruction to a corresponding Go
 // statement.
 func (d *decompiler) instFRem(inst *ir.InstFRem) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.REM, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instShl converts the given LLVM IR shl instruction to a corresponding Go
 // statement.
 func (d *decompiler) instShl(inst *ir.InstShl) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.SHL, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instLShr converts the given LLVM IR lshr instruction to a corresponding Go
 // statement.
 func (d *decompiler) instLShr(inst *ir.InstLShr) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.SHR, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instAShr converts the given LLVM IR ashr instruction to a corresponding Go
@@ -244,28 +245,28 @@ func (d *decompiler) instAShr(inst *ir.InstAShr) ast.Stmt {
 	// TODO: Differentiate between logical shift right and arithmetic shift
 	// right.
 	expr := d.binaryOp(inst.X, token.SHR, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instAnd converts the given LLVM IR and instruction to a corresponding Go
 // statement.
 func (d *decompiler) instAnd(inst *ir.InstAnd) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.AND, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instOr converts the given LLVM IR or instruction to a corresponding Go
 // statement.
 func (d *decompiler) instOr(inst *ir.InstOr) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.OR, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instXor converts the given LLVM IR xor instruction to a corresponding Go
 // statement.
 func (d *decompiler) instXor(inst *ir.InstXor) ast.Stmt {
 	expr := d.binaryOp(inst.X, token.XOR, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instExtractElement converts the given LLVM IR extractelement instruction to a
@@ -275,7 +276,7 @@ func (d *decompiler) instExtractElement(inst *ir.InstExtractElement) ast.Stmt {
 		X:     d.value(inst.X),
 		Index: d.value(inst.Index),
 	}
-	return d.assign(inst.Name, src)
+	return d.assign(inst.LocalName, src)
 }
 
 // instInsertElement converts the given LLVM IR insertelement instruction to a
@@ -302,7 +303,7 @@ func (d *decompiler) instExtractValue(inst *ir.InstExtractValue) ast.Stmt {
 			Index: d.intLit(index),
 		}
 	}
-	return d.assign(inst.Name, src)
+	return d.assign(inst.LocalName, src)
 }
 
 // instInsertValue converts the given LLVM IR insertvalue instruction to a
@@ -315,7 +316,7 @@ func (d *decompiler) instInsertValue(inst *ir.InstInsertValue) ast.Stmt {
 // instAlloca converts the given LLVM IR alloca instruction to a corresponding
 // Go statement.
 func (d *decompiler) instAlloca(inst *ir.InstAlloca) ast.Stmt {
-	typ := d.goType(inst.Elem)
+	typ := d.goType(inst.ElemType)
 	if inst.NElems != nil {
 		typ = &ast.ArrayType{
 			Len: d.value(inst.NElems),
@@ -326,7 +327,7 @@ func (d *decompiler) instAlloca(inst *ir.InstAlloca) ast.Stmt {
 		Fun:  ast.NewIdent("new"),
 		Args: []ast.Expr{typ},
 	}
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instLoad converts the given LLVM IR load instruction to a corresponding Go
@@ -336,7 +337,7 @@ func (d *decompiler) instLoad(inst *ir.InstLoad) ast.Stmt {
 	expr := &ast.StarExpr{
 		X: d.value(inst.Src),
 	}
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instStore converts the given LLVM IR store instruction to a corresponding Go
@@ -367,98 +368,98 @@ func (d *decompiler) instGetElementPtr(inst *ir.InstGetElementPtr) ast.Stmt {
 		Op: token.AND,
 		X:  src,
 	}
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instTrunc converts the given LLVM IR trunc instruction to a corresponding Go
 // statement.
 func (d *decompiler) instTrunc(inst *ir.InstTrunc) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instZExt converts the given LLVM IR zext instruction to a corresponding Go
 // statement.
 func (d *decompiler) instZExt(inst *ir.InstZExt) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instSExt converts the given LLVM IR sext instruction to a corresponding Go
 // statement.
 func (d *decompiler) instSExt(inst *ir.InstSExt) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instFPTrunc converts the given LLVM IR fptrunc instruction to a corresponding
 // Go statement.
 func (d *decompiler) instFPTrunc(inst *ir.InstFPTrunc) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instFPExt converts the given LLVM IR fpext instruction to a corresponding Go
 // statement.
 func (d *decompiler) instFPExt(inst *ir.InstFPExt) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instFPToUI converts the given LLVM IR fptoui instruction to a corresponding
 // Go statement.
 func (d *decompiler) instFPToUI(inst *ir.InstFPToUI) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instFPToSI converts the given LLVM IR fptosi instruction to a corresponding
 // Go statement.
 func (d *decompiler) instFPToSI(inst *ir.InstFPToSI) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instUIToFP converts the given LLVM IR uitofp instruction to a corresponding
 // Go statement.
 func (d *decompiler) instUIToFP(inst *ir.InstUIToFP) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instSIToFP converts the given LLVM IR sitofp instruction to a corresponding
 // Go statement.
 func (d *decompiler) instSIToFP(inst *ir.InstSIToFP) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instPtrToInt converts the given LLVM IR ptrtoint instruction to a
 // corresponding Go statement.
 func (d *decompiler) instPtrToInt(inst *ir.InstPtrToInt) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instIntToPtr converts the given LLVM IR inttoptr instruction to a
 // corresponding Go statement.
 func (d *decompiler) instIntToPtr(inst *ir.InstIntToPtr) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instBitCast converts the given LLVM IR bitcast instruction to a corresponding
 // Go statement.
 func (d *decompiler) instBitCast(inst *ir.InstBitCast) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instAddrSpaceCast converts the given LLVM IR addrspacecast instruction to a
 // corresponding Go statement.
 func (d *decompiler) instAddrSpaceCast(inst *ir.InstAddrSpaceCast) ast.Stmt {
 	expr := d.convert(inst.From, inst.To)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instICmp converts the given LLVM IR icmp instruction to a corresponding Go
@@ -466,7 +467,7 @@ func (d *decompiler) instAddrSpaceCast(inst *ir.InstAddrSpaceCast) ast.Stmt {
 func (d *decompiler) instICmp(inst *ir.InstICmp) ast.Stmt {
 	op := intPred(inst.Pred)
 	expr := d.binaryOp(inst.X, op, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instFCmp converts the given LLVM IR fcmp instruction to a corresponding Go
@@ -474,14 +475,14 @@ func (d *decompiler) instICmp(inst *ir.InstICmp) ast.Stmt {
 func (d *decompiler) instFCmp(inst *ir.InstFCmp) ast.Stmt {
 	op := floatPred(inst.Pred)
 	expr := d.binaryOp(inst.X, op, inst.Y)
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // instSelect converts the given LLVM IR select instruction to a corresponding
 // Go statement.
 func (d *decompiler) instSelect(inst *ir.InstSelect) []ast.Stmt {
 	spec := &ast.ValueSpec{
-		Names: []*ast.Ident{d.localIdent(inst.Name)},
+		Names: []*ast.Ident{d.localIdent(inst.LocalName)},
 		Type:  d.goType(inst.X.Type()),
 	}
 	declStmt := &ast.DeclStmt{
@@ -493,10 +494,10 @@ func (d *decompiler) instSelect(inst *ir.InstSelect) []ast.Stmt {
 	ifStmt := &ast.IfStmt{
 		Cond: d.value(inst.Cond),
 		Body: &ast.BlockStmt{
-			List: []ast.Stmt{d.assign(inst.Name, d.value(inst.X))},
+			List: []ast.Stmt{d.assign(inst.LocalName, d.value(inst.X))},
 		},
 		Else: &ast.BlockStmt{
-			List: []ast.Stmt{d.assign(inst.Name, d.value(inst.Y))},
+			List: []ast.Stmt{d.assign(inst.LocalName, d.value(inst.Y))},
 		},
 	}
 	return []ast.Stmt{declStmt, ifStmt}
@@ -509,10 +510,10 @@ func (d *decompiler) instCall(inst *ir.InstCall) ast.Stmt {
 	switch c := inst.Callee.(type) {
 	case *ir.Function:
 		// global function identifier.
-		callee = d.globalIdent(c.Name)
-	case *irtypes.Param:
+		callee = d.globalIdent(c.GlobalName)
+	case *ir.Param:
 		// local function identifier.
-		callee = d.localIdent(c.Name)
+		callee = d.localIdent(c.LocalName)
 	case *constant.ExprBitCast:
 		callee = d.value(c)
 	case *ir.InstBitCast:
@@ -530,10 +531,10 @@ func (d *decompiler) instCall(inst *ir.InstCall) ast.Stmt {
 		Fun:  callee,
 		Args: args,
 	}
-	if irtypes.Equal(inst.Sig.Ret, irtypes.Void) {
+	if irtypes.Equal(inst.Type(), irtypes.Void) {
 		return &ast.ExprStmt{X: expr}
 	}
-	return d.assign(inst.Name, expr)
+	return d.assign(inst.LocalName, expr)
 }
 
 // binaryOp converts the given LLVM IR binary operation to a corresponding Go
@@ -568,28 +569,28 @@ func (d *decompiler) assign(name string, expr ast.Expr) *ast.AssignStmt {
 
 // intPred converts the given LLVM IR integer predicate to a corresponding Go
 // token.
-func intPred(pred ir.IntPred) token.Token {
+func intPred(pred enum.IPred) token.Token {
 	// TODO: Differentiate between unsigned and signed.
 	switch pred {
-	case ir.IntEQ:
+	case enum.IPredEQ:
 		return token.EQL
-	case ir.IntNE:
+	case enum.IPredNE:
 		return token.NEQ
-	case ir.IntUGT:
+	case enum.IPredUGT:
 		return token.GTR
-	case ir.IntUGE:
+	case enum.IPredUGE:
 		return token.GEQ
-	case ir.IntULT:
+	case enum.IPredULT:
 		return token.LSS
-	case ir.IntULE:
+	case enum.IPredULE:
 		return token.LEQ
-	case ir.IntSGT:
+	case enum.IPredSGT:
 		return token.GTR
-	case ir.IntSGE:
+	case enum.IPredSGE:
 		return token.GEQ
-	case ir.IntSLT:
+	case enum.IPredSLT:
 		return token.LSS
-	case ir.IntSLE:
+	case enum.IPredSLE:
 		return token.LEQ
 	default:
 		panic(fmt.Sprintf("support for integer predicate %v not yet implemented", pred))
@@ -598,40 +599,40 @@ func intPred(pred ir.IntPred) token.Token {
 
 // floatPred converts the given LLVM IR floating-point predicate to a
 // corresponding Go token.
-func floatPred(pred ir.FloatPred) token.Token {
+func floatPred(pred enum.FPred) token.Token {
 	// TODO: Differentiate between ordered and unordered.
 	switch pred {
-	case ir.FloatFalse:
+	case enum.FPredFalse:
 		panic(`support for floating-point predicate "false" not yet implemented`)
-	case ir.FloatOEQ:
+	case enum.FPredOEQ:
 		return token.EQL
-	case ir.FloatOGT:
+	case enum.FPredOGT:
 		return token.GTR
-	case ir.FloatOGE:
+	case enum.FPredOGE:
 		return token.GEQ
-	case ir.FloatOLT:
+	case enum.FPredOLT:
 		return token.LSS
-	case ir.FloatOLE:
+	case enum.FPredOLE:
 		return token.LEQ
-	case ir.FloatONE:
+	case enum.FPredONE:
 		return token.NEQ
-	case ir.FloatORD:
+	case enum.FPredORD:
 		panic(`support for floating-point predicate "ord" not yet implemented`)
-	case ir.FloatUEQ:
+	case enum.FPredUEQ:
 		return token.EQL
-	case ir.FloatUGT:
+	case enum.FPredUGT:
 		return token.GTR
-	case ir.FloatUGE:
+	case enum.FPredUGE:
 		return token.GEQ
-	case ir.FloatULT:
+	case enum.FPredULT:
 		return token.LSS
-	case ir.FloatULE:
+	case enum.FPredULE:
 		return token.LEQ
-	case ir.FloatUNE:
+	case enum.FPredUNE:
 		return token.NEQ
-	case ir.FloatUNO:
+	case enum.FPredUNO:
 		panic(`support for floating-point predicate "uno" not yet implemented`)
-	case ir.FloatTrue:
+	case enum.FPredTrue:
 		panic(`support for floating-point predicate "true" not yet implemented`)
 	default:
 		panic(fmt.Sprintf("support for floating-point predicate %v not yet implemented", pred))

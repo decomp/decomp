@@ -41,10 +41,10 @@ func (d *decompiler) termRet(term *ir.TermRet) ast.Stmt {
 // statement.
 func (d *decompiler) termBr(term *ir.TermBr) ast.Stmt {
 	// Use goto-statements as a fallback for incomplete control flow recovery.
-	d.labels[term.Target.Name] = true
+	d.labels[term.Target.LocalName] = true
 	return &ast.BranchStmt{
 		Tok:   token.GOTO,
-		Label: d.label(term.Target.Name),
+		Label: d.label(term.Target.LocalName),
 	}
 }
 
@@ -52,15 +52,15 @@ func (d *decompiler) termBr(term *ir.TermBr) ast.Stmt {
 // corresponding Go statement.
 func (d *decompiler) termCondBr(term *ir.TermCondBr) ast.Stmt {
 	// Use goto-statements as a fallback for incomplete control flow recovery.
-	d.labels[term.TargetTrue.Name] = true
-	d.labels[term.TargetFalse.Name] = true
+	d.labels[term.TargetTrue.LocalName] = true
+	d.labels[term.TargetFalse.LocalName] = true
 	gotoTrueStmt := &ast.BranchStmt{
 		Tok:   token.GOTO,
-		Label: d.label(term.TargetTrue.Name),
+		Label: d.label(term.TargetTrue.LocalName),
 	}
 	gotoFalseStmt := &ast.BranchStmt{
 		Tok:   token.GOTO,
-		Label: d.label(term.TargetFalse.Name),
+		Label: d.label(term.TargetFalse.LocalName),
 	}
 	return &ast.IfStmt{
 		Cond: d.value(term.Cond),
@@ -81,7 +81,7 @@ func (d *decompiler) termSwitch(term *ir.TermSwitch) ast.Stmt {
 	for _, c := range term.Cases {
 		gotoStmt := &ast.BranchStmt{
 			Tok:   token.GOTO,
-			Label: d.localIdent(c.Target.Name),
+			Label: d.localIdent(c.Target.LocalName),
 		}
 		cc := &ast.CaseClause{
 			List: []ast.Expr{d.value(c.X)},

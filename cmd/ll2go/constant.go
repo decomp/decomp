@@ -25,17 +25,19 @@ func (d *decompiler) constant(c constant.Constant) ast.Expr {
 		return d.constVector(c)
 	case *constant.Array:
 		return d.constArray(c)
+	case *constant.CharArray:
+		return d.constCharArray(c)
 	case *constant.Struct:
 		return d.constStruct(c)
 	case *constant.ZeroInitializer:
 		return d.constZeroInitializer(c)
 	// Global variable and function addresses
 	case *ir.Global:
-		return d.globalIdent(c.Name)
+		return d.globalIdent(c.GlobalName)
 	case *ir.Function:
-		return d.globalIdent(c.Name)
+		return d.globalIdent(c.GlobalName)
 	// Constant expressions
-	case constant.Expr:
+	case constant.Expression:
 		return d.expr(c)
 	default:
 		panic(fmt.Sprintf("support for constant value %T not yet implemented", c))
@@ -82,9 +84,6 @@ func (d *decompiler) constVector(c *constant.Vector) ast.Expr {
 // constArray converts the given LLVM IR array constant to a corresponding Go
 // expression.
 func (d *decompiler) constArray(c *constant.Array) ast.Expr {
-	if c.CharArray {
-		return d.constCharArray(c)
-	}
 	var elems []ast.Expr
 	for _, e := range c.Elems {
 		elems = append(elems, d.constant(e))
@@ -97,19 +96,10 @@ func (d *decompiler) constArray(c *constant.Array) ast.Expr {
 
 // constCharArray converts the given LLVM IR character array constant to a
 // corresponding Go expression.
-func (d *decompiler) constCharArray(c *constant.Array) ast.Expr {
-	var buf []byte
-	for _, e := range c.Elems {
-		elem, ok := e.(*constant.Int)
-		if !ok {
-			panic(fmt.Sprintf("invalid constant type; expected *constant.Int, got %T", e))
-		}
-		b := byte(elem.Int64())
-		buf = append(buf, b)
-	}
+func (d *decompiler) constCharArray(c *constant.CharArray) ast.Expr {
 	return &ast.BasicLit{
 		Kind:  token.STRING,
-		Value: fmt.Sprintf("%q", string(buf)),
+		Value: fmt.Sprintf("%q", string(c.X)),
 	}
 }
 
@@ -142,7 +132,7 @@ func (d *decompiler) constZeroInitializer(c *constant.ZeroInitializer) ast.Expr 
 }
 
 // expr converts the given LLVM IR expression to a corresponding Go expression.
-func (d *decompiler) expr(expr constant.Expr) ast.Expr {
+func (d *decompiler) expr(expr constant.Expression) ast.Expr {
 	switch expr := expr.(type) {
 	// Binary expressions
 	case *constant.ExprAdd:
@@ -340,7 +330,7 @@ func (d *decompiler) exprGetElementPtr(expr *constant.ExprGetElementPtr) ast.Exp
 	for _, index := range expr.Indices {
 		src = &ast.IndexExpr{
 			X:     src,
-			Index: d.constant(index),
+			Index: d.constant(index.Index),
 		}
 	}
 	e := &ast.UnaryExpr{
@@ -431,14 +421,14 @@ func (d *decompiler) exprAddrSpaceCast(expr *constant.ExprAddrSpaceCast) ast.Exp
 // exprICmp converts the given LLVM IR icmp expression to a corresponding Go
 // statement.
 func (d *decompiler) exprICmp(expr *constant.ExprICmp) ast.Expr {
-	op := intPred(ir.IntPred(expr.Pred))
+	op := intPred(expr.Pred)
 	return d.binaryOp(expr.X, op, expr.Y)
 }
 
 // exprFCmp converts the given LLVM IR fcmp expression to a corresponding Go
 // statement.
 func (d *decompiler) exprFCmp(expr *constant.ExprFCmp) ast.Expr {
-	op := floatPred(ir.FloatPred(expr.Pred))
+	op := floatPred(expr.Pred)
 	return d.binaryOp(expr.X, op, expr.Y)
 }
 
