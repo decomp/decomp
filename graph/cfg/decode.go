@@ -22,7 +22,9 @@ func ParseFile(path string) (*Graph, error) {
 	if err := dot.Unmarshal(data, g); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	for _, n := range g.Nodes() {
+	nodes := g.Nodes()
+	for nodes.Next() {
+		n := nodes.Node()
 		if n, ok := n.(*Node); ok {
 			if n.entry {
 				// Store entry node.

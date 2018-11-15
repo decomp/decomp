@@ -5,3 +5,4 @@
 *.xcf
 *.exe
 vendor
+go.sum

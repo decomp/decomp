@@ -77,7 +77,9 @@ func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
 	p := g.NewNodeWithLabel(fmt.Sprintf("prim_node_of_%s", entryLabel))
 
 	// Connect incoming edges to entry.
-	for _, from := range g.To(entry.ID()) {
+	fromNodes := g.To(entry.ID())
+	for fromNodes.Next() {
+		from := fromNodes.Node()
 		e := g.Edge(from.ID(), entry.ID())
 		var label string
 		if e, ok := e.(*cfg.Edge); ok {
@@ -87,7 +89,9 @@ func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
 	}
 
 	// Connect outgoing edges from exit.
-	for _, to := range g.From(exit.ID()) {
+	toNodes := g.From(exit.ID())
+	for toNodes.Next() {
+		to := toNodes.Node()
 		e := g.Edge(exit.ID(), to.ID())
 		var label string
 		if e, ok := e.(*cfg.Edge); ok {

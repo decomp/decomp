@@ -80,9 +80,11 @@ digraph if_else {
 // g, and a boolean indicating if such a primitive was found.
 func FindIfElse(g graph.Directed, dom cfg.DominatorTree) (prim IfElse, ok bool) {
 	// Range through cond node candidates.
-	for _, cond := range g.Nodes() {
+	condNodes := g.Nodes()
+	for condNodes.Next() {
+		cond := condNodes.Node()
 		// Verify that cond has two successors (body_true and body_false).
-		condSuccs := g.From(cond.ID())
+		condSuccs := graph.NodesOf(g.From(cond.ID()))
 		if len(condSuccs) != 2 {
 			continue
 		}
@@ -92,7 +94,7 @@ func FindIfElse(g graph.Directed, dom cfg.DominatorTree) (prim IfElse, ok bool) 
 		prim.BodyTrue, prim.BodyFalse = condSuccs[0], condSuccs[1]
 
 		// Verify that body_true has one successor (exit).
-		bodyTrueSuccs := g.From(prim.BodyTrue.ID())
+		bodyTrueSuccs := graph.NodesOf(g.From(prim.BodyTrue.ID()))
 		if len(bodyTrueSuccs) != 1 {
 			continue
 		}
@@ -125,25 +127,25 @@ func (prim IfElse) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 
 	// Verify that cond has two successors (body_true and body_false).
 	condSuccs := g.From(cond.ID())
-	if len(condSuccs) != 2 || !g.HasEdgeFromTo(cond.ID(), bodyTrue.ID()) || !g.HasEdgeFromTo(cond.ID(), bodyFalse.ID()) {
+	if condSuccs.Len() != 2 || !g.HasEdgeFromTo(cond.ID(), bodyTrue.ID()) || !g.HasEdgeFromTo(cond.ID(), bodyFalse.ID()) {
 		return false
 	}
 
 	// Verify that body_true has one predecessor (cond) and one successor (exit).
 	bodyTrueSuccs := g.From(bodyTrue.ID())
 	bodyTruePreds := g.To(bodyTrue.ID())
-	if len(bodyTruePreds) != 1 || len(bodyTrueSuccs) != 1 || !g.HasEdgeFromTo(bodyTrue.ID(), exit.ID()) {
+	if bodyTruePreds.Len() != 1 || bodyTrueSuccs.Len() != 1 || !g.HasEdgeFromTo(bodyTrue.ID(), exit.ID()) {
 		return false
 	}
 
 	// Verify that body_false has one predecessor (cond) and one successor (exit).
 	bodyFalseSuccs := g.From(bodyFalse.ID())
 	bodyFalsePreds := g.To(bodyFalse.ID())
-	if len(bodyFalsePreds) != 1 || len(bodyFalseSuccs) != 1 || !g.HasEdgeFromTo(bodyFalse.ID(), exit.ID()) {
+	if bodyFalsePreds.Len() != 1 || bodyFalseSuccs.Len() != 1 || !g.HasEdgeFromTo(bodyFalse.ID(), exit.ID()) {
 		return false
 	}
 
 	// Verify that exit has two predecessor (body_true and body_false).
 	exitPreds := g.To(exit.ID())
-	return len(exitPreds) == 2
+	return exitPreds.Len() == 2
 }

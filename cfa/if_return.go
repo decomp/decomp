@@ -72,9 +72,11 @@ digraph if_return {
 // found.
 func FindIfReturn(g graph.Directed, dom cfg.DominatorTree) (prim IfReturn, ok bool) {
 	// Range through cond node candidates.
-	for _, cond := range g.Nodes() {
+	condNodes := g.Nodes()
+	for condNodes.Next() {
+		cond := condNodes.Node()
 		// Verify that cond has two successors (body and exit).
-		condSuccs := g.From(cond.ID())
+		condSuccs := graph.NodesOf(g.From(cond.ID()))
 		if len(condSuccs) != 2 {
 			continue
 		}
@@ -114,20 +116,20 @@ func (prim IfReturn) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 
 	// Verify that cond has two successors (body and exit).
 	condSuccs := g.From(cond.ID())
-	if len(condSuccs) != 2 || !g.HasEdgeFromTo(cond.ID(), body.ID()) || !g.HasEdgeFromTo(cond.ID(), exit.ID()) {
+	if condSuccs.Len() != 2 || !g.HasEdgeFromTo(cond.ID(), body.ID()) || !g.HasEdgeFromTo(cond.ID(), exit.ID()) {
 		return false
 	}
 
 	// Verify that body has one predecessor (cond) and zero successors.
 	bodyPreds := g.To(body.ID())
 	bodySuccs := g.From(body.ID())
-	if len(bodyPreds) != 1 || len(bodySuccs) != 0 {
+	if bodyPreds.Len() != 1 || bodySuccs.Len() != 0 {
 		return false
 	}
 
 	// Verify that exit has one predecessor (cond).
 	exitPreds := g.To(exit.ID())
-	if len(exitPreds) != 1 {
+	if exitPreds.Len() != 1 {
 		return false
 	}
 
@@ -142,7 +144,8 @@ func (prim IfReturn) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 	//     ↖ ↓
 	//       A
 	condPreds := g.To(cond.ID())
-	for _, pred := range condPreds {
+	for condPreds.Next() {
+		pred := condPreds.Node()
 		if dom.Dominates(cond, pred) {
 			return false
 		}

@@ -149,9 +149,11 @@ func locateEntryNode(g *cfg.Graph, entryLabel string) (graph.Node, error) {
 		return entry, nil
 	}
 	var entry graph.Node
-	for _, n := range g.Nodes() {
+	nodes := g.Nodes()
+	for nodes.Next() {
+		n := nodes.Node()
 		preds := g.To(n.ID())
-		if len(preds) == 0 {
+		if preds.Len() == 0 {
 			if entry != nil {
 				return nil, errors.Errorf("more than one candidate for the entry node located; prev %q, new %q", label(entry), label(n))
 			}
@@ -177,7 +179,7 @@ var ErrIncomplete = goerrors.New("incomplete control flow recovery")
 func restructure(g *cfg.Graph, entry graph.Node, steps bool, name string) ([]*primitive.Primitive, error) {
 	prims := make([]*primitive.Primitive, 0)
 	// Locate control flow primitives.
-	for step := 1; len(g.Nodes()) > 1; step++ {
+	for step := 1; g.Nodes().Len() > 1; step++ {
 		// Locate primitive.
 		dom := cfg.NewDom(g, entry)
 		prim, err := cfa.FindPrim(g, dom)
@@ -204,7 +206,7 @@ func restructure(g *cfg.Graph, entry graph.Node, steps bool, name string) ([]*pr
 		}
 		// Handle special case where entry node has been replaced by primitive
 		// node.
-		if !g.Has(entry.ID()) {
+		if g.Node(entry.ID()) == nil {
 			var ok bool
 			entry, ok = g.NodeByLabel(prim.Entry)
 			if !ok {
@@ -235,7 +237,7 @@ func storeStep(g *cfg.Graph, name, path string, highlight []string) error {
 		n.Attrs["style"] = "filled"
 		n.Attrs["fillcolor"] = "red"
 	}
-	buf, err := dot.Marshal(g, strconv.Quote(name), "", "\t", false)
+	buf, err := dot.Marshal(g, strconv.Quote(name), "", "\t")
 	if err != nil {
 		return errors.WithStack(err)
 	}

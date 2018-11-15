@@ -72,9 +72,11 @@ digraph pre_loop {
 // boolean indicating if such a primitive was found.
 func FindPreLoop(g graph.Directed, dom cfg.DominatorTree) (prim PreLoop, ok bool) {
 	// Range through cond node candidates.
-	for _, cond := range g.Nodes() {
+	condNodes := g.Nodes()
+	for condNodes.Next() {
+		cond := condNodes.Node()
 		// Verify that cond has two successors (body and exit).
-		condSuccs := g.From(cond.ID())
+		condSuccs := graph.NodesOf(g.From(cond.ID()))
 		if len(condSuccs) != 2 {
 			continue
 		}
@@ -114,18 +116,18 @@ func (prim PreLoop) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 
 	// Verify that cond has two successors (body and exit).
 	condSuccs := g.From(cond.ID())
-	if len(condSuccs) != 2 || !g.HasEdgeFromTo(cond.ID(), body.ID()) || !g.HasEdgeFromTo(cond.ID(), exit.ID()) {
+	if condSuccs.Len() != 2 || !g.HasEdgeFromTo(cond.ID(), body.ID()) || !g.HasEdgeFromTo(cond.ID(), exit.ID()) {
 		return false
 	}
 
 	// Verify that body has one predecessor (cond) and one successor (cond).
 	bodyPreds := g.To(body.ID())
 	bodySuccs := g.From(body.ID())
-	if len(bodyPreds) != 1 || len(bodySuccs) != 1 || !g.HasEdgeFromTo(body.ID(), cond.ID()) {
+	if bodyPreds.Len() != 1 || bodySuccs.Len() != 1 || !g.HasEdgeFromTo(body.ID(), cond.ID()) {
 		return false
 	}
 
 	// Verify that exit has one predecessor (cond).
 	exitPreds := g.To(exit.ID())
-	return len(exitPreds) == 1
+	return exitPreds.Len() == 1
 }

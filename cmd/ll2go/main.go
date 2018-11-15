@@ -162,7 +162,7 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 				return nil, errors.WithStack(err)
 			}
 		}
-		dbg.Printf("decompiling function %q.", f.Name)
+		dbg.Printf("decompiling function %q.", f.Ident())
 		fn, err := d.funcDecl(f, prims)
 		if err != nil {
 			return nil, errors.WithStack(err)
@@ -579,7 +579,7 @@ func parsePrims(srcName string, f *ir.Function) ([]*primitive.Primitive, error) 
 		prims, err := genPrims(f)
 		if err != nil {
 			if errors.Cause(err) == ErrIncomplete {
-				dbg.Printf("WARNING: incomplete control flow recovery of %q", f.Name)
+				dbg.Printf("WARNING: incomplete control flow recovery of %q", f.Ident())
 			} else {
 				return nil, errors.WithStack(err)
 			}
@@ -609,9 +609,11 @@ var ErrIncomplete = goerrors.New("incomplete control flow recovery")
 // edges.
 func locateEntryNode(g *cfg.Graph) (graph.Node, error) {
 	var entry graph.Node
-	for _, n := range g.Nodes() {
+	nodes := g.Nodes()
+	for nodes.Next() {
+		n := nodes.Node()
 		preds := g.To(n.ID())
-		if len(preds) == 0 {
+		if preds.Len() == 0 {
 			if entry != nil {
 				return nil, errors.Errorf("more than one candidate for the entry node located; prev %q, new %q", label(entry), label(n))
 			}
@@ -633,7 +635,7 @@ func genPrims(f *ir.Function) ([]*primitive.Primitive, error) {
 		log.Fatalf("%+v", err)
 	}
 	var prims []*primitive.Primitive
-	for len(g.Nodes()) > 1 {
+	for g.Nodes().Len() > 1 {
 		// Locate primitive.
 		dom := cfg.NewDom(g, entry)
 		prim, err := cfa.FindPrim(g, dom)
@@ -647,7 +649,7 @@ func genPrims(f *ir.Function) ([]*primitive.Primitive, error) {
 		}
 		// Handle special case where entry node has been replaced by primitive
 		// node.
-		if !g.Has(entry.ID()) {
+		if g.Node(entry.ID()) == nil {
 			var ok bool
 			entry, ok = g.NodeByLabel(prim.Entry)
 			if !ok {

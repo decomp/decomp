@@ -65,9 +65,11 @@ digraph post_loop {
 // boolean indicating if such a primitive was found.
 func FindPostLoop(g graph.Directed, dom cfg.DominatorTree) (prim PostLoop, ok bool) {
 	// Range through cond node candidates.
-	for _, cond := range g.Nodes() {
+	condNodes := g.Nodes()
+	for condNodes.Next() {
+		cond := condNodes.Node()
 		// Verify that cond has two successors (cond and exit).
-		condSuccs := g.From(cond.ID())
+		condSuccs := graph.NodesOf(g.From(cond.ID()))
 		if len(condSuccs) != 2 {
 			continue
 		}
@@ -106,11 +108,11 @@ func (prim PostLoop) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 
 	// Verify that cond has two successors (cond and exit).
 	condSuccs := g.From(cond.ID())
-	if len(condSuccs) != 2 || !g.HasEdgeFromTo(cond.ID(), cond.ID()) || !g.HasEdgeFromTo(cond.ID(), exit.ID()) {
+	if condSuccs.Len() != 2 || !g.HasEdgeFromTo(cond.ID(), cond.ID()) || !g.HasEdgeFromTo(cond.ID(), exit.ID()) {
 		return false
 	}
 
 	// Verify that exit has one predecessor (cond).
 	exitPreds := g.To(exit.ID())
-	return len(exitPreds) == 1
+	return exitPreds.Len() == 1
 }

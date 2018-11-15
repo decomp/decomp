@@ -180,7 +180,7 @@ func createDotDir(llPath string, force bool) (string, error) {
 //    foo_graphs/bar.dot
 //    foo_graphs/baz.dot
 func storeCFG(g graph.Directed, funcName, dotDir string, img bool) error {
-	buf, err := dot.Marshal(g, fmt.Sprintf("%q", funcName), "", "\t", false)
+	buf, err := dot.Marshal(g, fmt.Sprintf("%q", funcName), "", "\t")
 	if err != nil {
 		return errors.WithStack(err)
 	}
