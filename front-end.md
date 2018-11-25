@@ -2,6 +2,8 @@
 
 Translate machine code (e.g. x86 assembly) to LLVM IR.
 
+For a comparison of machine code to LLVM IR lifters, see https://github.com/trailofbits/mcsema#comparison-with-other-machine-code-to-llvm-bitcode-lifters.
+
 ## RetDec
 
 https://github.com/avast-tl/retdec
