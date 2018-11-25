@@ -21,8 +21,8 @@ github.com/llir/ll v0.0.0-20181124143609-405448b26944 h1:0Ie0H7XbvWS+NCEelOaPU0Q
 github.com/llir/ll v0.0.0-20181124143609-405448b26944/go.mod h1:a4JSuI2i1XkjU15LV11UxD243X6zJFuVeCHc63E/kGA=
 github.com/llir/llvm v0.3.0-pre1 h1:xC/snin1JpYMrPnNwfoGGuuyu5pc3kQlmYSCA8fXTM4=
 github.com/llir/llvm v0.3.0-pre1/go.mod h1:rIRZQoU/ByzFwoA1usk4bFCkAprgzGwgGQ+Pw27n3ls=
-github.com/llir/llvm v0.3.0-pre2 h1:qAhIeDb+x2wF9NF9G4h91oGtRyK0R/2p714nSCB0oeU=
-github.com/llir/llvm v0.3.0-pre2/go.mod h1:GjmZh4l6Kcz7/Q1G25oyiZuD2VqOWfHwnudPDaeArAE=
+github.com/llir/llvm v0.3.0-pre2.0.20181125212240-e76410922c5e h1:6LRfFwVo1Rt2lUr1w/BSM4wx1uq3R0wSkd9VQpZeRBo=
+github.com/llir/llvm v0.3.0-pre2.0.20181125212240-e76410922c5e/go.mod h1:GjmZh4l6Kcz7/Q1G25oyiZuD2VqOWfHwnudPDaeArAE=
 github.com/mewkiz/pkg v0.0.0-20181108225906-b4dee0c4e703 h1:dD6FYOywpJ718MbrtwFwcdkrxbSzX9CRX4TIVmf44Gc=
 github.com/mewkiz/pkg v0.0.0-20181108225906-b4dee0c4e703/go.mod h1:bhmdGJSMX5WCIBFmk27tBnUvBJm5WxXmarBV41qvbNI=
 github.com/mewkiz/pkg v0.0.0-20181119122551-9729f4f4ff2b h1:XHFBx9ZEVHnSCRiTz7w1a/NRBk9x7iyFiqnoN6R+vu8=
