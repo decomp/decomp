@@ -80,7 +80,7 @@ func (d *decompiler) goTypeDef(t irtypes.Type) ast.Expr {
 		return &ast.ArrayType{
 			Len: &ast.BasicLit{
 				Kind:  token.INT,
-				Value: strconv.FormatInt(t.Len, 10),
+				Value: strconv.FormatUint(t.Len, 10),
 			},
 			Elt: d.goType(t.ElemType),
 		}
@@ -92,7 +92,7 @@ func (d *decompiler) goTypeDef(t irtypes.Type) ast.Expr {
 		return &ast.ArrayType{
 			Len: &ast.BasicLit{
 				Kind:  token.INT,
-				Value: strconv.FormatInt(t.Len, 10),
+				Value: strconv.FormatUint(t.Len, 10),
 			},
 			Elt: d.goType(t.ElemType),
 		}
