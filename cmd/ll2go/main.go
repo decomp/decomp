@@ -171,7 +171,7 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 	}
 
 	// Add newIntNNN function declarations.
-	var newIntSizes []int64
+	var newIntSizes []uint64
 	for newIntSize := range d.newIntSizes {
 		newIntSizes = append(newIntSizes, newIntSize)
 	}
@@ -210,7 +210,7 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 	}
 
 	// Add types not part of builtin.
-	var intSizes []int64
+	var intSizes []uint64
 	for intSize := range d.intSizes {
 		switch intSize {
 		case 8, 16, 32, 64:
@@ -264,9 +264,9 @@ type decompiler struct {
 	// Global states.
 
 	// Tracks use of integer types not part of Go builtin.
-	intSizes map[int64]bool
+	intSizes map[uint64]bool
 	// Tracks use of newIntNNN function calls.
-	newIntSizes map[int64]bool
+	newIntSizes map[uint64]bool
 
 	// Per function states.
 
@@ -279,8 +279,8 @@ type decompiler struct {
 // newDecompiler returns a new decompiler.
 func newDecompiler() *decompiler {
 	return &decompiler{
-		intSizes:    make(map[int64]bool),
-		newIntSizes: make(map[int64]bool),
+		intSizes:    make(map[uint64]bool),
+		newIntSizes: make(map[uint64]bool),
 	}
 }
 
@@ -530,6 +530,15 @@ func (d *decompiler) value(v value.Value) ast.Expr {
 
 // intLit converts the given integer literal into a corresponding Go expression.
 func (d *decompiler) intLit(i int64) ast.Expr {
+	return &ast.BasicLit{
+		Kind:  token.INT,
+		Value: fmt.Sprintf("%d", i),
+	}
+}
+
+// uintLit converts the given unsigned integer literal into a corresponding Go
+// expression.
+func (d *decompiler) uintLit(i uint64) ast.Expr {
 	return &ast.BasicLit{
 		Kind:  token.INT,
 		Value: fmt.Sprintf("%d", i),

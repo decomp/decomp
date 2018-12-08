@@ -300,7 +300,7 @@ func (d *decompiler) instExtractValue(inst *ir.InstExtractValue) ast.Stmt {
 	for _, index := range inst.Indices {
 		src = &ast.IndexExpr{
 			X:     src,
-			Index: d.intLit(index),
+			Index: d.uintLit(index),
 		}
 	}
 	return d.assign(inst.LocalName, src)
