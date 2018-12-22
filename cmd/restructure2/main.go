@@ -83,7 +83,11 @@ func restructure(dotPath string, steps bool) error {
 	// Recovery control flow primitives.
 	prims, err := hammock.Analyze(g, before, after)
 	if err != nil {
-		return errors.WithStack(err)
+		if errors.Cause(err) == hammock.ErrIncomplete {
+			warn.Printf("warning: %v", err)
+		} else {
+			return errors.WithStack(err)
+		}
 	}
 	_ = prims
 	// Print control flow graph.
