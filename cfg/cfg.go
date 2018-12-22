@@ -1,8 +1,7 @@
-// Package cfg implements control flow graph.
+// Package cfg provides access to control flow graphs.
 package cfg
 
 import (
-	"fmt"
 	"io/ioutil"
 	"sort"
 
@@ -56,7 +55,6 @@ func ParseFile(dotPath string) (*Graph, error) {
 
 // NewNode returns a new Node with a unique arbitrary ID.
 func (g *Graph) NewNode() graph.Node {
-	fmt.Println("new node")
 	return &Node{
 		Node:  g.DirectedGraph.NewNode(),
 		Attrs: make(Attrs),
@@ -65,7 +63,6 @@ func (g *Graph) NewNode() graph.Node {
 
 // NewEdge returns a new Edge from the source to the destination node.
 func (g *Graph) NewEdge(from, to graph.Node) graph.Edge {
-	fmt.Println("new edge")
 	return &Edge{
 		Edge:  g.DirectedGraph.NewEdge(from, to),
 		Attrs: make(Attrs),
