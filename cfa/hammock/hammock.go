@@ -10,16 +10,16 @@
 package hammock
 
 import (
-	"fmt"
-
 	"github.com/mewmew/lnp/cfa"
 	"github.com/mewmew/lnp/cfa/primitive"
 	"github.com/pkg/errors"
 )
 
 // Analyze analyzes the given control flow graph and returns the list of
-// recovered high-level control flow primitives.
-func Analyze(g cfa.Graph) ([]*primitive.Primitive, error) {
+// recovered high-level control flow primitives. The before and after functions
+// are invoked if non-nil before and after merging the nodes of located
+// primitives.
+func Analyze(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primitive)) ([]*primitive.Primitive, error) {
 	var prims []*primitive.Primitive
 	for {
 		// Locate control flow primitive.
@@ -29,15 +29,18 @@ func Analyze(g cfa.Graph) ([]*primitive.Primitive, error) {
 			break
 		}
 		prims = append(prims, prim)
-		fmt.Println("before merge:", g)
+		if before != nil {
+			before(g, prim)
+		}
 		// Merge nodes of located primitive.
-		fmt.Println("located prim:", prim)
 		newG, err := cfa.Merge(g, prim)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		fmt.Println("after merge:", newG)
 		g = newG
+		if after != nil {
+			after(g, prim)
+		}
 	}
 	return prims, nil
 }

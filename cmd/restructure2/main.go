@@ -6,7 +6,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/mewmew/lnp/cfa"
 	"github.com/mewmew/lnp/cfa/hammock"
+	"github.com/mewmew/lnp/cfa/primitive"
 	"github.com/mewmew/lnp/cfg"
 	"github.com/pkg/errors"
 )
@@ -30,7 +32,14 @@ func restructure(dotPath string) error {
 		return errors.WithStack(err)
 	}
 	// Recovery control flow primitives.
-	prims, err := hammock.Analyze(g)
+	before := func(g cfa.Graph, prim *primitive.Primitive) {
+		fmt.Println("before merge:", g)
+		fmt.Println("located prim:", prim)
+	}
+	after := func(g cfa.Graph, prim *primitive.Primitive) {
+		fmt.Println("after merge:", g)
+	}
+	prims, err := hammock.Analyze(g, before, after)
 	if err != nil {
 		return errors.WithStack(err)
 	}
