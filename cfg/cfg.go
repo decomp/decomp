@@ -15,7 +15,7 @@ import (
 // Graph is a control flow graph rooted at entry.
 type Graph struct {
 	// Entry node of control flow graph.
-	Entry *Node
+	entry *Node
 	// Underlying simple.DirectedGraph.
 	*simple.DirectedGraph
 	// DOT graph ID.
@@ -40,14 +40,14 @@ func ParseFile(dotPath string) (*Graph, error) {
 		n := nodes.Node()
 		if n, ok := n.(*Node); ok {
 			if _, entry := n.Attrs["entry"]; entry {
-				if g.Entry != nil {
-					return nil, errors.Errorf("multiple entry nodes in control flow graph; prev %q, new %q", g.Entry.DOTID(), n.DOTID())
+				if g.entry != nil {
+					return nil, errors.Errorf("multiple entry nodes in control flow graph; prev %q, new %q", g.entry.DOTID(), n.DOTID())
 				}
-				g.Entry = n
+				g.entry = n
 			}
 		}
 	}
-	if g.Entry == nil {
+	if g.entry == nil {
 		return nil, errors.Errorf("unable to locate entry node of control flow graph %q", g.DOTID())
 	}
 	return g, nil
@@ -79,6 +79,13 @@ func (g *Graph) SetDOTID(dotID string) {
 	g.dotID = dotID
 }
 
+// Entry returns the entry node of the control flow graph.
+func (g *Graph) Entry() *Node {
+	return g.entry
+}
+
+// --- [ Node ] ----------------------------------------------------------------
+
 // Node is a node of the control flow graph.
 type Node struct {
 	// Underlying simple.Node.
@@ -99,6 +106,8 @@ func (n *Node) SetDOTID(dotID string) {
 	n.dotID = dotID
 }
 
+// --- [ Edge ] ----------------------------------------------------------------
+
 // Edge is an edge of the control flow graph.
 type Edge struct {
 	// Underlying simple.Edge.
@@ -106,6 +115,8 @@ type Edge struct {
 	// Edge attributes.
 	Attrs
 }
+
+// --- [ Attributes ] ----------------------------------------------------------
 
 // Attrs is a set of key-value pair attributes used by graph.Node or graph.Edge.
 type Attrs map[string]string
