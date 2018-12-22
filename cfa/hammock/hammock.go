@@ -48,6 +48,10 @@ func Analyze(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primit
 // FindPrim returns the first occurrence of a high-level control flow primitive
 // in g, and a boolean indicating if such a primitive was found.
 func FindPrim(g cfa.Graph, dom cfa.DominatorTree) (*primitive.Primitive, bool) {
+	// Locate sequences of two statements.
+	if prim, ok := FindSeq(g, dom); ok {
+		return prim.Prim(), true
+	}
 	// Locate pre-test loops.
 	if prim, ok := FindPreLoop(g, dom); ok {
 		return prim.Prim(), true
@@ -72,9 +76,5 @@ func FindPrim(g cfa.Graph, dom cfa.DominatorTree) (*primitive.Primitive, bool) {
 	//if prim, ok := FindSwitch(g, dom); ok {
 	//	return prim.Prim(), true
 	//}
-	// Locate sequences of two statements.
-	if prim, ok := FindSeq(g, dom); ok {
-		return prim.Prim(), true
-	}
 	return nil, false
 }
