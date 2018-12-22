@@ -1,11 +1,13 @@
-// Package cfg provides access to control flow graphs.
+// Package cfg declares the types used to represent control flow graphs.
 package cfg
 
 import (
+	"fmt"
 	"io/ioutil"
 	"sort"
 
 	"github.com/graphism/simple"
+	"github.com/mewmew/lnp/cfa"
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding"
@@ -20,6 +22,8 @@ type Graph struct {
 	*simple.DirectedGraph
 	// DOT graph ID.
 	dotID string
+	// nodes maps from DOT node ID to associated node.
+	nodes map[string]*Node
 }
 
 // ParseFile parses the given Graphviz DOT file into a control flow graph.
@@ -31,20 +35,22 @@ func ParseFile(dotPath string) (*Graph, error) {
 	}
 	g := &Graph{
 		DirectedGraph: simple.NewDirectedGraph(),
+		nodes:         make(map[string]*Node),
 	}
 	if err := dot.Unmarshal(data, g); err != nil {
 		return nil, errors.WithStack(err)
 	}
 	// Locate entry node.
-	for nodes := g.Nodes(); nodes.Next(); {
-		n := nodes.Node()
-		if n, ok := n.(*Node); ok {
-			if _, entry := n.Attrs["entry"]; entry {
-				if g.entry != nil {
-					return nil, errors.Errorf("multiple entry nodes in control flow graph; prev %q, new %q", g.entry.DOTID(), n.DOTID())
-				}
-				g.entry = n
+	nodes := g.Nodes()
+	for nodes.Next() {
+		// Note: This run-time type assertion goes away, should Gonum graph start
+		// to leverage generics in Go2.
+		n := nodes.Node().(*Node)
+		if _, entry := n.Attrs["entry"]; entry {
+			if g.entry != nil {
+				return nil, errors.Errorf("multiple entry nodes in control flow graph; prev %q, new %q", g.entry.DOTID(), n.DOTID())
 			}
+			g.entry = n
 		}
 	}
 	if g.entry == nil {
@@ -80,8 +86,65 @@ func (g *Graph) SetDOTID(dotID string) {
 }
 
 // Entry returns the entry node of the control flow graph.
-func (g *Graph) Entry() *Node {
+func (g *Graph) Entry() cfa.Node {
 	return g.entry
+}
+
+// SetEntry sets the entry node of the control flow graph to entry.
+func (g *Graph) SetEntry(entry cfa.Node) {
+	// Note: This run-time type assertion goes away, should Gonum graph start to
+	// leverage generics in Go2.
+	g.entry = entry.(*Node)
+}
+
+// NodeWithDOTID returns the node with the given DOT node ID in the control flow
+// graph. The boolean return value indicates success.
+func (g *Graph) NodeWithDOTID(dotID string) (cfa.Node, bool) {
+	n, ok := g.nodes[dotID]
+	return n, ok
+}
+
+// AddNode adds a node to the graph. AddNode panics if the added node ID matches
+// an existing node ID.
+func (g *Graph) AddNode(n graph.Node) {
+	// Note: This run-time type assertion goes away, should Gonum graph start to
+	// leverage generics in Go2.
+	nn := n.(*Node)
+	dotID := nn.DOTID()
+	if prev, ok := g.nodes[dotID]; ok {
+		panic(fmt.Errorf("node with DOT node ID %q already present; prev `%v`, new `%v`", dotID, prev, nn))
+	}
+	g.nodes[dotID] = nn
+	// Update entry node.
+	if _, ok := nn.Attrs["entry"]; ok {
+		g.entry = nn
+	}
+	g.DirectedGraph.AddNode(nn)
+}
+
+// RemoveNode removes the node with the given ID from the graph, as well as any
+// edges attached to it. If the node is not in the graph it is a no-op.
+func (g *Graph) RemoveNode(id int64) {
+	// Note: This run-time type assertion goes away, should Gonum graph start to
+	// leverage generics in Go2.
+	n := g.Node(id).(*Node)
+	if _, ok := n.Attrs["entry"]; ok {
+		// Remove entry node.
+		g.entry = nil
+	}
+	dotID := n.DOTID()
+	delete(g.nodes, dotID)
+	g.DirectedGraph.RemoveNode(id)
+}
+
+// String returns the string representation of the control flow graph in
+// Graphviz DOT format.
+func (g *Graph) String() string {
+	buf, err := dot.Marshal(g, "", "", "\t")
+	if err != nil {
+		panic(fmt.Errorf("unable to marshal control flow graph to DOT format; %v", err))
+	}
+	return string(buf)
 }
 
 // --- [ Node ] ----------------------------------------------------------------
