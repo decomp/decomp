@@ -204,3 +204,15 @@ func (a Attrs) SetAttribute(attr encoding.Attribute) error {
 	a[attr.Key] = attr.Value
 	return nil
 }
+
+// Attribute returns the value of the attribute with the given key. The boolean
+// return value indicates success.
+func (a Attrs) Attribute(key string) (string, bool) {
+	val, ok := a[key]
+	return val, ok
+}
+
+// DelAttribute deletes the attribute with the given key.
+func (a Attrs) DelAttribute(key string) {
+	delete(a, key)
+}

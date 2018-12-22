@@ -38,16 +38,14 @@ type Node interface {
 	graph.Node
 	dot.Node
 	dot.DOTIDSetter
-	encoding.Attributer
-	encoding.AttributeSetter
+	Attributes
 }
 
 // Edge is an edge of a control flow graph and implements the graph.Edge,
 // encoding.Attributer and encoding.AttributeSetter interfaces.
 type Edge interface {
 	graph.Edge
-	encoding.Attributer
-	encoding.AttributeSetter
+	Attributes
 }
 
 // NodesOf returns it.Len() nodes from it. It is safe to pass a nil Nodes to
@@ -61,4 +59,16 @@ func NodesOf(it graph.Nodes) []Node {
 		ns[i] = node.(Node)
 	}
 	return ns
+}
+
+// Attributes is a set of key-value pair attributes used by graph.Node or
+// graph.Edge.
+type Attributes interface {
+	encoding.Attributer
+	encoding.AttributeSetter
+	// Attribute returns the value of the attribute with the given key. The
+	// boolean return value indicates success.
+	Attribute(key string) (string, bool)
+	// DelAttribute deletes the attribute with the given key.
+	DelAttribute(key string)
 }
