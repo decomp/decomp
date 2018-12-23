@@ -27,6 +27,14 @@ type Graph struct {
 	nodes map[string]*Node
 }
 
+// NewGraph returns a new control flow graph.
+func NewGraph() *Graph {
+	return &Graph{
+		DirectedGraph: simple.NewDirectedGraph(),
+		nodes:         make(map[string]*Node),
+	}
+}
+
 // ParseFile parses the given Graphviz DOT file into a control flow graph.
 func ParseFile(dotPath string) (*Graph, error) {
 	// Parse DOT file.
@@ -51,10 +59,7 @@ func Parse(r io.Reader) (*Graph, error) {
 // reading from data.
 func ParseBytes(data []byte) (*Graph, error) {
 	// Create control flow graph.
-	g := &Graph{
-		DirectedGraph: simple.NewDirectedGraph(),
-		nodes:         make(map[string]*Node),
-	}
+	g := NewGraph()
 	if err := dot.Unmarshal(data, g); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -116,6 +121,7 @@ func (g *Graph) Entry() cfa.Node {
 
 // SetEntry sets the entry node of the control flow graph to entry.
 func (g *Graph) SetEntry(entry cfa.Node) {
+	entry.SetAttribute(encoding.Attribute{Key: "entry", Value: "true"})
 	// Note: This run-time type assertion goes away, should Gonum graph start to
 	// leverage generics in Go2.
 	g.entry = entry.(*Node)
