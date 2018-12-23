@@ -17,6 +17,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -32,6 +33,7 @@ import (
 	"github.com/llir/llvm/ir"
 	"github.com/mewkiz/pkg/pathutil"
 	"github.com/mewkiz/pkg/term"
+	"github.com/mewmew/lnp/decompile"
 	"github.com/pkg/errors"
 )
 
@@ -135,8 +137,21 @@ func main() {
 // emtpy, all functions of the module are decompiled.
 func ll2go(m *ir.Module, llPath string, funcNames map[string]bool) (*ast.File, error) {
 	basePath := pathutil.TrimExt(llPath)
+	// TODO: parse output from control flow recovery and pass to decompiler.
 	_ = basePath
-	panic("not yet implemented")
+	// Error handler.
+	var errs ErrorList
+	eh := func(err error) {
+		errs = append(errs, err)
+	}
+	// Decompile LLVM IR module to Go source code.
+	gen := decompile.NewGenerator(eh, m)
+	file := gen.Decompile()
+	if len(errs) > 0 {
+		// TODO: return partial results of decompilation?
+		return nil, errs
+	}
+	return file, nil
 }
 
 // parseModule parses the given LLVM IR assembly file into an LLVM IR module.
@@ -158,4 +173,26 @@ func outputGo(w io.Writer, file *ast.File) error {
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+// ### [ Helper functions ] ####################################################
+
+// ErrorList is a list of zero or more errors.
+type ErrorList []error
+
+// Error implements the error interface for ErrorList.
+func (errs ErrorList) Error() string {
+	switch len(errs) {
+	case 0:
+		panic("invalid call to ErrorList.Error; error list is empty")
+	case 1:
+		return fmt.Sprintf("error during compilation: %v", errs[0])
+	default:
+		buf := &bytes.Buffer{}
+		fmt.Fprintf(buf, "%d errors during compilation:", len(errs))
+		for _, err := range errs {
+			fmt.Fprintf(buf, "\n\t%s", err)
+		}
+		return buf.String()
+	}
 }
