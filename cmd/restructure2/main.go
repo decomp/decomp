@@ -154,7 +154,7 @@ func restructure(g cfa.Graph, stepPrefix string, steps bool) ([]*primitive.Primi
 		before = func(g cfa.Graph, prim *primitive.Primitive) {
 			data := []byte(dotBeforeMerge(g, prim))
 			dbg.Printf("located primitive:\n%s\n", prim)
-			beforePath := fmt.Sprintf("%s_xx_%04da.dot", stepPrefix, step)
+			beforePath := fmt.Sprintf("%s_%04da.dot", stepPrefix, step)
 			dbg.Println("creating:", beforePath)
 			if err := ioutil.WriteFile(beforePath, data, 0644); err != nil {
 				warn.Printf("unable to create %q; %v", beforePath, err)
@@ -162,7 +162,7 @@ func restructure(g cfa.Graph, stepPrefix string, steps bool) ([]*primitive.Primi
 		}
 		after = func(g cfa.Graph, prim *primitive.Primitive) {
 			data := []byte(dotAfterMerge(g, prim))
-			afterPath := fmt.Sprintf("%s_xx_%04db.dot", stepPrefix, step)
+			afterPath := fmt.Sprintf("%s_%04db.dot", stepPrefix, step)
 			dbg.Println("creating:", afterPath)
 			if err := ioutil.WriteFile(afterPath, data, 0644); err != nil {
 				warn.Printf("unable to create %q; %v", afterPath, err)
