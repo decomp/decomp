@@ -1,8 +1,32 @@
+// The restructure tool recovers control flow primitives from control flow
+// graphs (*.dot -> *.json).
+//
+// The input of restructure is a Graphviz DOT file, containing the unstructured
+// control flow graph of a function, and the output is a JSON stream describing
+// how the recovered high-level control flow primitives relate to the nodes of
+// the control flow graph.
+//
+// Usage:
+//
+//     restructure [OPTION]... [FILE.dot]
+//
+// Flags:
+//
+//   -indent
+//         indent JSON output
+//   -o string
+//         output path
+//   -q    suppress non-error messages
+//   -steps
+//         output intermediate steps
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -27,44 +51,110 @@ var (
 	warn = log.New(os.Stderr, term.RedBold("restructure:")+" ", 0)
 )
 
+func usage() {
+	const use = `
+Recover control flow primitives from control flow graphs (*.dot -> *.json).
+
+Usage:
+
+	restructure [OPTION]... [FILE.dot]
+
+Flags:
+`
+	fmt.Fprintln(os.Stderr, use[1:])
+	flag.PrintDefaults()
+}
+
 func main() {
 	// Parse command line arguments.
 	var (
+		// indent specifies whether to indent JSON output.
+		indent bool
+		// output specifies the output path.
+		output string
+		// quiet specifies whether to suppress non-error messages.
+		quiet bool
 		// steps specifies whether to output intermediate steps.
 		steps bool
 	)
+	flag.BoolVar(&indent, "indent", false, "indent JSON output")
+	flag.StringVar(&output, "o", "", "output path")
+	flag.BoolVar(&quiet, "q", false, "suppress non-error messages")
 	flag.BoolVar(&steps, "steps", false, "output intermediate steps")
+	flag.Usage = usage
 	flag.Parse()
-	if flag.NArg() != 1 {
+	var dotPath string
+	switch flag.NArg() {
+	case 0:
+		// Parse DOT file from standard input.
+		dotPath = "-"
+	case 1:
+		dotPath = flag.Arg(0)
+	default:
 		flag.Usage()
 		os.Exit(1)
 	}
-	dotPath := flag.Arg(0)
+	if quiet {
+		// Mute debug messages if `-q` is set.
+		dbg.SetOutput(ioutil.Discard)
+	}
 
-	// Recover high-level control flow primitives.
-	if err := restructure(dotPath, steps); err != nil {
+	// Parse control flow graph.
+	g, err := parseCFG(dotPath)
+	if err != nil {
+		log.Fatalf("%+v", err)
+	}
+
+	// Perform control flow analysis.
+	var stepPrefix string
+	switch dotPath {
+	case "-":
+		// Use "stdin" prefix for intermediate step files.
+		dotPath = "stdin"
+	default:
+		stepPrefix = pathutil.TrimExt(dotPath)
+	}
+	prims, err := restructure(g, stepPrefix, steps)
+	if err != nil {
+		log.Fatalf("%+v", err)
+	}
+
+	// Output primitives in JSON format.
+	w := os.Stdout
+	if len(output) > 0 {
+		f, err := os.Create(output)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		w = f
+	}
+	if err := outputJSON(w, prims, indent); err != nil {
 		log.Fatalf("%+v", err)
 	}
 }
 
-func restructure(dotPath string, steps bool) error {
-	// Parse control flow graph.
-	g, err := cfg.ParseFile(dotPath)
-	if err != nil {
-		return errors.WithStack(err)
-	}
+// restructure attempts to recover the control flow primitives of a given
+// control flow graph. It does so by repeatedly locating and merging structured
+// subgraphs (canonical graph representations of control flow primitives) into
+// single nodes until the entire graph is reduced into a single node or no
+// structured subgraphs may be located.
+//
+// The steps argument specifies whether to record the intermediate control flow
+// graphs at each step. The returned list of primitives is ordered in the same
+// sequence as they were located.
+func restructure(g cfa.Graph, stepPrefix string, steps bool) ([]*primitive.Primitive, error) {
 	// Output intermediate steps in Graphviz DOT format.
 	var (
 		before func(g cfa.Graph, prim *primitive.Primitive)
 		after  func(g cfa.Graph, prim *primitive.Primitive)
 	)
 	step := 1
-	basePath := pathutil.TrimExt(dotPath)
 	if steps {
 		before = func(g cfa.Graph, prim *primitive.Primitive) {
 			data := []byte(dotBeforeMerge(g, prim))
 			dbg.Printf("located primitive:\n%s\n", prim)
-			beforePath := fmt.Sprintf("%s_xx_%04da.dot", basePath, step)
+			beforePath := fmt.Sprintf("%s_xx_%04da.dot", stepPrefix, step)
 			dbg.Println("creating:", beforePath)
 			if err := ioutil.WriteFile(beforePath, data, 0644); err != nil {
 				warn.Printf("unable to create %q; %v", beforePath, err)
@@ -72,7 +162,7 @@ func restructure(dotPath string, steps bool) error {
 		}
 		after = func(g cfa.Graph, prim *primitive.Primitive) {
 			data := []byte(dotAfterMerge(g, prim))
-			afterPath := fmt.Sprintf("%s_xx_%04db.dot", basePath, step)
+			afterPath := fmt.Sprintf("%s_xx_%04db.dot", stepPrefix, step)
 			dbg.Println("creating:", afterPath)
 			if err := ioutil.WriteFile(afterPath, data, 0644); err != nil {
 				warn.Printf("unable to create %q; %v", afterPath, err)
@@ -86,13 +176,10 @@ func restructure(dotPath string, steps bool) error {
 		if errors.Cause(err) == hammock.ErrIncomplete {
 			warn.Printf("warning: %v", err)
 		} else {
-			return errors.WithStack(err)
+			return nil, errors.WithStack(err)
 		}
 	}
-	_ = prims
-	// Print control flow graph.
-	fmt.Println(g)
-	return nil
+	return prims, nil
 }
 
 // dotBeforeMerge returns the intermediate graph g in Graphviz DOT format with
@@ -157,4 +244,38 @@ func setFillColor(n cfa.Node, color string) {
 func clearFillColor(n cfa.Node) {
 	n.DelAttribute("fillcolor")
 	n.DelAttribute("style")
+}
+
+// parseCFG parses the given control flow graph in Graphviz DOT format.
+func parseCFG(dotPath string) (*cfg.Graph, error) {
+	switch dotPath {
+	case "-":
+		// Read from standard input.
+		return cfg.Parse(os.Stdin)
+	default:
+		return cfg.ParseFile(dotPath)
+	}
+}
+
+// outputJSON outputs the primitives in JSON format with optional indentation,
+// writing to w.
+func outputJSON(w io.Writer, prims []*primitive.Primitive, indent bool) error {
+	// Output indented JSON.
+	if indent {
+		buf, err := json.MarshalIndent(prims, "", "\t")
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		buf = append(buf, '\n')
+		if _, err := io.Copy(w, bytes.NewReader(buf)); err != nil {
+			return errors.WithStack(err)
+		}
+		return nil
+	}
+	// Output JSON.
+	enc := json.NewEncoder(w)
+	if err := enc.Encode(prims); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }

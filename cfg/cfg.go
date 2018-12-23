@@ -3,6 +3,7 @@ package cfg
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"sort"
 
@@ -33,6 +34,23 @@ func ParseFile(dotPath string) (*Graph, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	return ParseBytes(data)
+}
+
+// Parse parses the given Graphviz DOT file into a control flow graph, reading
+// from r.
+func Parse(r io.Reader) (*Graph, error) {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return ParseBytes(data)
+}
+
+// ParseBytes parses the given Graphviz DOT file into a control flow graph,
+// reading from data.
+func ParseBytes(data []byte) (*Graph, error) {
+	// Create control flow graph.
 	g := &Graph{
 		DirectedGraph: simple.NewDirectedGraph(),
 		nodes:         make(map[string]*Node),
@@ -57,6 +75,12 @@ func ParseFile(dotPath string) (*Graph, error) {
 		return nil, errors.Errorf("unable to locate entry node of control flow graph %q", g.DOTID())
 	}
 	return g, nil
+}
+
+// ParseString parses the given Graphviz DOT file into a control flow graph, reading
+// from s.
+func ParseString(s string) (*Graph, error) {
+	return ParseBytes([]byte(s))
 }
 
 // NewNode returns a new Node with a unique arbitrary ID.
