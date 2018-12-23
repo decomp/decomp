@@ -13,7 +13,7 @@
 //
 // Usage:
 //
-//     ll2dot [OPTION]... FILE.ll...
+//     ll2dot [OPTION]... [FILE.ll]...
 //
 // Flags:
 //
@@ -60,7 +60,7 @@ Generate control flow graphs from LLVM IR assembly (*.ll -> *.dot).
 
 Usage:
 
-	ll2dot [OPTION]... FILE.ll...
+	ll2dot [OPTION]... [FILE.ll]...
 
 Flags:
 `
