@@ -48,7 +48,8 @@ func (gen *Generator) goType(irType types.Type) (gotypes.Type, error) {
 	//case *types.MetadataType:
 	case *types.ArrayType:
 		return gen.goArrayType(irType)
-	//case *types.StructType:
+	case *types.StructType:
+		return gen.goStructType(irType)
 	default:
 		panic(fmt.Errorf("support for LLVM IR type %T not yet implemented", irType))
 	}
@@ -111,6 +112,22 @@ func (gen *Generator) goArrayType(irType *types.ArrayType) (*gotypes.Array, erro
 	return gotypes.NewArray(elem, int64(irType.Len)), nil
 }
 
+// goStructType returns the Go struct type corresponding to the given LLVM IR
+// struct type.
+func (gen *Generator) goStructType(irType *types.StructType) (*gotypes.Struct, error) {
+	var fields []*gotypes.Var
+	for i, irField := range irType.Fields {
+		fieldName := fmt.Sprintf("field%d", i)
+		fieldType, err := gen.goType(irField)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		field := gotypes.NewVar(0, nil, fieldName, fieldType)
+		fields = append(fields, field)
+	}
+	return gotypes.NewStruct(fields, nil), nil
+}
+
 // ### [ Helper functions ] ####################################################
 
 // newTypeDef returns a new Go type definition based on the given type name and
@@ -130,14 +147,26 @@ func newTypeDef(name string, goType gotypes.Type) *ast.GenDecl {
 // type.
 func goTypeExpr(goType gotypes.Type) ast.Expr {
 	switch goType := goType.(type) {
+	case *gotypes.Array:
+		return goArrayTypeExpr(goType)
 	case *gotypes.Basic:
 		return goBasicTypeExpr(goType)
 	case *gotypes.Pointer:
 		return goPointerTypeExpr(goType)
-	case *gotypes.Array:
-		return goArrayTypeExpr(goType)
+	case *gotypes.Struct:
+		return goStructTypeExpr(goType)
 	default:
 		panic(fmt.Errorf("support for Go type %T not yet implemented", goType))
+	}
+}
+
+// goArrayTypeExpr returns the AST Go type expression corresponding to the given
+// Go array type.
+func goArrayTypeExpr(goType *gotypes.Array) *ast.ArrayType {
+	elem := goTypeExpr(goType.Elem())
+	return &ast.ArrayType{
+		Len: goIntLit(goType.Len()),
+		Elt: elem,
 	}
 }
 
@@ -154,12 +183,23 @@ func goPointerTypeExpr(goType *gotypes.Pointer) *ast.StarExpr {
 	return &ast.StarExpr{X: elem}
 }
 
-// goArrayTypeExpr returns the AST Go type expression corresponding to the given
-// Go array type.
-func goArrayTypeExpr(goType *gotypes.Array) *ast.ArrayType {
-	elem := goTypeExpr(goType.Elem())
-	return &ast.ArrayType{
-		Len: goIntLit(goType.Len()),
-		Elt: elem,
+// goStructTypeExpr returns the AST Go type expression corresponding to the
+// given Go struct type.
+func goStructTypeExpr(goType *gotypes.Struct) *ast.StructType {
+	var fields []*ast.Field
+	for i := 0; i < goType.NumFields(); i++ {
+		goField := goType.Field(i)
+		fieldName := ast.NewIdent(goField.Name())
+		fieldType := goTypeExpr(goField.Type())
+		field := &ast.Field{
+			Names: []*ast.Ident{fieldName},
+			Type:  fieldType,
+		}
+		fields = append(fields, field)
+	}
+	return &ast.StructType{
+		Fields: &ast.FieldList{
+			List: fields,
+		},
 	}
 }
