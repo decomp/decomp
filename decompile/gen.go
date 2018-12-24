@@ -20,7 +20,7 @@ type Generator struct {
 	// Index of Go top-level declarations.
 
 	// typeDefs maps from type name to type definition.
-	typeDefs map[string]gotypes.Type
+	typeDefs map[string]*gotypes.Named
 	// globals maps from global name to global declarations and defintions.
 	globals map[string]*ast.ValueSpec
 	// funcs maps from global name to function declarations and defintions.
@@ -48,7 +48,7 @@ func NewGenerator(eh func(error), m *ir.Module) *Generator {
 		file: &ast.File{
 			Name: ast.NewIdent(pkgName),
 		},
-		typeDefs: make(map[string]gotypes.Type),
+		typeDefs: make(map[string]*gotypes.Named),
 		globals:  make(map[string]*ast.ValueSpec),
 		funcs:    make(map[string]*ast.FuncDecl),
 	}

@@ -17,7 +17,9 @@ func (gen *Generator) Decompile() *ast.File {
 // decompileModule decompiles the LLVM IR module to Go source code, emitting to
 // file.
 func (gen *Generator) decompileModule() {
-	// Translate type definitions.
+	// Index Go type definitions.
+	gen.indexTypeDefs()
+	// Translate LLVM IR type definitions to Go.
 	gen.translateTypeDefs()
 
 	// TODO: implement

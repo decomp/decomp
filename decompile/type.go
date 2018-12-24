@@ -10,24 +10,70 @@ import (
 	"github.com/pkg/errors"
 )
 
+// === [ Index ] ===============================================================
+
+// indexTypeDefs indexes the type name and creates a scaffolding Go type
+// definition of the LLVM IR type defintiions.
+func (gen *Generator) indexTypeDefs() {
+	for _, irTypeDef := range gen.m.TypeDefs {
+		name := irTypeDef.Name()
+		typeName := gotypes.NewTypeName(0, nil, name, nil)
+		t := gotypes.NewNamed(typeName, nil, nil)
+		gen.typeDefs[name] = t
+	}
+}
+
+// === [ Translate ] ===========================================================
+
 // translateTypeDefs translates the type definitions of the LLVM IR module to
 // equivalent Go type definitions.
 func (gen *Generator) translateTypeDefs() {
+	// Translate LLVM IR type definitions to Go.
 	for _, irTypeDef := range gen.m.TypeDefs {
 		typeName := irTypeDef.Name()
-		goType, err := gen.goType(irTypeDef)
+		t, ok := gen.typeDefs[typeName]
+		if !ok {
+			gen.Errorf("unable to locate type definition with type name %q", typeName)
+			continue
+		}
+		// Note, we generate the underlying type, so that the type definition
+		// won't resolve to itself.
+		underlying, err := gen.goUnderlyingType(irTypeDef)
 		if err != nil {
 			gen.eh(err)
 			continue
 		}
-		// Append Go type definition to Go source file.
-		typeDecl := newTypeDef(typeName, goType)
+		t.SetUnderlying(underlying)
+	}
+	// Append Go type definition to Go source file.
+	for _, irTypeDef := range gen.m.TypeDefs {
+		typeName := irTypeDef.Name()
+		t, ok := gen.typeDefs[typeName]
+		if !ok {
+			gen.Errorf("unable to locate type definition with type name %q", typeName)
+			continue
+		}
+		typeDecl := newTypeDef(typeName, t.Underlying())
 		gen.file.Decls = append(gen.file.Decls, typeDecl)
 	}
 }
 
 // goType returns the Go type corresponding to the given LLVM IR type.
 func (gen *Generator) goType(irType types.Type) (gotypes.Type, error) {
+	// Check if named type.
+	if name := irType.Name(); len(name) > 0 {
+		t, ok := gen.typeDefs[name]
+		if !ok {
+			return nil, errors.Errorf("unable to locate type definition with type name %q", name)
+		}
+		return t, nil
+	}
+	return gen.goUnderlyingType(irType)
+}
+
+// goUnderlyingType returns the underlying Go type corresponding to the given
+// LLVM IR type.
+func (gen *Generator) goUnderlyingType(irType types.Type) (gotypes.Type, error) {
 	switch irType := irType.(type) {
 	case *types.VoidType:
 		// Void types are not present in the Go type system. When translating
@@ -167,6 +213,8 @@ func goTypeExpr(goType gotypes.Type) ast.Expr {
 		return goArrayTypeExpr(goType)
 	case *gotypes.Basic:
 		return goBasicTypeExpr(goType)
+	case *gotypes.Named:
+		return goNamedTypeExpr(goType)
 	case *gotypes.Pointer:
 		return goPointerTypeExpr(goType)
 	case *gotypes.Signature:
@@ -236,6 +284,12 @@ func goFuncTypeExpr(goType *gotypes.Signature) *ast.FuncType {
 			List: results,
 		},
 	}
+}
+
+// goNamedTypeExpr returns the AST Go type expression corresponding to the given
+// Go named type.
+func goNamedTypeExpr(goType *gotypes.Named) *ast.Ident {
+	return ast.NewIdent(goType.Obj().Name())
 }
 
 // goPointerTypeExpr returns the AST Go type expression corresponding to the
