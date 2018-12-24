@@ -34,7 +34,8 @@ func (gen *Generator) goType(irType types.Type) (gotypes.Type, error) {
 		// types using void types (e.g. function types), they should simply be
 		// ignored directly.
 		panic("cannot represent LLVM IR void type as Go type")
-	//case *types.FuncType:
+	case *types.FuncType:
+		return gen.goFuncType(irType)
 	case *types.IntType:
 		return gen.goIntType(irType), nil
 	case *types.FloatType:
@@ -53,6 +54,34 @@ func (gen *Generator) goType(irType types.Type) (gotypes.Type, error) {
 	default:
 		panic(fmt.Errorf("support for LLVM IR type %T not yet implemented", irType))
 	}
+}
+
+// goFuncType returns the Go function type corresponding to the given LLVM IR
+// function type.
+func (gen *Generator) goFuncType(irType *types.FuncType) (*gotypes.Signature, error) {
+	// Result.
+	var results *gotypes.Tuple
+	if !types.Equal(irType.RetType, types.Void) {
+		retType, err := gen.goType(irType.RetType)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		result := gotypes.NewVar(0, nil, "", retType)
+		results = gotypes.NewTuple(result)
+	}
+	// Parameters.
+	var goParams []*gotypes.Var
+	for i, irParam := range irType.Params {
+		paramType, err := gen.goType(irParam)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		paramName := fmt.Sprintf("param%d", i)
+		goParam := gotypes.NewVar(0, nil, paramName, paramType)
+		goParams = append(goParams, goParam)
+	}
+	params := gotypes.NewTuple(goParams...)
+	return gotypes.NewSignature(nil, params, results, irType.Variadic), nil
 }
 
 // goIntType returns the Go integer type corresponding to the given LLVM IR
@@ -128,20 +157,7 @@ func (gen *Generator) goStructType(irType *types.StructType) (*gotypes.Struct, e
 	return gotypes.NewStruct(fields, nil), nil
 }
 
-// ### [ Helper functions ] ####################################################
-
-// newTypeDef returns a new Go type definition based on the given type name and
-// Go type.
-func newTypeDef(name string, goType gotypes.Type) *ast.GenDecl {
-	spec := &ast.TypeSpec{
-		Name: ast.NewIdent(name),
-		Type: goTypeExpr(goType),
-	}
-	return &ast.GenDecl{
-		Tok:   token.TYPE,
-		Specs: []ast.Spec{spec},
-	}
-}
+// --- [ Go type expressions ] -------------------------------------------------
 
 // goTypeExpr returns the AST Go type expression corresponding to the given Go
 // type.
@@ -153,6 +169,8 @@ func goTypeExpr(goType gotypes.Type) ast.Expr {
 		return goBasicTypeExpr(goType)
 	case *gotypes.Pointer:
 		return goPointerTypeExpr(goType)
+	case *gotypes.Signature:
+		return goFuncTypeExpr(goType)
 	case *gotypes.Struct:
 		return goStructTypeExpr(goType)
 	default:
@@ -174,6 +192,50 @@ func goArrayTypeExpr(goType *gotypes.Array) *ast.ArrayType {
 // Go basic type.
 func goBasicTypeExpr(goType *gotypes.Basic) *ast.Ident {
 	return ast.NewIdent(goType.Name())
+}
+
+// goFuncTypeExpr returns the AST Go type expression corresponding to the given
+// Go function type.
+func goFuncTypeExpr(goType *gotypes.Signature) *ast.FuncType {
+	// Results.
+	var results []*ast.Field
+	goResults := goType.Results()
+	for i := 0; i < goResults.Len(); i++ {
+		goResult := goResults.At(i)
+		resultType := goTypeExpr(goResult.Type())
+		result := &ast.Field{
+			Type: resultType,
+		}
+		resultName := goResult.Name()
+		if len(resultName) > 0 {
+			result.Names = []*ast.Ident{ast.NewIdent(resultName)}
+		}
+		results = append(results, result)
+	}
+	// Parameters.
+	var params []*ast.Field
+	goParams := goType.Params()
+	for i := 0; i < goParams.Len(); i++ {
+		goParam := goParams.At(i)
+		paramType := goTypeExpr(goParam.Type())
+		param := &ast.Field{
+			Type: paramType,
+		}
+		paramName := goParam.Name()
+		if len(paramName) > 0 {
+			param.Names = []*ast.Ident{ast.NewIdent(paramName)}
+		}
+		params = append(params, param)
+	}
+	// TODO: figure out how to handle variadic. goType.Variadic()
+	return &ast.FuncType{
+		Params: &ast.FieldList{
+			List: params,
+		},
+		Results: &ast.FieldList{
+			List: results,
+		},
+	}
 }
 
 // goPointerTypeExpr returns the AST Go type expression corresponding to the
@@ -201,5 +263,20 @@ func goStructTypeExpr(goType *gotypes.Struct) *ast.StructType {
 		Fields: &ast.FieldList{
 			List: fields,
 		},
+	}
+}
+
+// ### [ Helper functions ] ####################################################
+
+// newTypeDef returns a new Go type definition based on the given type name and
+// Go type.
+func newTypeDef(name string, goType gotypes.Type) *ast.GenDecl {
+	spec := &ast.TypeSpec{
+		Name: ast.NewIdent(name),
+		Type: goTypeExpr(goType),
+	}
+	return &ast.GenDecl{
+		Tok:   token.TYPE,
+		Specs: []ast.Spec{spec},
 	}
 }
