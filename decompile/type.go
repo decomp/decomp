@@ -12,8 +12,8 @@ import (
 
 // === [ Index ] ===============================================================
 
-// indexTypeDefs indexes the type name and creates a scaffolding Go type
-// definition of the LLVM IR type defintiions.
+// indexTypeDefs indexes the type names and creates a scaffolding Go type
+// definitions of the LLVM IR type defintiions.
 func (gen *Generator) indexTypeDefs() {
 	for _, irTypeDef := range gen.m.TypeDefs {
 		name := irTypeDef.Name()
@@ -36,8 +36,9 @@ func (gen *Generator) translateTypeDefs() {
 			gen.Errorf("unable to locate type definition with type name %q", typeName)
 			continue
 		}
-		// Note, we generate the underlying type, so that the type definition
-		// won't resolve to itself.
+		// Note, we generate the underlying type (i.e. we invoke goUnderlyingType
+		// instead of goType), so that the type definition won't resolve to
+		// itself.
 		underlying, err := gen.goUnderlyingType(irTypeDef)
 		if err != nil {
 			gen.eh(err)
@@ -45,7 +46,7 @@ func (gen *Generator) translateTypeDefs() {
 		}
 		t.SetUnderlying(underlying)
 	}
-	// Append Go type definition to Go source file.
+	// Append Go type definitions to Go source file.
 	for _, irTypeDef := range gen.m.TypeDefs {
 		typeName := irTypeDef.Name()
 		t, ok := gen.typeDefs[typeName]
@@ -126,6 +127,14 @@ func (gen *Generator) goFuncType(irType *types.FuncType) (*gotypes.Signature, er
 		goParam := gotypes.NewVar(0, nil, paramName, paramType)
 		goParams = append(goParams, goParam)
 	}
+	if irType.Variadic {
+		// Add variadic type.
+		//
+		//    ...interface{}
+		paramType := gotypes.NewSlice(gotypes.NewInterface(nil, nil))
+		goParam := gotypes.NewVar(0, nil, "paramx", paramType)
+		goParams = append(goParams, goParam)
+	}
 	params := gotypes.NewTuple(goParams...)
 	return gotypes.NewSignature(nil, params, results, irType.Variadic), nil
 }
@@ -134,6 +143,7 @@ func (gen *Generator) goFuncType(irType *types.FuncType) (*gotypes.Signature, er
 // integer type.
 func (gen *Generator) goIntType(irType *types.IntType) *gotypes.Basic {
 	// TODO: figure out how to distinguish signed vs. unsigned integer types.
+	// TODO: figure out how to support other bit sizes.
 	switch irType.BitSize {
 	case 1:
 		return gotypes.Typ[gotypes.Bool]
@@ -153,6 +163,7 @@ func (gen *Generator) goIntType(irType *types.IntType) *gotypes.Basic {
 // goFloatType returns the Go floating-point type corresponding to the given
 // LLVM IR floating-point type.
 func (gen *Generator) goFloatType(irType *types.FloatType) *gotypes.Basic {
+	// TODO: figure out how to support remaining float types.
 	switch irType.Kind {
 	//case types.FloatKindHalf:
 	case types.FloatKindFloat:
@@ -213,6 +224,8 @@ func goTypeExpr(goType gotypes.Type) ast.Expr {
 		return goArrayTypeExpr(goType)
 	case *gotypes.Basic:
 		return goBasicTypeExpr(goType)
+	case *gotypes.Interface:
+		return goInterfaceTypeExpr(goType)
 	case *gotypes.Named:
 		return goNamedTypeExpr(goType)
 	case *gotypes.Pointer:
@@ -263,9 +276,18 @@ func goFuncTypeExpr(goType *gotypes.Signature) *ast.FuncType {
 	// Parameters.
 	var params []*ast.Field
 	goParams := goType.Params()
-	for i := 0; i < goParams.Len(); i++ {
+	nparams := goParams.Len()
+	for i := 0; i < nparams; i++ {
 		goParam := goParams.At(i)
-		paramType := goTypeExpr(goParam.Type())
+		var paramType ast.Expr
+		if goType.Variadic() && i == nparams-1 {
+			goElemType := goParam.Type().(*gotypes.Slice).Elem()
+			paramType = &ast.Ellipsis{
+				Elt: goTypeExpr(goElemType),
+			}
+		} else {
+			paramType = goTypeExpr(goParam.Type())
+		}
 		param := &ast.Field{
 			Type: paramType,
 		}
@@ -275,7 +297,6 @@ func goFuncTypeExpr(goType *gotypes.Signature) *ast.FuncType {
 		}
 		params = append(params, param)
 	}
-	// TODO: figure out how to handle variadic. goType.Variadic()
 	return &ast.FuncType{
 		Params: &ast.FieldList{
 			List: params,
@@ -283,6 +304,23 @@ func goFuncTypeExpr(goType *gotypes.Signature) *ast.FuncType {
 		Results: &ast.FieldList{
 			List: results,
 		},
+	}
+}
+
+// goInterfaceTypeExpr returns the AST Go type expression corresponding to the
+// given Go interface type.
+func goInterfaceTypeExpr(goType *gotypes.Interface) *ast.InterfaceType {
+	if goType.NumMethods() != 0 {
+		// TODO: add support for interface type with methods.
+		panic("support for interface type with methods not yet implemented")
+	}
+	if goType.NumEmbeddeds() != 0 {
+		// TODO: add support for interface type with embedded fields.
+		panic("support for interface type with embedded fields not yet implemented")
+	}
+	// empty interface.
+	return &ast.InterfaceType{
+		Methods: &ast.FieldList{},
 	}
 }
 
