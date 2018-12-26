@@ -21,9 +21,9 @@ type Generator struct {
 
 	// typeDefs maps from type name to type definition.
 	typeDefs map[string]*gotypes.Named
-	// globals maps from global name to global declarations and defintions.
-	globals map[string]*ast.ValueSpec
-	// funcs maps from global name to function declarations and defintions.
+	// globals maps from global identifier to global declarations and defintions.
+	globals map[string]*ast.GenDecl
+	// funcs maps from global identifier to function declarations and defintions.
 	funcs map[string]*ast.FuncDecl
 }
 
@@ -49,7 +49,7 @@ func NewGenerator(eh func(error), m *ir.Module) *Generator {
 			Name: ast.NewIdent(pkgName),
 		},
 		typeDefs: make(map[string]*gotypes.Named),
-		globals:  make(map[string]*ast.ValueSpec),
+		globals:  make(map[string]*ast.GenDecl),
 		funcs:    make(map[string]*ast.FuncDecl),
 	}
 	return gen

@@ -75,6 +75,7 @@ func (gen *Generator) goType(irType types.Type) (gotypes.Type, error) {
 // goUnderlyingType returns the underlying Go type corresponding to the given
 // LLVM IR type.
 func (gen *Generator) goUnderlyingType(irType types.Type) (gotypes.Type, error) {
+	// TODO: figure out how to add support for remaining types.
 	switch irType := irType.(type) {
 	case *types.VoidType:
 		// Void types are not present in the Go type system. When translating
