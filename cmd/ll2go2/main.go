@@ -33,7 +33,7 @@ import (
 	"github.com/llir/llvm/ir"
 	"github.com/mewkiz/pkg/pathutil"
 	"github.com/mewkiz/pkg/term"
-	"github.com/mewmew/lnp/decompile"
+	"github.com/mewmew/lnp/pkg/decompile"
 	"github.com/pkg/errors"
 )
 

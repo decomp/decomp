@@ -3,8 +3,8 @@ package hammock
 import (
 	"fmt"
 
-	"github.com/mewmew/lnp/cfa"
-	"github.com/mewmew/lnp/cfa/primitive"
+	"github.com/mewmew/lnp/pkg/cfa"
+	"github.com/mewmew/lnp/pkg/cfa/primitive"
 	"gonum.org/v1/gonum/graph"
 )
 

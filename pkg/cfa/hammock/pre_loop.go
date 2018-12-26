@@ -3,20 +3,20 @@ package hammock
 import (
 	"fmt"
 
-	"github.com/mewmew/lnp/cfa"
-	"github.com/mewmew/lnp/cfa/primitive"
+	"github.com/mewmew/lnp/pkg/cfa"
+	"github.com/mewmew/lnp/pkg/cfa/primitive"
 	"gonum.org/v1/gonum/graph"
 )
 
-// If represents a 1-way conditional statement.
+// PreLoop represents a pre-test loop.
 //
 // Pseudo-code:
 //
-//    if (A) {
+//    while (A) {
 //       B
 //    }
 //    C
-type If struct {
+type PreLoop struct {
 	// Condition node (A).
 	Cond cfa.Node
 	// Body node (B).
@@ -34,10 +34,10 @@ type If struct {
 //    "cond": "A"
 //    "body": "B"
 //    "exit": "C"
-func (prim If) Prim() *primitive.Primitive {
+func (prim PreLoop) Prim() *primitive.Primitive {
 	cond, body, exit := prim.Cond.DOTID(), prim.Body.DOTID(), prim.Exit.DOTID()
 	return &primitive.Primitive{
-		Prim: "if",
+		Prim: "pre_loop",
 		Nodes: map[string]string{
 			"cond": cond,
 			"body": body,
@@ -48,29 +48,29 @@ func (prim If) Prim() *primitive.Primitive {
 	}
 }
 
-// String returns a string representation of prim in Graphviz DOT format.
+// String returns a string representation of prim in DOT format.
 //
 // Example output:
 //
-//    digraph if {
+//    digraph pre_loop {
 //       cond -> body
 //       cond -> exit
-//       body -> exit
+//       body -> cond
 //    }
-func (prim If) String() string {
+func (prim PreLoop) String() string {
 	cond, body, exit := prim.Cond.DOTID(), prim.Body.DOTID(), prim.Exit.DOTID()
 	const format = `
-digraph if {
+digraph pre_loop {
 	%[1]s -> %[2]s
 	%[1]s -> %[3]s
-	%[2]s -> %[3]s
+	%[2]s -> %[1]s
 }`
 	return fmt.Sprintf(format[1:], cond, body, exit)
 }
 
-// FindIf returns the first occurrence of a 1-way conditional statement in g,
-// and a boolean indicating if such a primitive was found.
-func FindIf(g graph.Directed, dom cfa.DominatorTree) (prim If, ok bool) {
+// FindPreLoop returns the first occurrence of a pre-test loop in g, and a
+// boolean indicating if such a primitive was found.
+func FindPreLoop(g graph.Directed, dom cfa.DominatorTree) (prim PreLoop, ok bool) {
 	// Range through cond node candidates.
 	for nodes := g.Nodes(); nodes.Next(); {
 		// Note: This run-time type assertion goes away, should Gonum graph start
@@ -93,20 +93,20 @@ func FindIf(g graph.Directed, dom cfa.DominatorTree) (prim If, ok bool) {
 			return prim, true
 		}
 	}
-	return If{}, false
+	return PreLoop{}, false
 }
 
 // IsValid reports whether the cond, body and exit node candidates of prim form
-// a valid 1-way conditional statement in g.
+// a valid pre-test loop in g.
 //
 // Control flow graph:
 //
 //    cond
-//    ↓   ↘
-//    ↓    body
-//    ↓   ↙
+//    ↓  ↖↘
+//    ↓   body
+//    ↓
 //    exit
-func (prim If) IsValid(g graph.Directed, dom cfa.DominatorTree) bool {
+func (prim PreLoop) IsValid(g graph.Directed, dom cfa.DominatorTree) bool {
 	// Dominator sanity check.
 	cond, body, exit := prim.Cond, prim.Body, prim.Exit
 	if !dom.Dominates(cond, body) || !dom.Dominates(cond, exit) {
@@ -117,13 +117,13 @@ func (prim If) IsValid(g graph.Directed, dom cfa.DominatorTree) bool {
 	if condSuccs.Len() != 2 || !g.HasEdgeFromTo(cond.ID(), body.ID()) || !g.HasEdgeFromTo(cond.ID(), exit.ID()) {
 		return false
 	}
-	// Verify that body has one predecessor (cond) and one successor (exit).
+	// Verify that body has one predecessor (cond) and one successor (cond).
 	bodyPreds := g.To(body.ID())
 	bodySuccs := g.From(body.ID())
-	if bodyPreds.Len() != 1 || bodySuccs.Len() != 1 || !g.HasEdgeFromTo(body.ID(), exit.ID()) {
+	if bodyPreds.Len() != 1 || bodySuccs.Len() != 1 || !g.HasEdgeFromTo(body.ID(), cond.ID()) {
 		return false
 	}
-	// Verify that exit has two predecessors (cond and body).
+	// Verify that exit has one predecessor (cond).
 	exitPreds := g.To(exit.ID())
-	return exitPreds.Len() == 2
+	return exitPreds.Len() == 1
 }

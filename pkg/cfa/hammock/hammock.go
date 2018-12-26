@@ -12,8 +12,8 @@ package hammock
 import (
 	goerrors "errors"
 
-	"github.com/mewmew/lnp/cfa"
-	"github.com/mewmew/lnp/cfa/primitive"
+	"github.com/mewmew/lnp/pkg/cfa"
+	"github.com/mewmew/lnp/pkg/cfa/primitive"
 	"github.com/pkg/errors"
 )
 

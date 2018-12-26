@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	"github.com/graphism/simple"
-	"github.com/mewmew/lnp/cfa"
+	"github.com/mewmew/lnp/pkg/cfa"
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding"

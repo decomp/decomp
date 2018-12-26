@@ -34,10 +34,10 @@ import (
 
 	"github.com/mewkiz/pkg/pathutil"
 	"github.com/mewkiz/pkg/term"
-	"github.com/mewmew/lnp/cfa"
-	"github.com/mewmew/lnp/cfa/hammock"
-	"github.com/mewmew/lnp/cfa/primitive"
-	"github.com/mewmew/lnp/cfg"
+	"github.com/mewmew/lnp/pkg/cfa"
+	"github.com/mewmew/lnp/pkg/cfa/hammock"
+	"github.com/mewmew/lnp/pkg/cfa/primitive"
+	"github.com/mewmew/lnp/pkg/cfg"
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph/encoding"
 )

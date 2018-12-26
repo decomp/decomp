@@ -1,7 +1,7 @@
 package cfa
 
 import (
-	"github.com/mewmew/lnp/cfa/primitive"
+	"github.com/mewmew/lnp/pkg/cfa/primitive"
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph/encoding"
 )

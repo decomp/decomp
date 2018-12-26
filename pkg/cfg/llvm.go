@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/llir/llvm/ir"
-	"github.com/mewmew/lnp/cfa"
+	"github.com/mewmew/lnp/pkg/cfa"
 	"gonum.org/v1/gonum/graph/encoding"
 )
 

@@ -39,7 +39,7 @@ import (
 	"github.com/llir/llvm/ir"
 	"github.com/mewkiz/pkg/pathutil"
 	"github.com/mewkiz/pkg/term"
-	"github.com/mewmew/lnp/cfg"
+	"github.com/mewmew/lnp/pkg/cfg"
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding/dot"
