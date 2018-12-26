@@ -28,7 +28,7 @@ func (gen *Generator) createGlobalDecls() {
 		}
 		name := irGlobal.Name()
 		if prev, ok := gen.globals[name]; ok {
-			gen.Errorf("global variable declaration with name %q already present; prev `%s`, new `%s`", name, prev, global)
+			gen.Errorf("global variable declaration with name %q already present; prev `%v`, new `%v`", name, prev, global)
 			continue
 		}
 		gen.globals[name] = global
@@ -44,7 +44,7 @@ func (gen *Generator) createGlobalDecls() {
 		}
 		name := irFunc.Name()
 		if prev, ok := gen.funcs[name]; ok {
-			gen.Errorf("function declaration with name %q already present; prev `%s`, new `%s`", name, prev, f)
+			gen.Errorf("function declaration with name %q already present; prev `%v`, new `%v`", name, prev, f)
 			continue
 		}
 		gen.funcs[name] = f

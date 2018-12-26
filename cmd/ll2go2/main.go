@@ -40,7 +40,7 @@ import (
 var (
 	// dbg represents a logger with the "ll2go:" prefix, which logs debug
 	// messages to standard error.
-	dbg = log.New(os.Stderr, term.GreenBold("ll2go:")+" ", 0)
+	dbg = log.New(os.Stderr, term.CyanBold("ll2go:")+" ", 0)
 	// warn represents a logger with the "ll2go:" prefix, which logs warning
 	// messages to standard error.
 	warn = log.New(os.Stderr, term.RedBold("ll2go:")+" ", 0)
@@ -191,7 +191,7 @@ func (errs ErrorList) Error() string {
 		buf := &bytes.Buffer{}
 		fmt.Fprintf(buf, "%d errors during compilation:", len(errs))
 		for _, err := range errs {
-			fmt.Fprintf(buf, "\n\t%s", err)
+			fmt.Fprintf(buf, "\n\t%v", err)
 		}
 		return buf.String()
 	}

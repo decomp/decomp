@@ -27,6 +27,38 @@ func (gen *Generator) Decompile() *ast.File {
 // decompileModule decompiles the LLVM IR module to Go source code, emitting to
 // file.
 func (gen *Generator) decompileModule() {
-	// TODO: implement
-	//panic("not yet implemented")
+	// Decompile LLVM IR global definitions to Go source code.
+	gen.decompileGlobalDefs()
+
+	// Decompile LLVM IR function definitions to Go source code.
+	gen.decompileFuncDefs()
+}
+
+// decompileGlobalDefs decompiles the LLVM IR global definitions to Go source
+// code, emitting to file.
+func (gen *Generator) decompileGlobalDefs() {
+	for _, irGlobal := range gen.m.Globals {
+		if irGlobal.Init == nil {
+			// Skip global declarations.
+			continue
+		}
+		name := irGlobal.Name()
+		global, ok := gen.globals[name]
+		if !ok {
+			gen.Errorf("unable to locate global variable declaration with name %q", name)
+			continue
+		}
+		init, err := gen.liftConst(irGlobal.Init)
+		if err != nil {
+			gen.eh(err)
+			continue
+		}
+		spec := global.Specs[0].(*ast.ValueSpec)
+		spec.Values = []ast.Expr{init}
+	}
+}
+
+// decompileFuncDefs decompiles the LLVM IR function definitions to Go source
+// code, emitting to file.
+func (gen *Generator) decompileFuncDefs() {
 }
