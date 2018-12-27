@@ -13,9 +13,10 @@ type funcGen struct {
 }
 
 // newFuncGen returns a new Go function generator for the given Go source file
-// generator.
-func (gen *Generator) newFuncGen() *funcGen {
+// generator and Go function declaration.
+func (gen *Generator) newFuncGen(f *ast.FuncDecl) *funcGen {
 	return &funcGen{
 		gen: gen,
+		f:   f,
 	}
 }

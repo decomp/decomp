@@ -61,4 +61,21 @@ func (gen *Generator) decompileGlobalDefs() {
 // decompileFuncDefs decompiles the LLVM IR function definitions to Go source
 // code, emitting to file.
 func (gen *Generator) decompileFuncDefs() {
+	for _, irFunc := range gen.m.Funcs {
+		if len(irFunc.Blocks) == 0 {
+			// Skip function declarations.
+			continue
+		}
+		name := irFunc.Name()
+		f, ok := gen.funcs[name]
+		if !ok {
+			gen.Errorf("unable to locate function declaration with name %q", name)
+			continue
+		}
+		fgen := gen.newFuncGen(f)
+		// Index local variables.
+		// TODO: continue here.
+		_ = fgen
+		//fgen.indexLocals()
+	}
 }

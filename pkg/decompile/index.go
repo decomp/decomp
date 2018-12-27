@@ -75,5 +75,14 @@ func (gen *Generator) newGlobal(irGlobal *ir.Global) (*ast.GenDecl, error) {
 // newFunc returns a new scaffolding Go function declaration (without body but
 // with type) based on the given LLVM IR function declaration or definition.
 func (gen *Generator) newFunc(irFunc *ir.Function) (*ast.FuncDecl, error) {
-	panic("not yet implemented")
+	name := irFunc.Name()
+	sig, err := gen.goType(irFunc.Sig)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	f := &ast.FuncDecl{
+		Name: ast.NewIdent(name),
+		Type: goTypeExpr(sig).(*ast.FuncType),
+	}
+	return f, nil
 }
