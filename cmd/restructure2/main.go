@@ -12,6 +12,8 @@
 //
 // Flags:
 //
+//   -img
+//         output image representation of graphs
 //   -indent
 //         indent JSON output
 //   -o string
@@ -30,6 +32,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"strconv"
 
 	"github.com/mewkiz/pkg/pathutil"
@@ -68,6 +71,8 @@ Flags:
 func main() {
 	// Parse command line arguments.
 	var (
+		// img specifies whether to output image representation of graphs.
+		img bool
 		// indent specifies whether to indent JSON output.
 		indent bool
 		// output specifies the output path.
@@ -77,6 +82,7 @@ func main() {
 		// steps specifies whether to output intermediate steps.
 		steps bool
 	)
+	flag.BoolVar(&img, "img", false, "output image representation of graphs")
 	flag.BoolVar(&indent, "indent", false, "indent JSON output")
 	flag.StringVar(&output, "o", "", "output path")
 	flag.BoolVar(&quiet, "q", false, "suppress non-error messages")
@@ -114,7 +120,7 @@ func main() {
 	default:
 		stepPrefix = pathutil.TrimExt(dotPath)
 	}
-	prims, err := restructure(g, stepPrefix, steps)
+	prims, err := restructure(g, stepPrefix, steps, img)
 	if err != nil {
 		log.Fatalf("%+v", err)
 	}
@@ -143,7 +149,10 @@ func main() {
 // The steps argument specifies whether to record the intermediate control flow
 // graphs at each step. The returned list of primitives is ordered in the same
 // sequence as they were located.
-func restructure(g cfa.Graph, stepPrefix string, steps bool) ([]*primitive.Primitive, error) {
+//
+// img specifies whether to output image representations of the intermediate
+// control flow graphs.
+func restructure(g cfa.Graph, stepPrefix string, steps, img bool) ([]*primitive.Primitive, error) {
 	// Output intermediate steps in Graphviz DOT format.
 	var (
 		before func(g cfa.Graph, prim *primitive.Primitive)
@@ -159,6 +168,13 @@ func restructure(g cfa.Graph, stepPrefix string, steps bool) ([]*primitive.Primi
 			if err := ioutil.WriteFile(beforePath, data, 0644); err != nil {
 				warn.Printf("unable to create %q; %v", beforePath, err)
 			}
+			// Store an image representation of the intermediate CFG if `-img` is
+			// set.
+			if img {
+				if err := outputImg(beforePath); err != nil {
+					warn.Println(err)
+				}
+			}
 		}
 		after = func(g cfa.Graph, prim *primitive.Primitive) {
 			data := []byte(dotAfterMerge(g, prim))
@@ -166,6 +182,13 @@ func restructure(g cfa.Graph, stepPrefix string, steps bool) ([]*primitive.Primi
 			dbg.Println("creating:", afterPath)
 			if err := ioutil.WriteFile(afterPath, data, 0644); err != nil {
 				warn.Printf("unable to create %q; %v", afterPath, err)
+			}
+			// Store an image representation of the intermediate CFG if `-img` is
+			// set.
+			if img {
+				if err := outputImg(afterPath); err != nil {
+					warn.Println(err)
+				}
 			}
 			step++
 		}
@@ -275,6 +298,19 @@ func outputJSON(w io.Writer, prims []*primitive.Primitive, indent bool) error {
 	// Output JSON.
 	enc := json.NewEncoder(w)
 	if err := enc.Encode(prims); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+// outputImg outputs an image representation of the given Graphviz DOT file.
+func outputImg(dotPath string) error {
+	pngPath := pathutil.TrimExt(dotPath) + ".png"
+	dbg.Printf("creating file %q.", pngPath)
+	cmd := exec.Command("dot", "-Tpng", "-o", pngPath, dotPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

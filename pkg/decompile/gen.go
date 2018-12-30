@@ -5,11 +5,15 @@ import (
 	gotypes "go/types"
 
 	"github.com/llir/llvm/ir"
+	"github.com/mewmew/lnp/pkg/cfa/primitive"
 )
 
 // Generator keeps track of top-level declarations when decompiling from LLVM IR
 // to Go AST representation.
 type Generator struct {
+	// Prims returns the control flow primitives of the given function.
+	Prims func(f *ir.Function) ([]*primitive.Primitive, error)
+
 	// Error handler used to report errors encountered during decompilation.
 	eh func(error)
 	// LLVM IR module being decompiled.

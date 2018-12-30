@@ -3,6 +3,19 @@ package decompile
 
 import (
 	"go/ast"
+	"log"
+	"os"
+
+	"github.com/mewkiz/pkg/term"
+)
+
+var (
+	// dbg represents a logger with the "decompile:" prefix, which logs debug
+	// messages to standard error.
+	dbg = log.New(os.Stderr, term.WhiteBold("decompile:")+" ", 0)
+	// warn represents a logger with the "decompile:" prefix, which logs warning
+	// messages to standard error.
+	warn = log.New(os.Stderr, term.RedBold("decompile:")+" ", 0)
 )
 
 // Decompile decompiles the LLVM IR module to Go source code.
@@ -67,15 +80,12 @@ func (gen *Generator) decompileFuncDefs() {
 			continue
 		}
 		name := irFunc.Name()
-		f, ok := gen.funcs[name]
+		goFunc, ok := gen.funcs[name]
 		if !ok {
 			gen.Errorf("unable to locate function declaration with name %q", name)
 			continue
 		}
-		fgen := gen.newFuncGen(f)
-		// Index local variables.
-		// TODO: continue here.
-		_ = fgen
-		//fgen.indexLocals()
+		fgen := gen.newFuncGen(goFunc)
+		fgen.decompileFuncDef(irFunc)
 	}
 }

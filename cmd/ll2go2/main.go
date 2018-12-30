@@ -27,12 +27,15 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/llir/llvm/asm"
 	"github.com/llir/llvm/ir"
+	"github.com/mewkiz/pkg/jsonutil"
 	"github.com/mewkiz/pkg/pathutil"
 	"github.com/mewkiz/pkg/term"
+	"github.com/mewmew/lnp/pkg/cfa/primitive"
 	"github.com/mewmew/lnp/pkg/decompile"
 	"github.com/pkg/errors"
 )
@@ -136,9 +139,6 @@ func main() {
 // funcNames specifies the set of function names to decompile. When funcNames is
 // emtpy, all functions of the module are decompiled.
 func ll2go(m *ir.Module, llPath string, funcNames map[string]bool) (*ast.File, error) {
-	basePath := pathutil.TrimExt(llPath)
-	// TODO: parse output from control flow recovery and pass to decompiler.
-	_ = basePath
 	// Error handler.
 	var errs ErrorList
 	eh := func(err error) {
@@ -146,6 +146,10 @@ func ll2go(m *ir.Module, llPath string, funcNames map[string]bool) (*ast.File, e
 	}
 	// Decompile LLVM IR module to Go source code.
 	gen := decompile.NewGenerator(eh, m)
+	// Set function for parsing recovered control flow primitives.
+	gen.Prims = func(f *ir.Function) ([]*primitive.Primitive, error) {
+		return parsePrims(llPath, f.Name())
+	}
 	file := gen.Decompile()
 	if len(errs) > 0 {
 		// TODO: return partial results of decompilation?
@@ -165,6 +169,19 @@ func parseModule(llPath string) (*ir.Module, error) {
 		dbg.Printf("parsing file %q.", llPath)
 		return asm.ParseFile(llPath)
 	}
+}
+
+// parsePrims parses the recovered control flow primitives of the given
+// function.
+func parsePrims(llPath, funcName string) ([]*primitive.Primitive, error) {
+	dotDir := pathutil.TrimExt(llPath) + "_graphs"
+	jsonName := funcName + ".json"
+	jsonPath := filepath.Join(dotDir, jsonName)
+	var prims []*primitive.Primitive
+	if err := jsonutil.ParseFile(jsonPath, &prims); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return prims, nil
 }
 
 // outputGo outputs the given Go source file, writing to w.

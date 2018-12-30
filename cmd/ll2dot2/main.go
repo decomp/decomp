@@ -120,12 +120,12 @@ func main() {
 			continue
 		}
 		// Create output directory.
-		dotDir, err := createDotDir(llPath, force)
+		dotDir, err := createDOTDir(llPath, force)
 		if err != nil {
 			log.Fatalf("%+v", err)
 		}
 		// Generate control flow graphs.
-		if err := ll2dot(m, dotDir, funcNames, force, img); err != nil {
+		if err := ll2dot(m, dotDir, funcNames, img); err != nil {
 			log.Fatalf("%+v", err)
 		}
 	}
@@ -135,8 +135,6 @@ func main() {
 // the given LLVM IR module, using one node per basic block.
 //
 // dotDir specifies the output directory for the generated control flow graphs.
-// When force is set, the output directory is automatically cleaned before
-// generating new graphs.
 //
 // funcNames specifies the set of function names for which to generate control
 // flow graphs. When funcNames is emtpy, control flow graphs are generated for
@@ -144,7 +142,7 @@ func main() {
 //
 // img specifies whether to output image representations of the control flow
 // graphs.
-func ll2dot(m *ir.Module, dotDir string, funcNames map[string]bool, force, img bool) error {
+func ll2dot(m *ir.Module, dotDir string, funcNames map[string]bool, img bool) error {
 	// Get functions set by `-funcs` or all functions if `-funcs` not used.
 	var funcs []*ir.Function
 	for _, f := range m.Funcs {
@@ -154,7 +152,6 @@ func ll2dot(m *ir.Module, dotDir string, funcNames map[string]bool, force, img b
 		}
 		funcs = append(funcs, f)
 	}
-
 	// Generate a control flow graph for each function.
 	for _, f := range funcs {
 		// Skip function declarations.
@@ -164,7 +161,6 @@ func ll2dot(m *ir.Module, dotDir string, funcNames map[string]bool, force, img b
 		// Generate control flow graph.
 		dbg.Printf("parsing function %q.", f.Ident())
 		g := cfg.NewGraphFromFunc(f)
-
 		// Output control flow graph in Graphviz DOT format.
 		if err := outputCFG(g, f.Name(), dotDir, img); err != nil {
 			return errors.WithStack(err)
@@ -173,13 +169,13 @@ func ll2dot(m *ir.Module, dotDir string, funcNames map[string]bool, force, img b
 	return nil
 }
 
-// createDotDir creates and returns an output directory based on the path of the
-// LLVM IR file.
+// createDOTDir creates and returns a DOT graphs output directory based on the
+// path of the LLVM IR file.
 //
 // For a source file "foo.ll" the output directory "foo_graphs/" is created. If
 // the `-force` flag is set, existing graph directories are overwritten by
 // force.
-func createDotDir(llPath string, force bool) (string, error) {
+func createDOTDir(llPath string, force bool) (string, error) {
 	var dotDir string
 	switch llPath {
 	case "-":
@@ -216,7 +212,7 @@ func parseModule(llPath string) (*ir.Module, error) {
 // is set, it also stores an image representation of the control flow graph.
 //
 // For a source file "foo.ll" containing the functions "bar" and "baz" the
-// following DOT files will be created:
+// following DOT files are produced:
 //
 //    foo_graphs/bar.dot
 //    foo_graphs/baz.dot
@@ -233,15 +229,22 @@ func outputCFG(g graph.Directed, funcName, dotDir string, img bool) error {
 	}
 	// Store an image representation of the CFG if `-img` is set.
 	if img {
-		pngName := funcName + ".png"
-		pngPath := filepath.Join(dotDir, pngName)
-		dbg.Printf("creating file %q.", pngPath)
-		cmd := exec.Command("dot", "-Tpng", "-o", pngPath, dotPath)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
+		if err := outputImg(dotPath); err != nil {
 			return errors.WithStack(err)
 		}
+	}
+	return nil
+}
+
+// outputImg outputs an image representation of the given Graphviz DOT file.
+func outputImg(dotPath string) error {
+	pngPath := pathutil.TrimExt(dotPath) + ".png"
+	dbg.Printf("creating file %q.", pngPath)
+	cmd := exec.Command("dot", "-Tpng", "-o", pngPath, dotPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return errors.WithStack(err)
 	}
 	return nil
 }

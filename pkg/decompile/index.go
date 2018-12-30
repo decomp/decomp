@@ -65,11 +65,11 @@ func (gen *Generator) newGlobal(irGlobal *ir.Global) (*ast.GenDecl, error) {
 		Names: []*ast.Ident{ast.NewIdent(name)},
 		Type:  goTypeExpr(contentType),
 	}
-	global := &ast.GenDecl{
+	goGlobal := &ast.GenDecl{
 		Tok:   token.VAR,
 		Specs: []ast.Spec{spec},
 	}
-	return global, nil
+	return goGlobal, nil
 }
 
 // newFunc returns a new scaffolding Go function declaration (without body but
@@ -80,9 +80,9 @@ func (gen *Generator) newFunc(irFunc *ir.Function) (*ast.FuncDecl, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	f := &ast.FuncDecl{
+	goFunc := &ast.FuncDecl{
 		Name: ast.NewIdent(name),
 		Type: goTypeExpr(sig).(*ast.FuncType),
 	}
-	return f, nil
+	return goFunc, nil
 }
