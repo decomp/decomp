@@ -12,7 +12,7 @@ import (
 // to Go AST representation.
 type Generator struct {
 	// Prims returns the control flow primitives of the given function.
-	Prims func(f *ir.Function) ([]*primitive.Primitive, error)
+	Prims func(f *ir.Func) ([]*primitive.Primitive, error)
 
 	// Error handler used to report errors encountered during decompilation.
 	eh func(error)

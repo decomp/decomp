@@ -147,7 +147,7 @@ func ll2go(m *ir.Module, llPath string, funcNames map[string]bool) (*ast.File, e
 	// Decompile LLVM IR module to Go source code.
 	gen := decompile.NewGenerator(eh, m)
 	// Set function for parsing recovered control flow primitives.
-	gen.Prims = func(f *ir.Function) ([]*primitive.Primitive, error) {
+	gen.Prims = func(f *ir.Func) ([]*primitive.Primitive, error) {
 		return parsePrims(llPath, f.Name())
 	}
 	file := gen.Decompile()

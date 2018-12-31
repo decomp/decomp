@@ -15,7 +15,7 @@ import (
 
 // decompileFuncDef decompiles the LLVM IR function definition to Go source
 // code, emitting to f.
-func (fgen *funcGen) decompileFuncDef(irFunc *ir.Function) {
+func (fgen *funcGen) decompileFuncDef(irFunc *ir.Func) {
 	blockStmt := &ast.BlockStmt{}
 	fgen.f.Body = blockStmt
 	fgen.cur = blockStmt
@@ -31,9 +31,15 @@ func (fgen *funcGen) decompileFuncDef(irFunc *ir.Function) {
 func (fgen *funcGen) liftBlock(block Block, liftTerm bool) {
 	switch block := block.(type) {
 	case *IRBlock:
-		fgen.liftBasicBlock(block.BasicBlock, liftTerm)
+		fgen.liftBasicBlock(block.Block, liftTerm)
+	case *Seq:
+		fgen.liftSeq(block)
+	case *If:
+		fgen.liftIf(block)
 	case *IfElse:
 		fgen.liftIfElse(block)
+	case *PreLoop:
+		fgen.liftPreLoop(block)
 	default:
 		panic(fmt.Errorf("support for pseudo basic block type %T not yet implemented", block))
 	}
@@ -42,13 +48,41 @@ func (fgen *funcGen) liftBlock(block Block, liftTerm bool) {
 // liftBasicBlock lifts the LLVM IR basic block to Go source code, emitting to
 // f. The liftTerm parameter determines whether to lift or skip the terminator
 // instruction of the basic block.
-func (fgen *funcGen) liftBasicBlock(block *ir.BasicBlock, liftTerm bool) {
+func (fgen *funcGen) liftBasicBlock(block *ir.Block, liftTerm bool) {
 	for _, inst := range block.Insts {
 		fgen.liftInst(inst)
 	}
 	if liftTerm {
 		fgen.liftTerm(block.Term)
 	}
+}
+
+// liftSeq lifts the pseudo sequence block to Go source code, emitting to f.
+func (fgen *funcGen) liftSeq(block *Seq) {
+	// Lift entry block.
+	fgen.liftBlock(block.Entry, false)
+	// Lift exit block.
+	fgen.liftBlock(block.Exit, false)
+}
+
+// liftIf lifts the pseudo if block to Go source code, emitting to f.
+func (fgen *funcGen) liftIf(block *If) {
+	// Lift cond block.
+	fgen.liftBlock(block.Cond, false)
+	// Get if-else statement.
+	body := &ast.BlockStmt{}
+	ifStmt := &ast.IfStmt{
+		Cond: fgen.getCond(block.Cond.GetTerm()),
+		Body: body,
+	}
+	fgen.cur.List = append(fgen.cur.List, ifStmt)
+	cur := fgen.cur
+	// Lift body block.
+	fgen.cur = body
+	fgen.liftBlock(block.Body, false)
+	// Lift exit block.
+	fgen.cur = cur
+	fgen.liftBlock(block.Exit, false)
 }
 
 // liftIfElse lifts the pseudo if-else block to Go source code, emitting to f.
@@ -73,12 +107,32 @@ func (fgen *funcGen) liftIfElse(block *IfElse) {
 	fgen.liftBlock(block.BodyFalse, false)
 	// Lift exit block.
 	fgen.cur = cur
-	fgen.liftBlock(block.Exit, true)
+	fgen.liftBlock(block.Exit, false)
+}
+
+// liftPreLoop lifts the pseudo pre-loop block to Go source code, emitting to f.
+func (fgen *funcGen) liftPreLoop(block *PreLoop) {
+	// Lift cond block.
+	fgen.liftBlock(block.Cond, false)
+	// Get if-else statement.
+	body := &ast.BlockStmt{}
+	forStmt := &ast.ForStmt{
+		Cond: fgen.getCond(block.Cond.GetTerm()),
+		Body: body,
+	}
+	fgen.cur.List = append(fgen.cur.List, forStmt)
+	cur := fgen.cur
+	// Lift body block.
+	fgen.cur = body
+	fgen.liftBlock(block.Body, false)
+	// Lift exit block.
+	fgen.cur = cur
+	fgen.liftBlock(block.Exit, false)
 }
 
 // primBlocks returns the list of pseudo basic blocks corresponding to the
 // recovered high-level primitives of the given function.
-func (fgen *funcGen) primBlocks(irFunc *ir.Function) []Block {
+func (fgen *funcGen) primBlocks(irFunc *ir.Func) []Block {
 	prims, err := fgen.gen.Prims(irFunc)
 	if err != nil {
 		fgen.gen.eh(err)
@@ -86,7 +140,7 @@ func (fgen *funcGen) primBlocks(irFunc *ir.Function) []Block {
 	}
 	blocks := make(map[string]Block)
 	for _, block := range irFunc.Blocks {
-		blocks[block.Name()] = &IRBlock{BasicBlock: block}
+		blocks[block.Name()] = &IRBlock{Block: block}
 	}
 	for _, prim := range prims {
 		dbg.Printf("recovering %q primitive", prim.Prim)
@@ -104,8 +158,43 @@ func (fgen *funcGen) primBlocks(irFunc *ir.Function) []Block {
 				fgen.gen.Errorf("unable to locate exit block %q of primitive %q in function %q", exitName, prim.Prim, irFunc.Name())
 				continue
 			}
-			_ = entry
-			_ = exit
+			block := &Seq{
+				BlockName: prim.Entry,
+				Entry:     entry,
+				Exit:      exit,
+			}
+			delete(blocks, entryName)
+			delete(blocks, exitName)
+			blocks[block.Name()] = block
+		case "if":
+			condName := prim.Nodes["cond"]
+			cond, ok := blocks[condName]
+			if !ok {
+				fgen.gen.Errorf("unable to locate cond block %q of primitive %q in function %q", condName, prim.Prim, irFunc.Name())
+				continue
+			}
+			bodyName := prim.Nodes["body"]
+			body, ok := blocks[bodyName]
+			if !ok {
+				fgen.gen.Errorf("unable to locate body block %q of primitive %q in function %q", bodyName, prim.Prim, irFunc.Name())
+				continue
+			}
+			exitName := prim.Nodes["exit"]
+			exit, ok := blocks[exitName]
+			if !ok {
+				fgen.gen.Errorf("unable to locate exit block %q of primitive %q in function %q", exitName, prim.Prim, irFunc.Name())
+				continue
+			}
+			block := &If{
+				BlockName: prim.Entry,
+				Cond:      cond,
+				Body:      body,
+				Exit:      exit,
+			}
+			delete(blocks, condName)
+			delete(blocks, bodyName)
+			delete(blocks, exitName)
+			blocks[block.Name()] = block
 		case "if_else":
 			condName := prim.Nodes["cond"]
 			cond, ok := blocks[condName]
@@ -143,6 +232,35 @@ func (fgen *funcGen) primBlocks(irFunc *ir.Function) []Block {
 			delete(blocks, bodyFalseName)
 			delete(blocks, exitName)
 			blocks[block.Name()] = block
+		case "pre_loop":
+			condName := prim.Nodes["cond"]
+			cond, ok := blocks[condName]
+			if !ok {
+				fgen.gen.Errorf("unable to locate cond block %q of primitive %q in function %q", condName, prim.Prim, irFunc.Name())
+				continue
+			}
+			bodyName := prim.Nodes["body"]
+			body, ok := blocks[bodyName]
+			if !ok {
+				fgen.gen.Errorf("unable to locate body block %q of primitive %q in function %q", bodyName, prim.Prim, irFunc.Name())
+				continue
+			}
+			exitName := prim.Nodes["exit"]
+			exit, ok := blocks[exitName]
+			if !ok {
+				fgen.gen.Errorf("unable to locate exit block %q of primitive %q in function %q", exitName, prim.Prim, irFunc.Name())
+				continue
+			}
+			block := &PreLoop{
+				BlockName: prim.Entry,
+				Cond:      cond,
+				Body:      body,
+				Exit:      exit,
+			}
+			delete(blocks, condName)
+			delete(blocks, bodyName)
+			delete(blocks, exitName)
+			blocks[block.Name()] = block
 		default:
 			panic(fmt.Errorf("support for primitive %q not yet implemented", prim.Prim))
 		}
@@ -166,11 +284,55 @@ type Block interface {
 }
 
 type IRBlock struct {
-	*ir.BasicBlock
+	*ir.Block
 }
 
 func (block *IRBlock) GetTerm() ir.Terminator {
 	return block.Term
+}
+
+type PreLoop struct {
+	BlockName string
+	Cond      Block
+	Body      Block
+	Exit      Block
+}
+
+func (block *PreLoop) Name() string {
+	return block.BlockName
+}
+
+func (block *PreLoop) GetTerm() ir.Terminator {
+	return block.Exit.GetTerm()
+}
+
+type Seq struct {
+	BlockName string
+	Entry     Block
+	Exit      Block
+}
+
+func (block *Seq) Name() string {
+	return block.BlockName
+}
+
+func (block *Seq) GetTerm() ir.Terminator {
+	return block.Exit.GetTerm()
+}
+
+type If struct {
+	BlockName string
+	Cond      Block
+	Body      Block
+	Exit      Block
+}
+
+func (block *If) Name() string {
+	return block.BlockName
+}
+
+func (block *If) GetTerm() ir.Terminator {
+	return block.Exit.GetTerm()
 }
 
 type IfElse struct {
@@ -200,6 +362,20 @@ func (fgen *funcGen) liftInst(inst ir.Instruction) {
 		fgen.liftInstLoad(inst)
 	case *ir.InstICmp:
 		fgen.liftInstICmp(inst)
+	case *ir.InstAdd:
+		// Variable name.
+		name := newIdent(inst)
+		// X and Y operands.
+		x := fgen.liftValue(inst.X)
+		y := fgen.liftValue(inst.Y)
+		fgen.emitAssignBinOp(name, x, y, token.ADD)
+	case *ir.InstMul:
+		// Variable name.
+		name := newIdent(inst)
+		// X and Y operands.
+		x := fgen.liftValue(inst.X)
+		y := fgen.liftValue(inst.Y)
+		fgen.emitAssignBinOp(name, x, y, token.MUL)
 	default:
 		panic(fmt.Errorf("support for instruction type %T not yet implemented", inst))
 	}
@@ -289,6 +465,24 @@ func (fgen *funcGen) liftInstICmp(inst *ir.InstICmp) {
 	// X and Y operands.
 	x := fgen.liftValue(inst.X)
 	y := fgen.liftValue(inst.Y)
+	binExpr := &ast.BinaryExpr{
+		X:  x,
+		Op: op,
+		Y:  y,
+	}
+	// Append assignment statement.
+	assignStmt := &ast.AssignStmt{
+		Lhs: []ast.Expr{name},
+		Tok: token.ASSIGN,
+		Rhs: []ast.Expr{binExpr},
+	}
+	fgen.cur.List = append(fgen.cur.List, assignStmt)
+}
+
+// emitAssignBinOp emits an assignment statement based on the given name,
+// operands and binary operation, emitting to f.
+func (fgen *funcGen) emitAssignBinOp(name *ast.Ident, x, y ast.Expr, op token.Token) {
+	// Binary expression.
 	binExpr := &ast.BinaryExpr{
 		X:  x,
 		Op: op,
