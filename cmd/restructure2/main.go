@@ -16,6 +16,9 @@
 //         output image representation of graphs
 //   -indent
 //         indent JSON output
+//   -method string
+//         control flow recovery method (hammock, interval, pattern-independent)
+//         (default "hammock")
 //   -o string
 //         output path
 //   -q    suppress non-error messages
@@ -75,6 +78,8 @@ func main() {
 		img bool
 		// indent specifies whether to indent JSON output.
 		indent bool
+		// method specifies the control flow recovery method (hammock, interval, pattern-independent).
+		method string
 		// output specifies the output path.
 		output string
 		// quiet specifies whether to suppress non-error messages.
@@ -84,6 +89,7 @@ func main() {
 	)
 	flag.BoolVar(&img, "img", false, "output image representation of graphs")
 	flag.BoolVar(&indent, "indent", false, "indent JSON output")
+	flag.StringVar(&method, "method", "hammock", "control flow recovery method (hammock, interval, pattern-independent)")
 	flag.StringVar(&output, "o", "", "output path")
 	flag.BoolVar(&quiet, "q", false, "suppress non-error messages")
 	flag.BoolVar(&steps, "steps", false, "output intermediate steps")
@@ -120,7 +126,7 @@ func main() {
 	default:
 		stepPrefix = pathutil.TrimExt(dotPath)
 	}
-	prims, err := restructure(g, stepPrefix, steps, img)
+	prims, err := restructure(g, method, stepPrefix, steps, img)
 	if err != nil {
 		log.Fatalf("%+v", err)
 	}
@@ -152,7 +158,7 @@ func main() {
 //
 // img specifies whether to output image representations of the intermediate
 // control flow graphs.
-func restructure(g cfa.Graph, stepPrefix string, steps, img bool) ([]*primitive.Primitive, error) {
+func restructure(g cfa.Graph, method, stepPrefix string, steps, img bool) ([]*primitive.Primitive, error) {
 	// Output intermediate steps in Graphviz DOT format.
 	var (
 		before func(g cfa.Graph, prim *primitive.Primitive)
@@ -194,15 +200,20 @@ func restructure(g cfa.Graph, stepPrefix string, steps, img bool) ([]*primitive.
 		}
 	}
 	// Recovery control flow primitives.
-	prims, err := hammock.Analyze(g, before, after)
-	if err != nil {
-		if errors.Cause(err) == hammock.ErrIncomplete {
-			warn.Printf("warning: %v", err)
-		} else {
-			return nil, errors.WithStack(err)
+	switch method {
+	case "hammock":
+		prims, err := hammock.Analyze(g, before, after)
+		if err != nil {
+			if errors.Cause(err) == cfa.ErrIncomplete {
+				warn.Printf("warning: %v", err)
+			} else {
+				return nil, errors.WithStack(err)
+			}
 		}
+		return prims, nil
+	default:
+		panic(fmt.Errorf("support for control flow recovery method %q not yet implemented", method))
 	}
-	return prims, nil
 }
 
 // dotBeforeMerge returns the intermediate graph g in Graphviz DOT format with

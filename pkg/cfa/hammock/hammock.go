@@ -10,15 +10,10 @@
 package hammock
 
 import (
-	goerrors "errors"
-
 	"github.com/mewmew/lnp/pkg/cfa"
 	"github.com/mewmew/lnp/pkg/cfa/primitive"
 	"github.com/pkg/errors"
 )
-
-// ErrIncomplete signals an incomplete control flow recovery.
-var ErrIncomplete = goerrors.New("incomplete control flow recovery")
 
 // Analyze analyzes the given control flow graph and returns the list of
 // recovered high-level control flow primitives. The before and after functions
@@ -49,7 +44,7 @@ func Analyze(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primit
 	}
 	if g.Nodes().Len() > 1 {
 		// Return partial results and signal incomplete control flow recovery.
-		return prims, ErrIncomplete
+		return prims, cfa.ErrIncomplete
 	}
 	return prims, nil
 }

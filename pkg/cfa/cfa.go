@@ -2,12 +2,16 @@
 package cfa
 
 import (
+	goerrors "errors"
 	"fmt"
 
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding"
 	"gonum.org/v1/gonum/graph/encoding/dot"
 )
+
+// ErrIncomplete signals an incomplete control flow recovery.
+var ErrIncomplete = goerrors.New("incomplete control flow recovery")
 
 // Graph is a control flow graph and implements the graph.Directed,
 // graph.Builder, graph.NodeRemover, graph.EdgeRemover and dot.Graph interfaces.
