@@ -3,6 +3,7 @@ package decompile
 import (
 	"go/ast"
 	"go/token"
+	gotypes "go/types"
 
 	"github.com/llir/llvm/ir"
 	"github.com/pkg/errors"
@@ -76,10 +77,21 @@ func (gen *Generator) newGlobal(irGlobal *ir.Global) (*ast.GenDecl, error) {
 // with type) based on the given LLVM IR function declaration or definition.
 func (gen *Generator) newFunc(irFunc *ir.Func) (*ast.FuncDecl, error) {
 	name := irFunc.Name()
-	sig, err := gen.goType(irFunc.Sig)
+	t, err := gen.goType(irFunc.Sig)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	tsig := t.(*gotypes.Signature)
+	var ps []*gotypes.Var
+	tps := tsig.Params()
+	for i := 0; i < tps.Len(); i++ {
+		tp := tps.At(i)
+		name := newName(irFunc.Params[i])
+		p := gotypes.NewVar(0, nil, name, tp.Type())
+		ps = append(ps, p)
+	}
+	params := gotypes.NewTuple(ps...)
+	sig := gotypes.NewSignature(tsig.Recv(), params, tsig.Results(), tsig.Variadic())
 	goFunc := &ast.FuncDecl{
 		Name: ast.NewIdent(name),
 		Type: goTypeExpr(sig).(*ast.FuncType),

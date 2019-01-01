@@ -532,6 +532,10 @@ func (fgen *funcGen) liftTerm(term ir.Terminator) {
 	switch term := term.(type) {
 	case *ir.TermRet:
 		fgen.liftTermRet(term)
+	case *ir.TermBr:
+		fgen.liftTermBr(term)
+	case *ir.TermCondBr:
+		fgen.liftTermCondBr(term)
 	default:
 		panic(fmt.Errorf("support for terminator %T not yet implemented", term))
 	}
@@ -549,6 +553,41 @@ func (fgen *funcGen) liftTermRet(term *ir.TermRet) {
 		Results: results,
 	}
 	fgen.cur.List = append(fgen.cur.List, returnStmt)
+}
+
+// liftTermBr lifts the LLVM IR br terminator to Go source code, emitting to f.
+func (fgen *funcGen) liftTermBr(term *ir.TermBr) {
+	gotoStmt := &ast.BranchStmt{
+		Tok:   token.GOTO,
+		Label: newIdent(term.Target),
+	}
+	fgen.cur.List = append(fgen.cur.List, gotoStmt)
+}
+
+// liftTermCondBr lifts the LLVM IR conditional br terminator to Go source code,
+// emitting to f.
+func (fgen *funcGen) liftTermCondBr(term *ir.TermCondBr) {
+	// Get if-else statement.
+	bodyTrue := &ast.BlockStmt{}
+	bodyFalse := &ast.BlockStmt{}
+	ifStmt := &ast.IfStmt{
+		Cond: fgen.getCond(term),
+		Body: bodyTrue,
+		Else: bodyFalse,
+	}
+	fgen.cur.List = append(fgen.cur.List, ifStmt)
+	// Lift body true block.
+	gotoTrueStmt := &ast.BranchStmt{
+		Tok:   token.GOTO,
+		Label: newIdent(term.TargetTrue),
+	}
+	bodyTrue.List = append(bodyTrue.List, gotoTrueStmt)
+	// Lift body false block.
+	gotoFalseStmt := &ast.BranchStmt{
+		Tok:   token.GOTO,
+		Label: newIdent(term.TargetFalse),
+	}
+	bodyFalse.List = append(bodyFalse.List, gotoFalseStmt)
 }
 
 // getCond returns the Go condition expression used in conditional branching of
@@ -583,11 +622,15 @@ type namedValue interface {
 }
 
 // newIdent returns a new Go identifier based on the given LLVM IR identifier.
-// Unnamed
 func newIdent(v namedValue) *ast.Ident {
+	return ast.NewIdent(newName(v))
+}
+
+// newName returns a new Go name based on the given LLVM IR identifier.
+func newName(v namedValue) string {
 	if v.IsUnnamed() {
 		name := fmt.Sprintf("_%d", v.ID())
-		return ast.NewIdent(name)
+		return name
 	}
 	f := func(r rune) rune {
 		const (
@@ -602,5 +645,5 @@ func newIdent(v namedValue) *ast.Ident {
 		return r
 	}
 	name := strings.Map(f, v.Name())
-	return ast.NewIdent(name)
+	return name
 }
