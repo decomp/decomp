@@ -21,17 +21,21 @@ func (fgen *funcGen) decompileFuncDef(irFunc *ir.Func) {
 	fgen.cur = blockStmt
 	blocks := fgen.primBlocks(irFunc)
 	for _, block := range blocks {
-		fgen.liftBlock(block, true)
+		fgen.liftBlock(block)
+	}
+	// Lift last terminator if not already lifted.
+	if len(blocks) > 0 {
+		if term, ok := blocks[len(blocks)-1].GetTerm(); ok {
+			fgen.liftTerm(term)
+		}
 	}
 }
 
-// liftBlock lifts the pseudo basic block to Go source code, emitting to f. The
-// liftTerm parameter determines whether to lift or skip the terminator
-// instruction of the basic block.
-func (fgen *funcGen) liftBlock(block Block, liftTerm bool) {
+// liftBlock lifts the pseudo basic block to Go source code, emitting to f.
+func (fgen *funcGen) liftBlock(block Block) {
 	switch block := block.(type) {
 	case *IRBlock:
-		fgen.liftBasicBlock(block.Block, liftTerm)
+		fgen.liftBasicBlock(block)
 	case *Seq:
 		fgen.liftSeq(block)
 	case *If:
@@ -46,54 +50,62 @@ func (fgen *funcGen) liftBlock(block Block, liftTerm bool) {
 }
 
 // liftBasicBlock lifts the LLVM IR basic block to Go source code, emitting to
-// f. The liftTerm parameter determines whether to lift or skip the terminator
-// instruction of the basic block.
-func (fgen *funcGen) liftBasicBlock(block *ir.Block, liftTerm bool) {
+// f.
+func (fgen *funcGen) liftBasicBlock(block *IRBlock) {
 	for _, inst := range block.Insts {
 		fgen.liftInst(inst)
 	}
-	if liftTerm {
+	if block.HasTerm {
 		fgen.liftTerm(block.Term)
+		block.SetHasTerm(false)
 	}
 }
 
 // liftSeq lifts the pseudo sequence block to Go source code, emitting to f.
 func (fgen *funcGen) liftSeq(block *Seq) {
 	// Lift entry block.
-	fgen.liftBlock(block.Entry, false)
+	block.Entry.SetHasTerm(false)
+	fgen.liftBlock(block.Entry)
 	// Lift exit block.
-	fgen.liftBlock(block.Exit, false)
+	//block.Entry.SetHasTerm(true)
+	fgen.liftBlock(block.Exit)
 }
 
 // liftIf lifts the pseudo if block to Go source code, emitting to f.
 func (fgen *funcGen) liftIf(block *If) {
 	// Lift cond block.
-	fgen.liftBlock(block.Cond, false)
+	block.Cond.SetHasTerm(false)
+	fgen.liftBlock(block.Cond)
 	// Get if-else statement.
 	body := &ast.BlockStmt{}
+	condTerm, _ := block.Cond.GetTerm()
 	ifStmt := &ast.IfStmt{
-		Cond: fgen.getCond(block.Cond.GetTerm()),
+		Cond: fgen.getCond(condTerm),
 		Body: body,
 	}
 	fgen.cur.List = append(fgen.cur.List, ifStmt)
 	cur := fgen.cur
 	// Lift body block.
 	fgen.cur = body
-	fgen.liftBlock(block.Body, false)
+	block.Body.SetHasTerm(false)
+	fgen.liftBlock(block.Body)
 	// Lift exit block.
 	fgen.cur = cur
-	fgen.liftBlock(block.Exit, false)
+	//block.Exit.SetHasTerm(true)
+	fgen.liftBlock(block.Exit)
 }
 
 // liftIfElse lifts the pseudo if-else block to Go source code, emitting to f.
 func (fgen *funcGen) liftIfElse(block *IfElse) {
 	// Lift cond block.
-	fgen.liftBlock(block.Cond, false)
+	block.Cond.SetHasTerm(false)
+	fgen.liftBlock(block.Cond)
 	// Get if-else statement.
 	bodyTrue := &ast.BlockStmt{}
 	bodyFalse := &ast.BlockStmt{}
+	condTerm, _ := block.Cond.GetTerm()
 	ifStmt := &ast.IfStmt{
-		Cond: fgen.getCond(block.Cond.GetTerm()),
+		Cond: fgen.getCond(condTerm),
 		Body: bodyTrue,
 		Else: bodyFalse,
 	}
@@ -101,33 +113,40 @@ func (fgen *funcGen) liftIfElse(block *IfElse) {
 	cur := fgen.cur
 	// Lift body true block.
 	fgen.cur = bodyTrue
-	fgen.liftBlock(block.BodyTrue, false)
+	block.BodyTrue.SetHasTerm(false)
+	fgen.liftBlock(block.BodyTrue)
 	// Lift body false block.
 	fgen.cur = bodyFalse
-	fgen.liftBlock(block.BodyFalse, false)
+	block.BodyFalse.SetHasTerm(false)
+	fgen.liftBlock(block.BodyFalse)
 	// Lift exit block.
 	fgen.cur = cur
-	fgen.liftBlock(block.Exit, false)
+	//block.Exit.SetHasTerm(true)
+	fgen.liftBlock(block.Exit)
 }
 
 // liftPreLoop lifts the pseudo pre-loop block to Go source code, emitting to f.
 func (fgen *funcGen) liftPreLoop(block *PreLoop) {
 	// Lift cond block.
-	fgen.liftBlock(block.Cond, false)
+	block.Cond.SetHasTerm(false)
+	fgen.liftBlock(block.Cond)
 	// Get if-else statement.
 	body := &ast.BlockStmt{}
+	condTerm, _ := block.Cond.GetTerm()
 	forStmt := &ast.ForStmt{
-		Cond: fgen.getCond(block.Cond.GetTerm()),
+		Cond: fgen.getCond(condTerm),
 		Body: body,
 	}
 	fgen.cur.List = append(fgen.cur.List, forStmt)
 	cur := fgen.cur
 	// Lift body block.
 	fgen.cur = body
-	fgen.liftBlock(block.Body, false)
+	block.Body.SetHasTerm(false)
+	fgen.liftBlock(block.Body)
 	// Lift exit block.
 	fgen.cur = cur
-	fgen.liftBlock(block.Exit, false)
+	//block.Exit.SetHasTerm(true)
+	fgen.liftBlock(block.Exit)
 }
 
 // primBlocks returns the list of pseudo basic blocks corresponding to the
@@ -140,7 +159,7 @@ func (fgen *funcGen) primBlocks(irFunc *ir.Func) []Block {
 	}
 	blocks := make(map[string]Block)
 	for _, block := range irFunc.Blocks {
-		blocks[block.Name()] = &IRBlock{Block: block}
+		blocks[block.Name()] = &IRBlock{Block: block, HasTerm: true}
 	}
 	for _, prim := range prims {
 		dbg.Printf("recovering %q primitive", prim.Prim)
@@ -280,15 +299,21 @@ func (fgen *funcGen) primBlocks(irFunc *ir.Func) []Block {
 
 type Block interface {
 	Name() string
-	GetTerm() ir.Terminator
+	GetTerm() (ir.Terminator, bool)
+	SetHasTerm(hasTerm bool)
 }
 
 type IRBlock struct {
 	*ir.Block
+	HasTerm bool
 }
 
-func (block *IRBlock) GetTerm() ir.Terminator {
-	return block.Term
+func (block *IRBlock) GetTerm() (ir.Terminator, bool) {
+	return block.Term, block.HasTerm
+}
+
+func (block *IRBlock) SetHasTerm(hasTerm bool) {
+	block.HasTerm = hasTerm
 }
 
 type PreLoop struct {
@@ -302,8 +327,12 @@ func (block *PreLoop) Name() string {
 	return block.BlockName
 }
 
-func (block *PreLoop) GetTerm() ir.Terminator {
+func (block *PreLoop) GetTerm() (ir.Terminator, bool) {
 	return block.Exit.GetTerm()
+}
+
+func (block *PreLoop) SetHasTerm(hasTerm bool) {
+	block.Exit.SetHasTerm(hasTerm)
 }
 
 type Seq struct {
@@ -316,8 +345,12 @@ func (block *Seq) Name() string {
 	return block.BlockName
 }
 
-func (block *Seq) GetTerm() ir.Terminator {
+func (block *Seq) GetTerm() (ir.Terminator, bool) {
 	return block.Exit.GetTerm()
+}
+
+func (block *Seq) SetHasTerm(hasTerm bool) {
+	block.Exit.SetHasTerm(hasTerm)
 }
 
 type If struct {
@@ -331,8 +364,12 @@ func (block *If) Name() string {
 	return block.BlockName
 }
 
-func (block *If) GetTerm() ir.Terminator {
+func (block *If) GetTerm() (ir.Terminator, bool) {
 	return block.Exit.GetTerm()
+}
+
+func (block *If) SetHasTerm(hasTerm bool) {
+	block.Exit.SetHasTerm(hasTerm)
 }
 
 type IfElse struct {
@@ -347,8 +384,12 @@ func (block *IfElse) Name() string {
 	return block.BlockName
 }
 
-func (block *IfElse) GetTerm() ir.Terminator {
+func (block *IfElse) GetTerm() (ir.Terminator, bool) {
 	return block.Exit.GetTerm()
+}
+
+func (block *IfElse) SetHasTerm(hasTerm bool) {
+	block.Exit.SetHasTerm(hasTerm)
 }
 
 // liftInst lifts the LLVM IR instruction to Go source code, emitting to f.
