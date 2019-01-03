@@ -163,10 +163,10 @@ func parseModule(llPath string) (*ir.Module, error) {
 	switch llPath {
 	case "-":
 		// Parse LLVM IR module from standard input.
-		dbg.Printf("parsing standard input.")
+		dbg.Printf("parsing standard input")
 		return asm.Parse("stdin", os.Stdin)
 	default:
-		dbg.Printf("parsing file %q.", llPath)
+		dbg.Printf("parsing file %q", llPath)
 		return asm.ParseFile(llPath)
 	}
 }

@@ -78,7 +78,8 @@ func main() {
 		img bool
 		// indent specifies whether to indent JSON output.
 		indent bool
-		// method specifies the control flow recovery method (hammock, interval, pattern-independent).
+		// method specifies the control flow recovery method (hammock, interval,
+		// pattern-independent).
 		method string
 		// output specifies the output path.
 		output string
@@ -168,9 +169,9 @@ func restructure(g cfa.Graph, method, stepPrefix string, steps, img bool) ([]*pr
 	if steps {
 		before = func(g cfa.Graph, prim *primitive.Primitive) {
 			data := []byte(dotBeforeMerge(g, prim))
-			dbg.Printf("located primitive:\n%s\n", prim)
+			dbg.Printf("located primitive:\n%s", prim)
 			beforePath := fmt.Sprintf("%s_%04da.dot", stepPrefix, step)
-			dbg.Println("creating:", beforePath)
+			dbg.Printf("creating file %q", beforePath)
 			if err := ioutil.WriteFile(beforePath, data, 0644); err != nil {
 				warn.Printf("unable to create %q; %v", beforePath, err)
 			}
@@ -185,7 +186,7 @@ func restructure(g cfa.Graph, method, stepPrefix string, steps, img bool) ([]*pr
 		after = func(g cfa.Graph, prim *primitive.Primitive) {
 			data := []byte(dotAfterMerge(g, prim))
 			afterPath := fmt.Sprintf("%s_%04db.dot", stepPrefix, step)
-			dbg.Println("creating:", afterPath)
+			dbg.Printf("creating file %q", afterPath)
 			if err := ioutil.WriteFile(afterPath, data, 0644); err != nil {
 				warn.Printf("unable to create %q; %v", afterPath, err)
 			}
@@ -317,7 +318,7 @@ func outputJSON(w io.Writer, prims []*primitive.Primitive, indent bool) error {
 // outputImg outputs an image representation of the given Graphviz DOT file.
 func outputImg(dotPath string) error {
 	pngPath := pathutil.TrimExt(dotPath) + ".png"
-	dbg.Printf("creating file %q.", pngPath)
+	dbg.Printf("creating file %q", pngPath)
 	cmd := exec.Command("dot", "-Tpng", "-o", pngPath, dotPath)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

@@ -147,7 +147,7 @@ func ll2dot(m *ir.Module, dotDir string, funcNames map[string]bool, img bool) er
 	var funcs []*ir.Func
 	for _, f := range m.Funcs {
 		if len(funcNames) > 0 && !funcNames[f.Name()] {
-			dbg.Printf("skipping function %q.", f.Ident())
+			dbg.Printf("skipping function %q", f.Ident())
 			continue
 		}
 		funcs = append(funcs, f)
@@ -159,7 +159,7 @@ func ll2dot(m *ir.Module, dotDir string, funcNames map[string]bool, img bool) er
 			continue
 		}
 		// Generate control flow graph.
-		dbg.Printf("parsing function %q.", f.Ident())
+		dbg.Printf("parsing function %q", f.Ident())
 		g := cfg.NewGraphFromFunc(f)
 		// Output control flow graph in Graphviz DOT format.
 		if err := outputCFG(g, f.Name(), dotDir, img); err != nil {
@@ -200,10 +200,10 @@ func parseModule(llPath string) (*ir.Module, error) {
 	switch llPath {
 	case "-":
 		// Parse LLVM IR module from standard input.
-		dbg.Printf("parsing standard input.")
+		dbg.Printf("parsing standard input")
 		return asm.Parse("stdin", os.Stdin)
 	default:
-		dbg.Printf("parsing file %q.", llPath)
+		dbg.Printf("parsing file %q", llPath)
 		return asm.ParseFile(llPath)
 	}
 }
@@ -223,7 +223,7 @@ func outputCFG(g graph.Directed, funcName, dotDir string, img bool) error {
 	}
 	dotName := funcName + ".dot"
 	dotPath := filepath.Join(dotDir, dotName)
-	dbg.Printf("creating file %q.", dotPath)
+	dbg.Printf("creating file %q", dotPath)
 	if err := ioutil.WriteFile(dotPath, buf, 0644); err != nil {
 		return errors.WithStack(err)
 	}
@@ -239,7 +239,7 @@ func outputCFG(g graph.Directed, funcName, dotDir string, img bool) error {
 // outputImg outputs an image representation of the given Graphviz DOT file.
 func outputImg(dotPath string) error {
 	pngPath := pathutil.TrimExt(dotPath) + ".png"
-	dbg.Printf("creating file %q.", pngPath)
+	dbg.Printf("creating file %q", pngPath)
 	cmd := exec.Command("dot", "-Tpng", "-o", pngPath, dotPath)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
