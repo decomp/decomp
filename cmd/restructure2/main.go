@@ -40,6 +40,7 @@ import (
 
 	"github.com/mewkiz/pkg/pathutil"
 	"github.com/mewkiz/pkg/term"
+	"github.com/mewmew/cfa/interval"
 	"github.com/mewmew/lnp/pkg/cfa"
 	"github.com/mewmew/lnp/pkg/cfa/hammock"
 	"github.com/mewmew/lnp/pkg/cfa/primitive"
@@ -204,6 +205,16 @@ func restructure(g cfa.Graph, method, stepPrefix string, steps, img bool) ([]*pr
 	switch method {
 	case "hammock":
 		prims, err := hammock.Analyze(g, before, after)
+		if err != nil {
+			if errors.Cause(err) == cfa.ErrIncomplete {
+				warn.Printf("warning: %v", err)
+			} else {
+				return nil, errors.WithStack(err)
+			}
+		}
+		return prims, nil
+	case "interval":
+		prims, err := interval.Analyze(g, before, after)
 		if err != nil {
 			if errors.Cause(err) == cfa.ErrIncomplete {
 				warn.Printf("warning: %v", err)

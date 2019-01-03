@@ -1,7 +1,5 @@
 package cfa
 
-import "gonum.org/v1/gonum/graph"
-
 // RevPostOrder returns the nodes of the graph in reverse post-order; as
 // computed by performing a depth-first traversal of the control flow graph --
 // starting at the entry node -- and storing nodes in post-order, and finally
@@ -10,9 +8,9 @@ import "gonum.org/v1/gonum/graph"
 // The benefit with reverse post-order is that it guarantees that each node of
 // the list is present before any of its successors (not taking cycles into
 // account).
-func RevPostOrder(g Graph) []graph.Node {
-	var ns []graph.Node
-	post := func(n graph.Node) {
+func RevPostOrder(g Graph) []Node {
+	var ns []Node
+	post := func(n Node) {
 		ns = append(ns, n)
 	}
 	DFS(g, nil, post)
@@ -21,7 +19,7 @@ func RevPostOrder(g Graph) []graph.Node {
 }
 
 // reverse reverses the list of nodes in-place.
-func reverse(nodes []graph.Node) []graph.Node {
+func reverse(nodes []Node) []Node {
 	n := len(nodes)
 	for i := 0; i < n/2; i++ {
 		j := n - i - 1
