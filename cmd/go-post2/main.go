@@ -40,8 +40,18 @@ var doDiff = flag.Bool("diff", false, "display diffs instead of rewriting files"
 // enable for debugging fix failures
 const debug = false // display incorrectly reformatted source and exit
 
+const use = `
+Post-processe Go source code to make it more idiomatic.
+
+Usage:
+
+	go-post [-diff] [-r fixname,...] [-force fixname,...] [FILE...]
+
+Flags:
+`
+
 func usage() {
-	fmt.Fprintf(os.Stderr, "usage: go tool fix [-diff] [-r fixname,...] [-force fixname,...] [path ...]\n")
+	fmt.Fprintln(os.Stderr, use[1:])
 	flag.PrintDefaults()
 	fmt.Fprintf(os.Stderr, "\nAvailable rewrites are:\n")
 	sort.Sort(byName(fixes))
@@ -147,7 +157,7 @@ func processFile(filename string, useStdin bool) error {
 		if fix.disabled && !force[fix.name] {
 			continue
 		}
-		if fix.f(newFile) {
+		for fix.f(newFile) {
 			fixed = true
 			fmt.Fprintf(&fixlog, " %s", fix.name)
 
@@ -166,6 +176,12 @@ func processFile(filename string, useStdin bool) error {
 					os.Exit(exitCode)
 				}
 				return err
+			}
+
+			// All go fix rules are idempotent and only need to run once, except
+			// for the "unresolved" go fix rule.
+			if fix.name != "unresolved" {
+				break
 			}
 		}
 	}
