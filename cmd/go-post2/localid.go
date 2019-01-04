@@ -19,7 +19,7 @@ var localidFix = fix{
 	"1970-01-01",
 	localid,
 	`Replace the use of local variable IDs with their definition.`,
-	true,
+	true, // disabled by default
 }
 
 // localid replaces the use of local variable IDs with their definition. The
@@ -64,7 +64,8 @@ func localid(file *ast.File) bool {
 		if name := ident.Name; isLocalID(name) {
 			// Check use count of ident. Only rewrite if used exactly once.
 			scope := getScope(file, ident)
-			totalUses, lhsUses := countUses(ident, scope), countUsesLhs(ident, scope)
+			totalUses := countUses(ident, scope)
+			lhsUses := countUsesLhs(ident, scope)
 			//fmt.Printf("ident %q used %d times, %d on lhs\n", name, totalUses, lhsUses)
 			if !(totalUses == 2 && lhsUses == 1) {
 				return
