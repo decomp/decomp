@@ -40,9 +40,9 @@ import (
 
 	"github.com/mewkiz/pkg/pathutil"
 	"github.com/mewkiz/pkg/term"
-	"github.com/mewmew/cfa/interval"
 	"github.com/mewmew/lnp/pkg/cfa"
 	"github.com/mewmew/lnp/pkg/cfa/hammock"
+	"github.com/mewmew/lnp/pkg/cfa/interval"
 	"github.com/mewmew/lnp/pkg/cfa/primitive"
 	"github.com/mewmew/lnp/pkg/cfg"
 	"github.com/pkg/errors"
