@@ -14,7 +14,7 @@ var assignbinopFix = fix{
 	"assignbinop",
 	"2015-03-11",
 	assignbinop,
-	`Simplify binary assignment statements.`,
+	"Simplify binary operation assignment statements.",
 	false,
 }
 
