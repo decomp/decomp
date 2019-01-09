@@ -6,6 +6,7 @@ package main
 
 import (
 	"go/ast"
+	"go/token"
 	"log"
 )
 
@@ -119,6 +120,61 @@ func mainret(file *ast.File) bool {
 		fixed = true
 	}
 	if mainFunc.Type.Params != nil && len(mainFunc.Type.Params.List) > 0 {
+		// Add "os" import if needed.
+		if !hasOS {
+			addImport(file, "os")
+		}
+		// Add "unsafe" import, to cast argv form []string to **int8.
+		addImport(file, "unsafe")
+		// Add argc and argv to body of main.
+		args := &ast.SelectorExpr{X: ast.NewIdent("os"), Sel: ast.NewIdent("Args")}
+		lenArgs := &ast.CallExpr{
+			Fun:  ast.NewIdent("len"),
+			Args: []ast.Expr{args},
+		}
+		argc := &ast.CallExpr{
+			Fun:  ast.NewIdent("int32"),
+			Args: []ast.Expr{lenArgs},
+		}
+		// TODO: fix type to int8**
+		int32PtrPtrType := &ast.StarExpr{
+			X: &ast.StarExpr{
+				X: ast.NewIdent("int8"),
+			},
+		}
+		argsElem := &ast.IndexExpr{
+			X: args,
+			Index: &ast.BasicLit{
+				Kind:  token.INT,
+				Value: "0",
+			},
+		}
+		argsPtr := &ast.UnaryExpr{
+			Op: token.AND,
+			X:  argsElem,
+		}
+		unsafeArgsPtr := &ast.CallExpr{
+			Fun: &ast.SelectorExpr{
+				X:   ast.NewIdent("unsafe"),
+				Sel: ast.NewIdent("Pointer"),
+			},
+			Args: []ast.Expr{argsPtr},
+		}
+		argv := &ast.CallExpr{
+			Fun:  int32PtrPtrType,
+			Args: []ast.Expr{unsafeArgsPtr},
+		}
+		argcDecl := &ast.AssignStmt{
+			Lhs: []ast.Expr{mainFunc.Type.Params.List[0].Names[0]},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{argc},
+		}
+		argvDecl := &ast.AssignStmt{
+			Lhs: []ast.Expr{mainFunc.Type.Params.List[1].Names[0]},
+			Tok: token.DEFINE,
+			Rhs: []ast.Expr{argv},
+		}
+		mainFunc.Body.List = append([]ast.Stmt{argcDecl, argvDecl}, mainFunc.Body.List...)
 		mainFunc.Type.Params = nil
 		fixed = true
 	}
@@ -137,7 +193,10 @@ func createExit(arg ast.Expr) *ast.ExprStmt {
 				Sel: ast.NewIdent("Exit"),
 			},
 			Args: []ast.Expr{
-				arg,
+				&ast.CallExpr{
+					Fun:  ast.NewIdent("int"),
+					Args: []ast.Expr{arg},
+				},
 			},
 		},
 	}

@@ -23,7 +23,7 @@ func main() {
 import "os"
 
 func main() {
-	os.Exit(42)
+	os.Exit(int(42))
 }
 `,
 	},
@@ -62,7 +62,7 @@ import "os"
 func main() {
 	i := 42
 	if i >= 128 {
-		os.Exit(i)
+		os.Exit(int(i))
 	}
 }
 `,
@@ -107,7 +107,7 @@ func main() {
 	},
 	// i=5,
 	{
-		Name: "mainret.4",
+		Name: "mainret.5",
 		In: `package main
 
 func f() {
@@ -123,7 +123,7 @@ func f() {
 	},
 	// i=6,
 	{
-		Name: "mainret.4",
+		Name: "mainret.6",
 		In: `package p
 
 func main() {
@@ -134,6 +134,29 @@ func main() {
 
 func main() {
 	return 42
+}
+`,
+	},
+	// i=7,
+	{
+		Name: "mainret.7",
+		In: `package main
+
+func main(argc int32, argv **int8) {
+	return 0
+}
+`,
+		Out: `package main
+
+import (
+	"os"
+	"unsafe"
+)
+
+func main() {
+	argc := int32(len(os.Args))
+	argv := (**int8)(unsafe.Pointer(&os.Args[0]))
+
 }
 `,
 	},
