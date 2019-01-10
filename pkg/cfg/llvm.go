@@ -65,12 +65,14 @@ func NewGraphFromFunc(f *ir.Func) *Graph {
 func edgeWithLabel(g cfa.Graph, from, to cfa.Node, label string) cfa.Edge {
 	e := g.NewEdge(from, to).(cfa.Edge)
 	if len(label) > 0 {
-		e.SetAttribute(encoding.Attribute{Key: "label", Value: label})
+		// Skip label for true and false, just color edge.
 		switch label {
 		case "true":
 			e.SetAttribute(encoding.Attribute{Key: "color", Value: "darkgreen"})
 		case "false":
 			e.SetAttribute(encoding.Attribute{Key: "color", Value: "red"})
+		default:
+			e.SetAttribute(encoding.Attribute{Key: "label", Value: label})
 		}
 	}
 	g.SetEdge(e)

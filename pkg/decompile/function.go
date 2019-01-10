@@ -417,6 +417,27 @@ func (fgen *funcGen) liftInst(inst ir.Instruction) {
 		x := fgen.liftValue(inst.X)
 		y := fgen.liftValue(inst.Y)
 		fgen.emitAssignBinOp(name, x, y, token.MUL)
+	case *ir.InstCall:
+		// Variable name.
+		name := newIdent(inst)
+		// Callee.
+		callee := fgen.liftValue(inst.Callee)
+		var args []ast.Expr
+		for _, irArg := range inst.Args {
+			arg := fgen.liftValue(irArg)
+			args = append(args, arg)
+		}
+		callExpr := &ast.CallExpr{
+			Fun:  callee,
+			Args: args,
+		}
+		// Append assignment statement.
+		assignStmt := &ast.AssignStmt{
+			Lhs: []ast.Expr{name},
+			Tok: token.ASSIGN,
+			Rhs: []ast.Expr{callExpr},
+		}
+		fgen.cur.List = append(fgen.cur.List, assignStmt)
 	default:
 		panic(fmt.Errorf("support for instruction type %T not yet implemented", inst))
 	}

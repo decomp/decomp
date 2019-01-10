@@ -84,6 +84,7 @@ func (gen *Generator) newFunc(irFunc *ir.Func) (*ast.FuncDecl, error) {
 	tsig := t.(*gotypes.Signature)
 	var ps []*gotypes.Var
 	tps := tsig.Params()
+	// TODO: handle variadic functions.
 	for i := 0; i < tps.Len(); i++ {
 		tp := tps.At(i)
 		name := newName(irFunc.Params[i])
