@@ -44,6 +44,8 @@ func (fgen *funcGen) liftBlock(block Block) {
 		fgen.liftIfElse(block)
 	case *PreLoop:
 		fgen.liftPreLoop(block)
+	case *PostLoop:
+		fgen.liftPostLoop(block)
 	default:
 		panic(fmt.Errorf("support for pseudo basic block type %T not yet implemented", block))
 	}
@@ -100,7 +102,7 @@ func (fgen *funcGen) liftIfElse(block *IfElse) {
 	// Lift cond block.
 	block.Cond.SetHasTerm(false)
 	fgen.liftBlock(block.Cond)
-	// Get if-else statement.
+	// Generate if-else statement.
 	bodyTrue := &ast.BlockStmt{}
 	bodyFalse := &ast.BlockStmt{}
 	condTerm, _ := block.Cond.GetTerm()
@@ -130,7 +132,7 @@ func (fgen *funcGen) liftPreLoop(block *PreLoop) {
 	// Lift cond block.
 	block.Cond.SetHasTerm(false)
 	fgen.liftBlock(block.Cond)
-	// Get if-else statement.
+	// Generate for-loop statement.
 	body := &ast.BlockStmt{}
 	condTerm, _ := block.Cond.GetTerm()
 	forStmt := &ast.ForStmt{
@@ -146,6 +148,33 @@ func (fgen *funcGen) liftPreLoop(block *PreLoop) {
 	// Lift exit block.
 	fgen.cur = cur
 	//block.Exit.SetHasTerm(true)
+	fgen.liftBlock(block.Exit)
+}
+
+// liftPostLoop lifts the pseudo post-loop block to Go source code, emitting to
+// f.
+func (fgen *funcGen) liftPostLoop(block *PostLoop) {
+	// Lift cond block.
+	cur := fgen.cur
+	body := &ast.BlockStmt{}
+	fgen.cur = body
+	block.Cond.SetHasTerm(false)
+	fgen.liftBlock(block.Cond)
+	condTerm, _ := block.Cond.GetTerm()
+	ifStmt := &ast.IfStmt{
+		Cond: fgen.getCond(condTerm),
+		Body: &ast.BlockStmt{
+			List: []ast.Stmt{&ast.BranchStmt{Tok: token.BREAK}},
+		},
+	}
+	body.List = append(body.List, ifStmt)
+	// Generate for-loop statement.
+	forStmt := &ast.ForStmt{
+		Body: body,
+	}
+	fgen.cur = cur
+	fgen.cur.List = append(fgen.cur.List, forStmt)
+	// Lift exit block.
 	fgen.liftBlock(block.Exit)
 }
 
@@ -280,6 +309,27 @@ func (fgen *funcGen) primBlocks(irFunc *ir.Func) []Block {
 			delete(blocks, bodyName)
 			delete(blocks, exitName)
 			blocks[block.Name()] = block
+		case "post_loop":
+			condName := prim.Nodes["cond"]
+			cond, ok := blocks[condName]
+			if !ok {
+				fgen.gen.Errorf("unable to locate cond block %q of primitive %q in function %q", condName, prim.Prim, irFunc.Name())
+				continue
+			}
+			exitName := prim.Nodes["exit"]
+			exit, ok := blocks[exitName]
+			if !ok {
+				fgen.gen.Errorf("unable to locate exit block %q of primitive %q in function %q", exitName, prim.Prim, irFunc.Name())
+				continue
+			}
+			block := &PostLoop{
+				BlockName: prim.Entry,
+				Cond:      cond,
+				Exit:      exit,
+			}
+			delete(blocks, condName)
+			delete(blocks, exitName)
+			blocks[block.Name()] = block
 		default:
 			panic(fmt.Errorf("support for primitive %q not yet implemented", prim.Prim))
 		}
@@ -332,6 +382,24 @@ func (block *PreLoop) GetTerm() (ir.Terminator, bool) {
 }
 
 func (block *PreLoop) SetHasTerm(hasTerm bool) {
+	block.Exit.SetHasTerm(hasTerm)
+}
+
+type PostLoop struct {
+	BlockName string
+	Cond      Block
+	Exit      Block
+}
+
+func (block *PostLoop) Name() string {
+	return block.BlockName
+}
+
+func (block *PostLoop) GetTerm() (ir.Terminator, bool) {
+	return block.Exit.GetTerm()
+}
+
+func (block *PostLoop) SetHasTerm(hasTerm bool) {
 	block.Exit.SetHasTerm(hasTerm)
 }
 
