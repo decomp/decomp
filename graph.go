@@ -80,6 +80,7 @@ func DFS(g cfa.Graph, pre, post func(n *Node)) {
 		if visited[n.ID()] {
 			return
 		}
+		visited[n.ID()] = true
 		for succs := g.From(n.ID()); succs.Next(); {
 			succ := succs.Node().(*Node)
 			dfs(succ)
