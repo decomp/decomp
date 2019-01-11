@@ -5,16 +5,22 @@ import (
 	"sort"
 
 	"github.com/mewmew/lnp/pkg/cfa"
+	"github.com/rickypai/natsort"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/iterator"
 )
 
+// An Interval I(h) with header node h is a maximal single-entry subgraph -- of
+// a control flow graph rooted at entry -- in which h is the only entry node and
+// all cycles contain h.
 type Interval struct {
 	g     cfa.Graph
 	head  *Node
 	nodes map[int64]*Node
 }
 
+// NewInterval returns a new interval in the control flow graph based on the
+// given header node.
 func NewInterval(g cfa.Graph, head *Node) *Interval {
 	return &Interval{
 		g:    g,
@@ -29,7 +35,7 @@ func NewInterval(g cfa.Graph, head *Node) *Interval {
 // matches an existing node ID.
 func (i *Interval) addNode(n *Node) {
 	if prev, ok := i.nodes[n.ID()]; ok {
-		panic(fmt.Errorf("node with ID %d already present in interval; prev `%v`, new `%v`", n.ID(), prev, n))
+		panic(fmt.Errorf("node with ID %d already present in interval; prev DOTID %q, new DOTID %q", n.ID(), prev.DOTID(), n.DOTID()))
 	}
 	i.nodes[n.ID()] = n
 }
@@ -37,7 +43,15 @@ func (i *Interval) addNode(n *Node) {
 // Node returns the node with the given ID if it exists in the interval, and nil
 // otherwise.
 func (i *Interval) Node(id int64) graph.Node {
-	return i.nodes[id]
+	n, ok := i.nodes[id]
+	if !ok {
+		// Ensure that nil is returned if node with ID is not present.
+		//
+		// Otherwise it would be converted to an interface value of graph.Node
+		// type with value nil.
+		return nil
+	}
+	return n
 }
 
 // Nodes returns all the nodes in the graph.
@@ -52,7 +66,7 @@ func (i *Interval) Nodes() graph.Nodes {
 	less := func(k, l int) bool {
 		nk := i.nodes[nodes[k].ID()]
 		nl := i.nodes[nodes[l].ID()]
-		return nk.DOTID() < nl.DOTID()
+		return natsort.Less(nk.DOTID(), nl.DOTID())
 	}
 	sort.Slice(nodes, less)
 	return iterator.NewOrderedNodes(nodes)

@@ -8,18 +8,18 @@ import (
 	"github.com/mewmew/lnp/pkg/cfg"
 )
 
-// derivedSequence returns the derived sequence of graphs G^1, ..., G^n, based
+// DerivedSequence returns the derived sequence of graphs G^1, ..., G^n, based
 // on the intervals of the given control flow graph, and the associated unique
 // sets of intervas, Is^1, ..., Is^n.
 //
 // ref: Figure 6-10; Cifuentes' Reverse Comilation Techniques.
-func derivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
+func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 	// Note, the Go code is zero-indexed, as compared to the Cifuentes' algorithm
 	// notation which is 1-indexed.
 	// G^1 = G
 	Gs := []cfa.Graph{g}
 	// IIs^1 = intervals(G^1)
-	IIs := [][]*Interval{intervals(Gs[0])}
+	IIs := [][]*Interval{Intervals(Gs[0])}
 	// i = 2
 	// repeat, Construction of G^i
 	for i := 1; ; i++ {
@@ -27,8 +27,10 @@ func derivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 		// Make each interval of G^{i-1} a node in G^i.
 		//
 		//    N^i = {n^i | I^{i-1}(n^{i-1}) \in IIs^{i-1}}
-		Gi := cfg.NewGraph()
+		Gi := NewGraph()
 		for _, I := range IIs[i-1] {
+			fmt.Printf("G_%d\n", i)
+			fmt.Println("adding header node:", I.head.DOTID())
 			Gi.AddNode(I.head) // TODO: use Gi.addNode?
 		}
 		Gi.SetEntry(g.Entry())
@@ -45,28 +47,29 @@ func derivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 		//          \land p \not \in I^{i-1}(m)
 		//       )
 		for _, I := range IIs[i-1] {
+			fmt.Println("I.head -- pred:", I.head.DOTID())
 			for preds := Gprev.To(I.head.ID()); preds.Next(); {
 				p := preds.Node().(cfa.Node)
+				fmt.Println("   p:", p.DOTID())
 				if I.Node(p.ID()) != nil {
 					// skip predecessor p if present in interval I(h).
 					continue
 				}
 				// Find interval to which p belongs, so that we can connect the
 				// header node of that interval with p in the derived graph.
-				var s cfa.Node
+				var pred cfa.Node
 				for _, J := range IIs[i-1] {
 					if J.Node(p.ID()) != nil {
-						s = J.head
+						pred = J.head
 						break
 					}
 				}
-				if s == nil {
+				if pred == nil {
 					panic(fmt.Errorf("unable to locate interval to which node %q belong", p.DOTID()))
 				}
-				eprev := Gprev.Edge(p.ID(), I.head.ID()).(*cfg.Edge)
-				e := cfg.Edge{
-					Edge:  simple.Edge{F: p, T: s},
-					Attrs: eprev.Attrs,
+				fmt.Println("   pred:", pred.DOTID())
+				e := &cfg.Edge{
+					Edge: simple.Edge{F: pred, T: I.head},
 				}
 				Gi.SetEdge(e)
 			}
@@ -86,28 +89,29 @@ func derivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 		//       \land (m, n) \in E^{i-1}
 		//    )
 		for _, I := range IIs[i-1] {
+			fmt.Println("I.head -- succ:", I.head.DOTID())
 			for succs := Gprev.From(I.head.ID()); succs.Next(); {
 				s := succs.Node().(cfa.Node)
+				fmt.Println("   s:", s.DOTID())
 				if I.Node(s.ID()) != nil {
 					// skip successor s if present in interval I(h).
 					continue
 				}
 				// Find interval to which s belongs, so that we can connect the
 				// header node of that interval with s in the derived graph.
-				var p cfa.Node
+				var succ cfa.Node
 				for _, J := range IIs[i-1] {
 					if J.Node(s.ID()) != nil {
-						p = J.head
+						succ = J.head
 						break
 					}
 				}
-				if p == nil {
+				if succ == nil {
 					panic(fmt.Errorf("unable to locate interval to which node %s belong", s.DOTID()))
 				}
-				eprev := Gprev.Edge(s.ID(), I.head.ID()).(*cfg.Edge)
-				e := cfg.Edge{
-					Edge:  simple.Edge{F: p, T: s},
-					Attrs: eprev.Attrs,
+				fmt.Println("   succ:", succ.DOTID())
+				e := &cfg.Edge{
+					Edge: simple.Edge{F: I.head, T: succ},
 				}
 				Gi.SetEdge(e)
 			}
@@ -118,7 +122,7 @@ func derivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 		}
 		Gs = append(Gs, Gi)
 		// Is^i = intervals(G^i)
-		IIs = append(IIs, intervals(Gi))
+		IIs = append(IIs, Intervals(Gi))
 		// i = i + 1
 	}
 	return Gs, IIs

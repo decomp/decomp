@@ -4,23 +4,25 @@ import (
 	"github.com/mewmew/lnp/pkg/cfa"
 )
 
-// intervals returns the intervals of the given control flow graph.
+// Intervals returns the intervals of the given control flow graph.
 //
 // Pre: G is a control flow graph.
 // Post: the intervals of G are contained in the list Is.
 //
 // ref: Figure 6-8; Cifuentes' Reverse Comilation Techniques.
-func intervals(g cfa.Graph) []*Interval {
+func Intervals(g cfa.Graph) []*Interval {
 	// Is := {}
 	var Is []*Interval
 	// H := {h}
 	H := newQueue()
 	entry := g.Entry().(*Node)
+	//fmt.Println("entry:", entry.DOTID()) // TODO: remove debug output
 	H.push(entry)
 	// for (all unprocessed n \in H) do
 	for !H.empty() {
 		// I(n) := {n}
 		n := H.pop()
+		//fmt.Println("==== n:", n.DOTID()) // TODO: remove debug output
 		I := NewInterval(g, n)
 		// repeat
 		for {
@@ -28,13 +30,19 @@ func intervals(g cfa.Graph) []*Interval {
 			added := false
 			for nodes := g.Nodes(); nodes.Next(); {
 				m := nodes.Node().(*Node)
+				if I.Node(m.ID()) != nil {
+					// Interval already contains node.
+					continue
+				}
+				//fmt.Println("m:", m.DOTID()) // TODO: remove debug output
 				if m.ID() == entry.ID() {
 					// skip entry node.
 					continue
 				}
 				allPredsInI := true
 				for preds := g.To(m.ID()); preds.Next(); {
-					p := preds.Node()
+					p := preds.Node().(*Node)
+					//fmt.Println("   p:", p.DOTID()) // TODO: remove debug output
 					if I.Node(p.ID()) == nil {
 						allPredsInI = false
 						break
@@ -42,6 +50,7 @@ func intervals(g cfa.Graph) []*Interval {
 				}
 				if allPredsInI {
 					added = true
+					//fmt.Println(" -> adding node:", m.DOTID()) // TODO: remove debug output
 					I.addNode(m)
 				}
 			}
@@ -53,28 +62,36 @@ func intervals(g cfa.Graph) []*Interval {
 		// H := H + {m \in N | m \not \int H \land m \not in I(n) \land {\exists p \in immedPred(m), p \in I(n)}}
 		for nodes := g.Nodes(); nodes.Next(); {
 			m := nodes.Node().(*Node)
+			//fmt.Printf("id: %v, dotid: %q\n", m.ID(), m.DOTID()) // TODO: remove debug output
+			//fmt.Println("m2:", m.DOTID()) // TODO: remove debug output
 			if m.ID() == entry.ID() {
 				// skip entry node.
 				continue
 			}
 			if H.has(m.ID()) {
 				// skip nodes in queue.
+				//fmt.Println("present in queue; skipping:", m.DOTID()) // TODO: remove debug output
 				continue
 			}
 			if I.Node(m.ID()) != nil {
 				// skip nodes in interval.
+				//fmt.Println("m.ID():", m.ID()) // TODO: remove debug output
+				//fmt.Println("already in interval; skipping:", m.DOTID()) // TODO: remove debug output
 				continue
 			}
 			// keep node if it has a predecessor in the interval.
 			hasPredInI := false
 			for preds := g.To(m.ID()); preds.Next(); {
 				p := preds.Node().(*Node)
+				//fmt.Println("   p2:", p.DOTID()) // TODO: remove debug output
 				if I.Node(p.ID()) != nil {
 					hasPredInI = true
 					break
 				}
 			}
 			if hasPredInI {
+				// Add node to queue.
+				//fmt.Println("push to queue:", m.DOTID()) // TODO: remove debug output
 				H.push(m)
 			}
 		}
