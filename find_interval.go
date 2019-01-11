@@ -7,6 +7,7 @@ import (
 // Intervals returns the intervals of the given control flow graph.
 //
 // Pre: G is a control flow graph.
+//
 // Post: the intervals of G are contained in the list Is.
 //
 // ref: Figure 6-8; Cifuentes' Reverse Comilation Techniques.

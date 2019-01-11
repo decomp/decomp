@@ -12,6 +12,10 @@ import (
 // on the intervals of the given control flow graph, and the associated unique
 // sets of intervas, Is^1, ..., Is^n.
 //
+// Pre: G is a control flow graph.
+//
+// Post: the derived sequence of G, G^1 ... G^n, n >= 1 has been constructed.
+//
 // ref: Figure 6-10; Cifuentes' Reverse Comilation Techniques.
 func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 	// Note, the Go code is zero-indexed, as compared to the Cifuentes' algorithm
