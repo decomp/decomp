@@ -2,11 +2,14 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"sort"
 
 	interval "github.com/mewmew/cifuentes_interval"
 	"github.com/mewmew/lnp/pkg/cfg"
 	"github.com/pkg/errors"
+	"github.com/rickypai/natsort"
 )
 
 func main() {
@@ -44,5 +47,27 @@ func f(dotPath string) error {
 		}
 	*/
 	interval.Analyze(dst, nil, nil)
+	nodes := sortNodes(interval.NodesOf(dst.Nodes()))
+	for _, n := range nodes {
+		fmt.Println("node:      ", n.Node.DOTID())
+		fmt.Println("preNum:    ", n.PreNum)
+		fmt.Println("postNum:   ", n.PostNum)
+		fmt.Println("revPostNum:", n.RevPostNum)
+		fmt.Println("inLoop:    ", n.InLoop)
+		fmt.Println("loopType:  ", n.LoopType)
+		if n.LoopFollow != nil {
+			fmt.Println("loopFollow:", n.LoopFollow.DOTID())
+		}
+		fmt.Println()
+	}
 	return nil
+}
+
+// sortNodes sorts the list of nodes by DOTID.
+func sortNodes(ns []*interval.Node) []*interval.Node {
+	less := func(i, j int) bool {
+		return natsort.Less(ns[i].DOTID(), ns[j].DOTID())
+	}
+	sort.Slice(ns, less)
+	return ns
 }

@@ -13,6 +13,7 @@ func Analyze(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primit
 	// Initialize depth-first search visit order.
 	initDFSOrder(g)
 	// Structure loops of the control flow graph.
-	loopStruct(g)
-	panic("not yet implemented")
+	//loopStruct(g)
+	var prims []*primitive.Primitive
+	return prims, nil
 }

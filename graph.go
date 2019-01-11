@@ -42,31 +42,38 @@ type Node struct {
 	cfa.Node
 
 	// Pre-order DFS visit number.
-	preNum int
+	PreNum int
 	// Post-order DFS visit number.
-	postNum int
+	PostNum int
+	// Reverse post-order DFS visit number.
+	RevPostNum int
 
 	// Loop structuring information.
 
 	// Specifies whether the node is part of a loop primitive.
-	inLoop bool
+	InLoop bool
 	// Type of the loop.
-	loopType loopType
+	LoopType loopType
 	// Follow node of the loop.
-	loopFollow *Node
+	LoopFollow *Node
 }
 
 // initDFSOrder initializes the DFS visit order of the control flow graph.
 func initDFSOrder(g cfa.Graph) {
-	preNum := 0
+	preNum := 1
 	pre := func(n *Node) {
-		n.preNum = preNum
+		n.PreNum = preNum
 		preNum++
 	}
-	postNum := 0
+	postNum := 1
+	n := g.Nodes().Len()
+	revPostNum := n
 	post := func(n *Node) {
-		n.postNum = postNum
+		n.PostNum = postNum
 		postNum++
+		n.PostNum = postNum
+		n.RevPostNum = revPostNum
+		revPostNum--
 	}
 	DFS(g, pre, post)
 }
@@ -81,9 +88,15 @@ func DFS(g cfa.Graph, pre, post func(n *Node)) {
 			return
 		}
 		visited[n.ID()] = true
+		if pre != nil {
+			pre(n)
+		}
 		for succs := g.From(n.ID()); succs.Next(); {
 			succ := succs.Node().(*Node)
 			dfs(succ)
+		}
+		if post != nil {
+			post(n)
 		}
 	}
 	dfs(g.Entry().(*Node))

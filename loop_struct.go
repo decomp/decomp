@@ -29,17 +29,17 @@ func loopStruct(g cfa.Graph) {
 			// if ((\exists x \in N^i, (x, h_j) \in E^i) \land (inLoop(x) == False))
 			for xs := Gi.To(I.head.ID()); xs.Next(); {
 				x := xs.Node().(*Node)
-				if !x.inLoop {
+				if !x.InLoop {
 					// for (all n \in loop (x, h_j))
 					nodesInLoop := loop(I, x)
 					for _, n := range nodesInLoop {
 						// inLoop(n) = True
-						n.inLoop = true
+						n.InLoop = true
 					}
 					// loopType(h_j) = findLoopType((x, h_j))
-					I.head.loopType = findLoopType(I, x, nodesInLoop)
+					I.head.LoopType = findLoopType(I, x, nodesInLoop)
 					// loopFollow(h_j) = findLoopFollow((x, h_j))
-					I.head.loopFollow = findLoopFollow(I, x, nodesInLoop)
+					I.head.LoopFollow = findLoopFollow(I, x, nodesInLoop)
 					break
 				}
 			}
@@ -72,7 +72,7 @@ func loop(I *Interval, latch *Node) []*Node {
 		// node numbering.
 		//
 		//    \forall n \in loop(y, x), n \in {x ... y}
-		if I.head.postNum <= n.postNum && n.postNum <= latch.postNum {
+		if I.head.PostNum <= n.PostNum && n.PostNum <= latch.PostNum {
 			ns = append(ns, n)
 		}
 	}
@@ -160,7 +160,7 @@ func findLoopType(I *Interval, latch *Node, nodesInLoop []*Node) loopType {
 func findLoopFollow(I *Interval, latch *Node, nodesInLoop []*Node) *Node {
 	headSuccs := NodesOf(I.From(I.head.ID()))
 	latchSuccs := NodesOf(I.From(latch.ID()))
-	switch I.head.loopType {
+	switch I.head.LoopType {
 	// if (loopType(x) == Pre_Tested)
 	case loopTypePreTest:
 		switch {
@@ -201,12 +201,12 @@ func findLoopFollow(I *Interval, latch *Node, nodesInLoop []*Node) *Node {
 			}
 			switch {
 			// if ((outEdges(n, 1) \not \in nodesInLoop) \land (outEdges(x, 1) < fol))
-			case !contains(nodesInLoop, nSuccs[0]) && nSuccs[0].postNum < followPostNum:
-				followPostNum = nSuccs[0].postNum
+			case !contains(nodesInLoop, nSuccs[0]) && nSuccs[0].PostNum < followPostNum:
+				followPostNum = nSuccs[0].PostNum
 				follow = nSuccs[0]
 			// if ((outEdges(x, 2) \not \in nodesInLoop) \land (outEdges(x, 2) < fol))			}
-			case !contains(nodesInLoop, nSuccs[1]) && nSuccs[1].postNum < followPostNum:
-				followPostNum = nSuccs[1].postNum
+			case !contains(nodesInLoop, nSuccs[1]) && nSuccs[1].PostNum < followPostNum:
+				followPostNum = nSuccs[1].PostNum
 				follow = nSuccs[1]
 			}
 		}
@@ -218,7 +218,7 @@ func findLoopFollow(I *Interval, latch *Node, nodesInLoop []*Node) *Node {
 		// No follow node located.
 		return nil
 	default:
-		panic(fmt.Errorf("support for loop type %v not yet implemented", I.head.loopType))
+		panic(fmt.Errorf("support for loop type %v not yet implemented", I.head.LoopType))
 	}
 }
 
