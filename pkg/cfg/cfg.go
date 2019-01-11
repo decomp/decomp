@@ -18,68 +18,91 @@ import (
 // Graph is a control flow graph rooted at entry.
 type Graph struct {
 	// Entry node of control flow graph.
-	entry *Node
+	entry cfa.Node
 	// Underlying simple.DirectedGraph.
 	*simple.DirectedGraph
 	// DOT graph ID.
 	dotID string
 	// nodes maps from DOT node ID to associated node.
-	nodes map[string]*Node
+	nodes map[string]cfa.Node
 }
 
 // NewGraph returns a new control flow graph.
 func NewGraph() *Graph {
 	return &Graph{
 		DirectedGraph: simple.NewDirectedGraph(),
-		nodes:         make(map[string]*Node),
+		nodes:         make(map[string]cfa.Node),
 	}
 }
 
 // ParseFile parses the given Graphviz DOT file into a control flow graph.
 func ParseFile(dotPath string) (*Graph, error) {
+	dst := NewGraph()
+	err := ParseFileInto(dotPath, dst)
+	return dst, err
+}
+
+// ParseFileInto parses the given Graphviz DOT file into the control flow graph
+// dst.
+func ParseFileInto(dotPath string, dst cfa.Graph) error {
 	// Parse DOT file.
 	data, err := ioutil.ReadFile(dotPath)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return errors.WithStack(err)
 	}
-	return ParseBytes(data)
+	return ParseBytesInto(data, dst)
 }
 
 // Parse parses the given Graphviz DOT file into a control flow graph, reading
 // from r.
 func Parse(r io.Reader) (*Graph, error) {
+	dst := NewGraph()
+	err := ParseInto(r, dst)
+	return dst, err
+}
+
+// ParseInto parses the given Graphviz DOT file into the control flow graph dst,
+// reading from r.
+func ParseInto(r io.Reader, dst cfa.Graph) error {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return errors.WithStack(err)
 	}
-	return ParseBytes(data)
+	return ParseBytesInto(data, dst)
 }
 
 // ParseBytes parses the given Graphviz DOT file into a control flow graph,
 // reading from data.
 func ParseBytes(data []byte) (*Graph, error) {
-	// Create control flow graph.
-	g := NewGraph()
-	if err := dot.Unmarshal(data, g); err != nil {
-		return nil, errors.WithStack(err)
+	dst := NewGraph()
+	err := ParseBytesInto(data, dst)
+	return dst, err
+}
+
+// ParseBytes parses the given Graphviz DOT file into the control flow graph
+// dst, reading from data.
+func ParseBytesInto(data []byte, dst cfa.Graph) error {
+	if err := dot.Unmarshal(data, dst); err != nil {
+		return errors.WithStack(err)
 	}
 	// Locate entry node.
-	nodes := g.Nodes()
+	nodes := dst.Nodes()
 	for nodes.Next() {
 		// Note: This run-time type assertion goes away, should Gonum graph start
 		// to leverage generics in Go2.
-		n := nodes.Node().(*Node)
-		if _, entry := n.Attrs["entry"]; entry {
-			if g.entry != nil {
-				return nil, errors.Errorf("multiple entry nodes in control flow graph; prev %q, new %q", g.entry.DOTID(), n.DOTID())
+		n := nodes.Node().(cfa.Node)
+		if _, ok := n.Attribute("entry"); ok {
+			entry := dst.Entry()
+			if entry != nil {
+				return errors.Errorf("multiple entry nodes in control flow graph; prev %q, new %q", entry.DOTID(), n.DOTID())
 			}
-			g.entry = n
+			dst.SetEntry(n)
 		}
 	}
-	if g.entry == nil {
-		return nil, errors.Errorf("unable to locate entry node of control flow graph %q", g.DOTID())
+	if dst.Entry() == nil {
+		return errors.Errorf("unable to locate entry node of control flow graph %q", dst.DOTID())
 	}
-	return g, nil
+	return nil
 }
 
 // ParseString parses the given Graphviz DOT file into a control flow graph, reading
@@ -116,6 +139,13 @@ func (g *Graph) SetDOTID(dotID string) {
 
 // Entry returns the entry node of the control flow graph.
 func (g *Graph) Entry() cfa.Node {
+	if g.entry == nil {
+		// Ensure that nil is returned if g.entry is nil.
+		//
+		// Otherwise it would be converted to an interface value of cfa.Node type
+		// with value nil.
+		return nil
+	}
 	return g.entry
 }
 
@@ -124,7 +154,7 @@ func (g *Graph) SetEntry(entry cfa.Node) {
 	entry.SetAttribute(encoding.Attribute{Key: "entry", Value: "true"})
 	// Note: This run-time type assertion goes away, should Gonum graph start to
 	// leverage generics in Go2.
-	g.entry = entry.(*Node)
+	g.entry = entry
 }
 
 // NodeWithDOTID returns the node with the given DOT node ID in the control flow
@@ -139,14 +169,14 @@ func (g *Graph) NodeWithDOTID(dotID string) (cfa.Node, bool) {
 func (g *Graph) AddNode(n graph.Node) {
 	// Note: This run-time type assertion goes away, should Gonum graph start to
 	// leverage generics in Go2.
-	nn := n.(*Node)
+	nn := n.(cfa.Node)
 	dotID := nn.DOTID()
 	if prev, ok := g.nodes[dotID]; ok {
 		panic(fmt.Errorf("node with DOT node ID %q already present; prev `%v`, new `%v`", dotID, prev, nn))
 	}
 	g.nodes[dotID] = nn
 	// Update entry node.
-	if _, ok := nn.Attrs["entry"]; ok {
+	if _, ok := nn.Attribute("entry"); ok {
 		g.entry = nn
 	}
 	g.DirectedGraph.AddNode(nn)
@@ -157,8 +187,8 @@ func (g *Graph) AddNode(n graph.Node) {
 func (g *Graph) RemoveNode(id int64) {
 	// Note: This run-time type assertion goes away, should Gonum graph start to
 	// leverage generics in Go2.
-	n := g.Node(id).(*Node)
-	if _, ok := n.Attrs["entry"]; ok {
+	n := g.Node(id).(cfa.Node)
+	if _, ok := n.Attribute("entry"); ok {
 		// Remove entry node.
 		g.entry = nil
 	}
