@@ -47,11 +47,15 @@ func f(dotPath string) error {
 		}
 	*/
 	interval.Analyze(dst, nil, nil)
-	nodes := sortNodes(interval.NodesOf(dst.Nodes()))
-	for _, n := range nodes {
+	printNodes(interval.NodesOf(dst.Nodes()))
+	return nil
+}
+
+func printNodes(ns []*interval.Node) {
+	sortNodes(ns)
+	for _, n := range ns {
 		fmt.Println("node:      ", n.Node.DOTID())
 		fmt.Println("preNum:    ", n.PreNum)
-		fmt.Println("postNum:   ", n.PostNum)
 		fmt.Println("revPostNum:", n.RevPostNum)
 		fmt.Println("inLoop:    ", n.InLoop)
 		fmt.Println("loopType:  ", n.LoopType)
@@ -60,7 +64,6 @@ func f(dotPath string) error {
 		}
 		fmt.Println()
 	}
-	return nil
 }
 
 // sortNodes sorts the list of nodes by DOTID.

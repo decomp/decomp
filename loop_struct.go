@@ -3,8 +3,10 @@ package interval
 import (
 	"fmt"
 	"math"
+	"sort"
 
 	"github.com/mewmew/lnp/pkg/cfa"
+	"github.com/rickypai/natsort"
 )
 
 // loopStruct structures loops in the given control flow graph.
@@ -27,24 +29,36 @@ func loopStruct(g cfa.Graph) {
 		for j, I := range IIs[i] {
 			_ = j
 			// if ((\exists x \in N^i, (x, h_j) \in E^i) \land (inLoop(x) == False))
-			for xs := Gi.To(I.head.ID()); xs.Next(); {
-				x := xs.Node().(*Node)
-				if !x.InLoop {
-					// for (all n \in loop (x, h_j))
-					nodesInLoop := loop(I, x)
-					for _, n := range nodesInLoop {
-						// inLoop(n) = True
-						n.InLoop = true
-					}
-					// loopType(h_j) = findLoopType((x, h_j))
-					I.head.LoopType = findLoopType(I, x, nodesInLoop)
-					// loopFollow(h_j) = findLoopFollow((x, h_j))
-					I.head.LoopFollow = findLoopFollow(I, x, nodesInLoop)
-					break
+			if latch, ok := findLatch(Gi, I.head); ok && !latch.InLoop {
+				// for (all n \in loop (x, h_j))
+				nodesInLoop := loop(I, latch)
+				fmt.Println("=== [ loop nodes ] ===")
+				printNodes(nodesInLoop)
+				for _, n := range nodesInLoop {
+					// inLoop(n) = True
+					n.InLoop = true
 				}
+				// loopType(h_j) = findLoopType((x, h_j))
+				I.head.LoopType = findLoopType(g, I.head, latch, nodesInLoop)
+				// loopFollow(h_j) = findLoopFollow((x, h_j))
+				I.head.LoopFollow = findLoopFollow(g, I.head, latch, nodesInLoop)
 			}
 		}
 	}
+}
+
+// findLatch locates the loop latch node in the control flow graph, based on the
+// given loop header node. The boolean return value indicates success.
+func findLatch(g cfa.Graph, head *Node) (latch *Node, ok bool) {
+	for preds := g.To(head.ID()); preds.Next(); {
+		latch := preds.Node().(*Node)
+		// Find back-edge.
+		if latch.RevPostNum > head.RevPostNum {
+			// Latch node located.
+			return latch, true
+		}
+	}
+	return nil, false
 }
 
 // TODO: implement and use markNodesInLoop instead of loop. Get rid of n.inLoop
@@ -65,6 +79,8 @@ func loop(I *Interval, latch *Node) []*Node {
 	// belong to the same loop.
 	//
 	//    \forall n \in loop(y, x), n \in I(x)
+	fmt.Println("head:", I.head.DOTID())
+	fmt.Println("latch:", latch.DOTID())
 	var ns []*Node
 	for nodes := I.Nodes(); nodes.Next(); {
 		n := nodes.Node().(*Node)
@@ -72,7 +88,7 @@ func loop(I *Interval, latch *Node) []*Node {
 		// node numbering.
 		//
 		//    \forall n \in loop(y, x), n \in {x ... y}
-		if I.head.PostNum <= n.PostNum && n.PostNum <= latch.PostNum {
+		if I.head.RevPostNum <= n.RevPostNum && n.RevPostNum <= latch.RevPostNum {
 			ns = append(ns, n)
 		}
 	}
@@ -93,19 +109,19 @@ const (
 	loopTypeEndless
 )
 
-// findLoopType returns the type of the loop (latch, I.head).
+// findLoopType returns the type of the loop (latch, head).
 //
-// Pre: (latch, I.head) induces a loop.
+// Pre: (latch, head) induces a loop.
 //
 //      nodesInLoop is the set of all nodes that belong to the loop (latch,
-//      I.head).
+//      head).
 //
-// Post: loopType(I.head) has the type of loop induces by (latch, I.head).
+// Post: loopType(head) has the type of loop induces by (latch, head).
 //
 // ref: Figure 6-28; Cifuentes' Reverse Comilation Techniques.
-func findLoopType(I *Interval, latch *Node, nodesInLoop []*Node) loopType {
-	headSuccs := NodesOf(I.From(I.head.ID()))
-	latchSuccs := NodesOf(I.From(latch.ID()))
+func findLoopType(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) loopType {
+	headSuccs := NodesOf(g.From(head.ID()))
+	latchSuccs := NodesOf(g.From(latch.ID()))
 	switch len(latchSuccs) {
 	// if (nodeType(y) == 2-way)
 	case 2:
@@ -146,21 +162,21 @@ func findLoopType(I *Interval, latch *Node, nodesInLoop []*Node) loopType {
 	}
 }
 
-// findLoopFollow returns the follow node of the loop (latch, I.head).
+// findLoopFollow returns the follow node of the loop (latch, head).
 //
-// Pre: (latch, I.head) induces a loop.
+// Pre: (latch, head) induces a loop.
 //
 //      nodesInLoop is the set of all nodes that belong to the loop (latch,
-//      I.head).
+//      head).
 //
 // Post: loopFollow(latch) is the follow node to the loop induces by (latch,
-//       I.head).
+//       head).
 //
 // ref: Figure 6-29; Cifuentes' Reverse Comilation Techniques.
-func findLoopFollow(I *Interval, latch *Node, nodesInLoop []*Node) *Node {
-	headSuccs := NodesOf(I.From(I.head.ID()))
-	latchSuccs := NodesOf(I.From(latch.ID()))
-	switch I.head.LoopType {
+func findLoopFollow(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) *Node {
+	headSuccs := NodesOf(g.From(head.ID()))
+	latchSuccs := NodesOf(g.From(latch.ID()))
+	switch head.LoopType {
 	// if (loopType(x) == Pre_Tested)
 	case loopTypePreTest:
 		switch {
@@ -172,7 +188,7 @@ func findLoopFollow(I *Interval, latch *Node, nodesInLoop []*Node) *Node {
 			// loopFollow(x) = outEdges(x, 1)
 			return headSuccs[0]
 		default:
-			panic(fmt.Errorf("unable to locate follow loop of pre-test header node %q", I.head.DOTID()))
+			panic(fmt.Errorf("unable to locate follow loop of pre-test header node %q", head.DOTID()))
 		}
 	// else if (loopType(x) == Post_Tested)
 	case loopTypePostTest:
@@ -190,35 +206,35 @@ func findLoopFollow(I *Interval, latch *Node, nodesInLoop []*Node) *Node {
 	// endless loop.
 	case loopTypeEndless:
 		// fol = Max // a large constant.
-		followPostNum := math.MaxInt64
+		followRevPostNum := math.MaxInt64
 		var follow *Node
 		// for (all 2-way nodes n \in nodesInLoop)
 		for _, n := range nodesInLoop {
-			nSuccs := NodesOf(I.From(n.ID()))
+			nSuccs := NodesOf(g.From(n.ID()))
 			if len(nSuccs) != 2 {
 				// Skip node as not 2-way conditional.
 				continue
 			}
 			switch {
 			// if ((outEdges(n, 1) \not \in nodesInLoop) \land (outEdges(x, 1) < fol))
-			case !contains(nodesInLoop, nSuccs[0]) && nSuccs[0].PostNum < followPostNum:
-				followPostNum = nSuccs[0].PostNum
+			case !contains(nodesInLoop, nSuccs[0]) && nSuccs[0].RevPostNum < followRevPostNum:
+				followRevPostNum = nSuccs[0].RevPostNum
 				follow = nSuccs[0]
 			// if ((outEdges(x, 2) \not \in nodesInLoop) \land (outEdges(x, 2) < fol))			}
-			case !contains(nodesInLoop, nSuccs[1]) && nSuccs[1].PostNum < followPostNum:
-				followPostNum = nSuccs[1].PostNum
+			case !contains(nodesInLoop, nSuccs[1]) && nSuccs[1].RevPostNum < followRevPostNum:
+				followRevPostNum = nSuccs[1].RevPostNum
 				follow = nSuccs[1]
 			}
 		}
 		// if (fol != Max)
-		if followPostNum != math.MaxInt64 {
+		if followRevPostNum != math.MaxInt64 {
 			// loopFollow(x) = fol
 			return follow
 		}
 		// No follow node located.
 		return nil
 	default:
-		panic(fmt.Errorf("support for loop type %v not yet implemented", I.head.LoopType))
+		panic(fmt.Errorf("support for loop type %v not yet implemented", head.LoopType))
 	}
 }
 
@@ -230,4 +246,30 @@ func contains(ns []*Node, n *Node) bool {
 		}
 	}
 	return false
+}
+
+// TODO: remove debug output.
+
+func printNodes(ns []*Node) {
+	sortNodes(ns)
+	for _, n := range ns {
+		fmt.Println("node:      ", n.Node.DOTID())
+		fmt.Println("preNum:    ", n.PreNum)
+		fmt.Println("revPostNum:", n.RevPostNum)
+		fmt.Println("inLoop:    ", n.InLoop)
+		fmt.Println("loopType:  ", n.LoopType)
+		if n.LoopFollow != nil {
+			fmt.Println("loopFollow:", n.LoopFollow.DOTID())
+		}
+		fmt.Println()
+	}
+}
+
+// sortNodes sorts the list of nodes by DOTID.
+func sortNodes(ns []*Node) []*Node {
+	less := func(i, j int) bool {
+		return natsort.Less(ns[i].DOTID(), ns[j].DOTID())
+	}
+	sort.Slice(ns, less)
+	return ns
 }

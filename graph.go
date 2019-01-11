@@ -43,8 +43,6 @@ type Node struct {
 
 	// Pre-order DFS visit number.
 	PreNum int
-	// Post-order DFS visit number.
-	PostNum int
 	// Reverse post-order DFS visit number.
 	RevPostNum int
 
@@ -65,13 +63,9 @@ func initDFSOrder(g cfa.Graph) {
 		n.PreNum = preNum
 		preNum++
 	}
-	postNum := 1
 	n := g.Nodes().Len()
 	revPostNum := n
 	post := func(n *Node) {
-		n.PostNum = postNum
-		postNum++
-		n.PostNum = postNum
 		n.RevPostNum = revPostNum
 		revPostNum--
 	}

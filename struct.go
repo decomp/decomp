@@ -10,10 +10,11 @@ import (
 // are invoked if non-nil before and after merging the nodes of located
 // primitives.
 func Analyze(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primitive)) ([]*primitive.Primitive, error) {
+	var prims []*primitive.Primitive
 	// Initialize depth-first search visit order.
 	initDFSOrder(g)
 	// Structure loops of the control flow graph.
-	//loopStruct(g)
-	var prims []*primitive.Primitive
+	loopStruct(g)
+	// TODO: implement structuring of 2-way, n-way and short-circuit.
 	return prims, nil
 }
