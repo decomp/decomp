@@ -7,6 +7,7 @@ import (
 	"github.com/mewmew/lnp/pkg/cfg"
 	"github.com/rickypai/natsort"
 	"gonum.org/v1/gonum/graph"
+	"gonum.org/v1/gonum/graph/encoding"
 )
 
 // Graph is a control flow graph which records structuring information.
@@ -68,6 +69,24 @@ type Node struct {
 	// Node contains only conditional and branching information, no other
 	// instructions.
 	IsCondNode bool
+	// Compound conditional used to represent short-circuit evaluation in the
+	// control flow graph.
+	// TODO: figure out a better representation; perhaps struct with two fields,
+	// merged condnode name and boolean operation.
+	//    NOT n AND t
+	//    n OR t
+	//    n AND e
+	//    NOT n OR e
+	CompCond string
+}
+
+// SetAttribute implements encoding.AttributeSetter for Node.
+func (n *Node) SetAttribute(attr encoding.Attribute) error {
+	switch attr.Key {
+	case "condnode":
+		n.IsCondNode = attr.Value == "true"
+	}
+	return n.Node.SetAttribute(attr)
 }
 
 // initDFSOrder initializes the DFS visit order of the control flow graph.
@@ -150,6 +169,18 @@ func descRevPostOrder(nodes []*Node) []*Node {
 	less := func(i, j int) bool {
 		// Place in descending order.
 		return nodes[i].RevPostNum > nodes[j].RevPostNum
+	}
+	sort.Slice(nodes, less)
+	return nodes
+}
+
+// ascRevPostOrder returns the nodes in ascending reverse post-order. In
+// particular, the returned list contains outermost nodes before innermost
+// nodes.
+func ascRevPostOrder(nodes []*Node) []*Node {
+	less := func(i, j int) bool {
+		// Place in ascending order.
+		return nodes[i].RevPostNum < nodes[j].RevPostNum
 	}
 	sort.Slice(nodes, less)
 	return nodes

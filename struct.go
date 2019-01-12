@@ -13,13 +13,18 @@ func Analyze(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primit
 	var prims []*primitive.Primitive
 	// Initialize depth-first search visit order.
 	initDFSOrder(g)
+
+	// The Structuring Algorithm is not finite Church-Rosser. Thus an ordering is
+	// to be followed, namely: structure n-way conditionals, followed by loop
+	// structuring, and 2-way conditional structuring last.
+
+	// Structure n-way conditionals.
+	// TODO: structNway
 	// Structure loops of the control flow graph.
 	loopStruct(g)
 	// Structure 2-way conditionals.
 	dom := cfa.NewDom(g)
 	struct2way(g, dom)
-	// Structure n-way conditionals.
-	// TODO: structNway
 	// Structure compound conditionals.
 	structCompCond(g)
 	return prims, nil

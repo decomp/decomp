@@ -70,10 +70,10 @@ func findLatch(g cfa.Graph, head *Node) (latch *Node, ok bool) {
 //
 // ref: Figure 6-27; Cifuentes' Reverse Comilation Techniques.
 func markNodesInLoop(I *Interval, latch *Node) []*Node {
-	fmt.Println("head: ", I.head.DOTID())
-	fmt.Println("latch:", latch.DOTID())
-	fmt.Println()
-	fmt.Println(I.String())
+	//fmt.Println("head: ", I.head.DOTID()) // TODO: remove debug output
+	//fmt.Println("latch:", latch.DOTID()) // TODO: remove debug output
+	//fmt.Println() // TODO: remove debug output
+	//fmt.Println(I.String()) // TODO: remove debug output
 	// nodesInLoop := {x}
 	nodesInLoop := []*Node{I.head}
 	// loopHead(x) = x
