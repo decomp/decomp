@@ -147,11 +147,11 @@ func (prim Switch) IsValid(g graph.Directed, dom cfa.DominatorTree) bool {
 	// Dominator sanity check.
 	cond, cases, defaultNode, exit := prim.Cond, prim.Cases, prim.Default, prim.Exit
 	for _, c := range cases {
-		if !dom.Dominates(cond, c) {
+		if !dom.Dominates(cond.ID(), c.ID()) {
 			return false
 		}
 	}
-	if !dom.Dominates(cond, defaultNode) || !dom.Dominates(cond, exit) {
+	if !dom.Dominates(cond.ID(), defaultNode.ID()) || !dom.Dominates(cond.ID(), exit.ID()) {
 		return false
 	}
 	// Verify that cond has n successors (where n = len(cases) + 1).

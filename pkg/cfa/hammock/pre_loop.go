@@ -109,7 +109,7 @@ func FindPreLoop(g graph.Directed, dom cfa.DominatorTree) (prim PreLoop, ok bool
 func (prim PreLoop) IsValid(g graph.Directed, dom cfa.DominatorTree) bool {
 	// Dominator sanity check.
 	cond, body, exit := prim.Cond, prim.Body, prim.Exit
-	if !dom.Dominates(cond, body) || !dom.Dominates(cond, exit) {
+	if !dom.Dominates(cond.ID(), body.ID()) || !dom.Dominates(cond.ID(), exit.ID()) {
 		return false
 	}
 	// Verify that cond has two successors (body and exit).

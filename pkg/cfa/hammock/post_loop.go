@@ -99,7 +99,7 @@ func FindPostLoop(g graph.Directed, dom cfa.DominatorTree) (prim PostLoop, ok bo
 func (prim PostLoop) IsValid(g graph.Directed, dom cfa.DominatorTree) bool {
 	// Dominator sanity check.
 	cond, exit := prim.Cond, prim.Exit
-	if !dom.Dominates(cond, exit) {
+	if !dom.Dominates(cond.ID(), exit.ID()) {
 		return false
 	}
 	// Verify that cond has two successors (cond and exit).

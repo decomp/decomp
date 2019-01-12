@@ -92,7 +92,7 @@ func FindSeq(g graph.Directed, dom cfa.DominatorTree) (prim Seq, ok bool) {
 func (prim Seq) IsValid(g graph.Directed, dom cfa.DominatorTree) bool {
 	// Dominator sanity check.
 	entry, exit := prim.Entry, prim.Exit
-	if !dom.Dominates(entry, exit) {
+	if !dom.Dominates(entry.ID(), exit.ID()) {
 		return false
 	}
 

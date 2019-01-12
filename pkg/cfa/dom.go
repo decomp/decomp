@@ -1,7 +1,6 @@
 package cfa
 
 import (
-	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/path"
 )
 
@@ -18,7 +17,7 @@ func NewDom(g Graph) DominatorTree {
 	}
 }
 
-// Dominates reports whether A dominates B.
-func (dom DominatorTree) Dominates(a, b graph.Node) bool {
-	return a == dom.DominatorTree.DominatorOf(b)
+// Dominates reports whether node x dominates y, with node IDs xid and yid.
+func (dom DominatorTree) Dominates(xid, yid int64) bool {
+	return xid == dom.DominatorTree.DominatorOf(yid).ID()
 }

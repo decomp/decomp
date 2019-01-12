@@ -110,7 +110,7 @@ func FindIfReturn(g graph.Directed, dom cfa.DominatorTree) (prim IfReturn, ok bo
 func (prim IfReturn) IsValid(g graph.Directed, dom cfa.DominatorTree) bool {
 	// Dominator sanity check.
 	cond, body, exit := prim.Cond, prim.Body, prim.Exit
-	if !dom.Dominates(cond, body) || !dom.Dominates(cond, exit) {
+	if !dom.Dominates(cond.ID(), body.ID()) || !dom.Dominates(cond.ID(), exit.ID()) {
 		return false
 	}
 	// Verify that cond has two successors (body and exit).
@@ -142,7 +142,7 @@ func (prim IfReturn) IsValid(g graph.Directed, dom cfa.DominatorTree) bool {
 	condPreds := g.To(cond.ID())
 	for condPreds.Next() {
 		pred := condPreds.Node()
-		if dom.Dominates(cond, pred) {
+		if dom.Dominates(cond.ID(), pred.ID()) {
 			return false
 		}
 	}

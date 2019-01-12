@@ -120,7 +120,7 @@ func FindIfElse(g graph.Directed, dom cfa.DominatorTree) (prim IfElse, ok bool) 
 func (prim IfElse) IsValid(g graph.Directed, dom cfa.DominatorTree) bool {
 	// Dominator sanity check.
 	cond, bodyTrue, bodyFalse, exit := prim.Cond, prim.BodyTrue, prim.BodyFalse, prim.Exit
-	if !dom.Dominates(cond, bodyTrue) || !dom.Dominates(cond, bodyFalse) || !dom.Dominates(cond, exit) {
+	if !dom.Dominates(cond.ID(), bodyTrue.ID()) || !dom.Dominates(cond.ID(), bodyFalse.ID()) || !dom.Dominates(cond.ID(), exit.ID()) {
 		return false
 	}
 	// Verify that cond has two successors (body_true and body_false).
