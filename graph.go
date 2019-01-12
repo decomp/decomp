@@ -61,7 +61,7 @@ type Node struct {
 
 	// 2-way conditional structuring information.
 
-	// Follow node of 2-way conditional.
+	// Follow node of 2-way and n-way conditionals.
 	Follow *Node
 
 	// Compound conditional structuring information.
