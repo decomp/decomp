@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"sort"
 
@@ -27,40 +28,39 @@ func f(dotPath string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	/*
-		Gs, IIs := interval.DerivedSequence(dst)
-		for i, g := range Gs {
-			name := fmt.Sprintf("G_%d.dot", i+1)
-			if err := ioutil.WriteFile(name, []byte(g.String()), 0644); err != nil {
+	Gs, IIs := interval.DerivedSequence(dst)
+	for i, g := range Gs {
+		name := fmt.Sprintf("G_%d.dot", i+1)
+		if err := ioutil.WriteFile(name, []byte(g.String()), 0644); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	for i, Is := range IIs {
+		for j, I := range Is {
+			name := fmt.Sprintf("   I_%d_%d.dot", i+1, j+1)
+			if err := ioutil.WriteFile(name, []byte(I.String()), 0644); err != nil {
 				return errors.WithStack(err)
 			}
 		}
-		for i, Is := range IIs {
-			fmt.Printf("G_%d\n", i+1)
-			for j, I := range Is {
-				fmt.Printf("   I_%d\n", j+1)
-				for nodes := I.Nodes(); nodes.Next(); {
-					n := nodes.Node().(cfa.Node)
-					fmt.Println("      n:", n.DOTID())
-				}
-			}
-		}
-	*/
+	}
+
 	interval.Analyze(dst, nil, nil)
-	printNodes(interval.NodesOf(dst.Nodes()))
+	//printNodes(interval.NodesOf(dst.Nodes()))
 	return nil
 }
 
 func printNodes(ns []*interval.Node) {
 	sortNodes(ns)
 	for _, n := range ns {
-		fmt.Println("node:      ", n.Node.DOTID())
-		fmt.Println("preNum:    ", n.PreNum)
-		fmt.Println("revPostNum:", n.RevPostNum)
-		fmt.Println("inLoop:    ", n.InLoop)
-		fmt.Println("loopType:  ", n.LoopType)
+		fmt.Println("Node:      ", n.Node.DOTID())
+		fmt.Println("PreNum:    ", n.PreNum)
+		fmt.Println("RevPostNum:", n.RevPostNum)
+		if n.LoopHead != nil {
+			fmt.Println("LoopHead:  ", n.LoopHead.DOTID())
+		}
+		fmt.Println("LoopType:  ", n.LoopType)
 		if n.LoopFollow != nil {
-			fmt.Println("loopFollow:", n.LoopFollow.DOTID())
+			fmt.Println("LoopFollow:", n.LoopFollow.DOTID())
 		}
 		fmt.Println()
 	}

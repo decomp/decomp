@@ -48,8 +48,8 @@ type Node struct {
 
 	// Loop structuring information.
 
-	// Specifies whether the node is part of a loop primitive.
-	InLoop bool
+	// Loop header node; or nil if not part of loop.
+	LoopHead *Node
 	// Type of the loop.
 	LoopType loopType
 	// Follow node of the loop.

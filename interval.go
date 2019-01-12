@@ -7,6 +7,7 @@ import (
 	"github.com/mewmew/lnp/pkg/cfa"
 	"github.com/rickypai/natsort"
 	"gonum.org/v1/gonum/graph"
+	"gonum.org/v1/gonum/graph/encoding/dot"
 	"gonum.org/v1/gonum/graph/iterator"
 )
 
@@ -70,6 +71,16 @@ func (i *Interval) Nodes() graph.Nodes {
 	}
 	sort.Slice(nodes, less)
 	return iterator.NewOrderedNodes(nodes)
+}
+
+// String returns the string representation of the interval in Graphviz DOT
+// format.
+func (i *Interval) String() string {
+	buf, err := dot.Marshal(i, "", "", "\t")
+	if err != nil {
+		panic(fmt.Errorf("unable to marshal interval to DOT format; %v", err))
+	}
+	return string(buf)
 }
 
 // --- [ skip? ] ---

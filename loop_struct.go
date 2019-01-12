@@ -29,15 +29,11 @@ func loopStruct(g cfa.Graph) {
 		for j, I := range IIs[i] {
 			_ = j
 			// if ((\exists x \in N^i, (x, h_j) \in E^i) \land (inLoop(x) == False))
-			if latch, ok := findLatch(Gi, I.head); ok && !latch.InLoop {
+			if latch, ok := findLatch(Gi, I.head); ok && latch.LoopHead == nil {
 				// for (all n \in loop (x, h_j))
-				nodesInLoop := loop(I, latch)
+				nodesInLoop := markNodesInLoop(I, latch)
 				fmt.Println("=== [ loop nodes ] ===")
 				printNodes(nodesInLoop)
-				for _, n := range nodesInLoop {
-					// inLoop(n) = True
-					n.InLoop = true
-				}
 				// loopType(h_j) = findLoopType((x, h_j))
 				I.head.LoopType = findLoopType(g, I.head, latch, nodesInLoop)
 				// loopFollow(h_j) = findLoopFollow((x, h_j))
@@ -64,35 +60,60 @@ func findLatch(g cfa.Graph, head *Node) (latch *Node, ok bool) {
 // TODO: implement and use markNodesInLoop instead of loop. Get rid of n.inLoop
 // in favour of loopHead?
 //
+
+// loop returns the nodes of the loop (latch, I.head), marking the loop header
+// of each node.
+//
 // Pre: (latch, I.head) is a back-edge.
 //
 // Post: the nodes that belong to the loop (latch, I.head) are marked.
 //
 // ref: Figure 6-27; Cifuentes' Reverse Comilation Techniques.
-
-// loop returns the nodes of the loop (latch, I.head).
-func loop(I *Interval, latch *Node) []*Node {
-	// The nodes belong to the same interval, since the interval header (i.e. x)
-	// dominates all nodes of the interval, and in a loop, the loop header node
-	// dominates all nodes of the loop. If a node belongs to a different
-	// interval, it is not dominated by the loop header node, thus it cannot
-	// belong to the same loop.
-	//
-	//    \forall n \in loop(y, x), n \in I(x)
-	fmt.Println("head:", I.head.DOTID())
-	fmt.Println("latch:", latch.DOTID())
-	var ns []*Node
+func markNodesInLoop(I *Interval, latch *Node) []*Node {
+	fmt.Println(I.String())
+	// nodesInLoop := {x}
+	nodesInLoop := []*Node{I.head}
+	// loopHead(x) = x
+	I.head.LoopHead = I.head
+	// for (all nodes n \in {x + 1 ... y})
 	for nodes := I.Nodes(); nodes.Next(); {
+		// if n \in I(x)
 		n := nodes.Node().(*Node)
-		// The loop is formed of all nodes that are between x and y in terms of
-		// node numbering.
-		//
-		//    \forall n \in loop(y, x), n \in {x ... y}
-		if I.head.RevPostNum <= n.RevPostNum && n.RevPostNum <= latch.RevPostNum {
-			ns = append(ns, n)
+		if I.head.RevPostNum < n.RevPostNum && n.RevPostNum <= latch.RevPostNum {
+			// nodesInLoop = nodesInLoop \union {n}
+			nodesInLoop = append(nodesInLoop, n)
+			// if (loopHead(n) == No_Node)
+			if n.LoopHead == nil {
+				// loopHead(n) = x
+				n.LoopHead = I.head
+			}
 		}
 	}
-	return ns
+	return nodesInLoop
+
+	/*
+		// The nodes belong to the same interval, since the interval header (i.e. x)
+		// dominates all nodes of the interval, and in a loop, the loop header node
+		// dominates all nodes of the loop. If a node belongs to a different
+		// interval, it is not dominated by the loop header node, thus it cannot
+		// belong to the same loop.
+		//
+		//    \forall n \in loop(y, x), n \in I(x)
+		fmt.Println("head:", I.head.DOTID())
+		fmt.Println("latch:", latch.DOTID())
+		var ns []*Node
+		for nodes := I.Nodes(); nodes.Next(); {
+			n := nodes.Node().(*Node)
+			// The loop is formed of all nodes that are between x and y in terms of
+			// node numbering.
+			//
+			//    \forall n \in loop(y, x), n \in {x ... y}
+			if I.head.RevPostNum <= n.RevPostNum && n.RevPostNum <= latch.RevPostNum {
+				ns = append(ns, n)
+			}
+		}
+		return ns
+	*/
 }
 
 // loopType is the set of loop types.
@@ -253,13 +274,15 @@ func contains(ns []*Node, n *Node) bool {
 func printNodes(ns []*Node) {
 	sortNodes(ns)
 	for _, n := range ns {
-		fmt.Println("node:      ", n.Node.DOTID())
-		fmt.Println("preNum:    ", n.PreNum)
-		fmt.Println("revPostNum:", n.RevPostNum)
-		fmt.Println("inLoop:    ", n.InLoop)
-		fmt.Println("loopType:  ", n.LoopType)
+		fmt.Println("Node:      ", n.Node.DOTID())
+		fmt.Println("PreNum:    ", n.PreNum)
+		fmt.Println("RevPostNum:", n.RevPostNum)
+		if n.LoopHead != nil {
+			fmt.Println("LoopHead:  ", n.LoopHead.DOTID())
+		}
+		fmt.Println("LoopType:  ", n.LoopType)
 		if n.LoopFollow != nil {
-			fmt.Println("loopFollow:", n.LoopFollow.DOTID())
+			fmt.Println("LoopFollow:", n.LoopFollow.DOTID())
 		}
 		fmt.Println()
 	}
