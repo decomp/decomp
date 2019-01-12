@@ -2,7 +2,6 @@ package interval
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/mewmew/lnp/pkg/cfa"
 )
@@ -32,7 +31,7 @@ loop:
 		//
 		// for (all nodes n in postorder)
 		for _, n := range ascRevPostOrder(NodesOf(g.Nodes())) {
-			fmt.Println("n:", n.DOTID())
+			//fmt.Println("n:", n.DOTID()) // TODO: remove debug output
 			// Order of nSuccs matter, as we have nSuccs[0] denote the true branch
 			// and nSuccs[1] denote the false branch.
 			nSuccs := successors(g, n.ID())
@@ -40,11 +39,11 @@ loop:
 			if len(nSuccs) == 2 {
 				// t = succ[n, 1]
 				t := nSuccs[0]
-				fmt.Println("   t:", t.DOTID())
+				//fmt.Println("   t:", t.DOTID()) // TODO: remove debug output
 				tSuccs := successors(g, t.ID()) // used to make output deterministic.
 				// e = succ[n, 2]
 				e := nSuccs[1]
-				fmt.Println("   e:", e.DOTID())
+				//fmt.Println("   e:", e.DOTID()) // TODO: remove debug output
 				eSuccs := successors(g, e.ID()) // used to make output deterministic.
 				switch {
 				// if ((nodeType(t) == 2-way) \land (numInst(t) == 1) \land (numInEdges(t) == 1))
@@ -54,7 +53,6 @@ loop:
 					case tSuccs[0].ID() == e.ID():
 						// modifyGraph(\lnot n \land t)
 						// TODO: figure out how to represent compound condition.
-						log.Println("figure out how to represent compound condition: NOT n AND t")
 						compCond := fmt.Sprintf("NOT %q AND %q", n.DOTID(), t.DOTID())
 						n.CompCond = compCond
 						g.RemoveNode(t.ID())
@@ -65,7 +63,6 @@ loop:
 					case tSuccs[1].ID() == e.ID():
 						// modifyGraph(n \lor t)
 						// TODO: figure out how to represent compound condition.
-						log.Println("figure out how to represent compound condition: n OR t")
 						compCond := fmt.Sprintf("%q OR %q", n.DOTID(), t.DOTID())
 						n.CompCond = compCond
 						g.RemoveNode(t.ID())
@@ -80,7 +77,6 @@ loop:
 					case eSuccs[0].ID() == t.ID():
 						// modifyGraph(n \land e)
 						// TODO: figure out how to represent compound condition.
-						log.Println("figure out how to represent compound condition: n AND e")
 						compCond := fmt.Sprintf("%q AND %q", n.DOTID(), e.DOTID())
 						n.CompCond = compCond
 						g.RemoveNode(e.ID())
@@ -91,7 +87,6 @@ loop:
 					case eSuccs[1].ID() == t.ID():
 						// modifyGraph(\lnot n \lor e)
 						// TODO: figure out how to represent compound condition.
-						log.Println("figure out how to represent compound condition: NOT n OR e")
 						compCond := fmt.Sprintf("NOT %q OR %q", n.DOTID(), e.DOTID())
 						n.CompCond = compCond
 						g.RemoveNode(e.ID())

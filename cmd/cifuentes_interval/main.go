@@ -63,6 +63,11 @@ func printNodes(ns []*interval.Node) {
 		if n.LoopFollow != nil {
 			fmt.Println("LoopFollow:", n.LoopFollow.DOTID())
 		}
+		if n.Follow != nil {
+			fmt.Println("Follow:    ", n.Follow.DOTID())
+		}
+		fmt.Println("IsCondNode:", n.IsCondNode)
+		fmt.Println("CompCond:  ", n.CompCond)
 		fmt.Println()
 	}
 }
