@@ -31,9 +31,9 @@ func loopStruct(g cfa.Graph) {
 			// if ((\exists x \in N^i, (x, h_j) \in E^i) \land (inLoop(x) == False))
 			if latch, ok := findLatch(Gi, I.head); ok && latch.LoopHead == nil {
 				// for (all n \in loop (x, h_j))
-				fmt.Println("=== [ loop nodes ] ===")
+				//fmt.Println("=== [ loop nodes ] ===") // TODO: remove debug output.
 				nodesInLoop := markNodesInLoop(I, latch)
-				printNodes(nodesInLoop)
+				//printNodes(nodesInLoop) // TODO: remove debug output
 				// loopType(h_j) = findLoopType((x, h_j))
 				I.head.LoopType = findLoopType(g, I.head, latch, nodesInLoop)
 				// loopFollow(h_j) = findLoopFollow((x, h_j))

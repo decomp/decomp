@@ -15,6 +15,9 @@ func Analyze(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primit
 	initDFSOrder(g)
 	// Structure loops of the control flow graph.
 	loopStruct(g)
+	// Structure 2-way conditionals.
+	dom := cfa.NewDom(g)
+	struct2way(g, dom)
 	// TODO: implement structuring of 2-way, n-way and short-circuit.
 	return prims, nil
 }

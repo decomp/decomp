@@ -57,6 +57,11 @@ type Node struct {
 	LoopType loopType
 	// Follow node of the loop.
 	LoopFollow *Node
+
+	// 2-way conditional structuring information.
+
+	// Follow node of 2-way conditional.
+	Follow *Node
 }
 
 // initDFSOrder initializes the DFS visit order of the control flow graph.
@@ -128,6 +133,17 @@ func successors(g cfa.Graph, id int64) []*Node {
 		// Figure out a better way to handle case conditions. Use natural sorting
 		// order for now, as that sorts x == 1 before x == 2.
 		return natsort.Less(ci, cj)
+	}
+	sort.Slice(nodes, less)
+	return nodes
+}
+
+// descRevPostOrder returns the nodes in descending reverse post-order. In
+// particular, the returned list contains innermost nodes before outmost nodes.
+func descRevPostOrder(nodes []*Node) []*Node {
+	less := func(i, j int) bool {
+		// Place in descending order.
+		return nodes[i].RevPostNum > nodes[j].RevPostNum
 	}
 	sort.Slice(nodes, less)
 	return nodes

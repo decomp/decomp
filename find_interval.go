@@ -114,7 +114,7 @@ func containsAllPreds(g cfa.Graph, I *Interval, n cfa.Node) bool {
 
 // --- [ Queue ] ---------------------------------------------------------------
 
-// A queue is a FIFO queue of nodes which keeps track of all nodes that has been
+// queue is a FIFO queue of nodes which keeps track of all nodes that has been
 // in the queue.
 type queue struct {
 	// List of nodes in queue.
