@@ -37,7 +37,7 @@ func f(dotPath string) error {
 	}
 	for i, Is := range IIs {
 		for j, I := range Is {
-			name := fmt.Sprintf("   I_%d_%d.dot", i+1, j+1)
+			name := fmt.Sprintf("I_%d_%d.dot", i+1, j+1)
 			if err := ioutil.WriteFile(name, []byte(I.String()), 0644); err != nil {
 				return errors.WithStack(err)
 			}
@@ -45,7 +45,8 @@ func f(dotPath string) error {
 	}
 
 	interval.Analyze(dst, nil, nil)
-	//printNodes(interval.NodesOf(dst.Nodes()))
+	fmt.Println("=== [ graph nodes ] ========")
+	printNodes(interval.NodesOf(dst.Nodes()))
 	return nil
 }
 

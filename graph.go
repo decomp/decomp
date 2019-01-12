@@ -1,8 +1,11 @@
 package interval
 
 import (
+	"sort"
+
 	"github.com/mewmew/lnp/pkg/cfa"
 	"github.com/mewmew/lnp/pkg/cfg"
+	"github.com/rickypai/natsort"
 	"gonum.org/v1/gonum/graph"
 )
 
@@ -85,8 +88,7 @@ func DFS(g cfa.Graph, pre, post func(n *Node)) {
 		if pre != nil {
 			pre(n)
 		}
-		for succs := g.From(n.ID()); succs.Next(); {
-			succ := succs.Node().(*Node)
+		for _, succ := range successors(g, n.ID()) {
 			dfs(succ)
 		}
 		if post != nil {
@@ -94,4 +96,39 @@ func DFS(g cfa.Graph, pre, post func(n *Node)) {
 		}
 	}
 	dfs(g.Entry().(*Node))
+}
+
+// successors returns the immediate successors of the node with the given ID in
+// the control flow graph. The successors are ordered based on the condition of
+// their outgoing edge; true before false in 2-way conditionals, and case 1
+// through case n before default in n-way conditionals.
+func successors(g cfa.Graph, id int64) []*Node {
+	nodes := NodesOf(g.From(id))
+	less := func(i, j int) bool {
+		ni := nodes[i]
+		nj := nodes[j]
+		ei := g.Edge(id, ni.ID()).(cfa.Edge)
+		ej := g.Edge(id, nj.ID()).(cfa.Edge)
+		ci, ok := ei.Attribute("cond")
+		if !ok {
+			// Fall-back to sorting on DOTID, to make output deterministic.
+			return natsort.Less(ni.DOTID(), nj.DOTID())
+		}
+		cj, ok := ej.Attribute("cond")
+		if !ok {
+			// Fall-back to sorting on DOTID, to make output deterministic.
+			return natsort.Less(ni.DOTID(), nj.DOTID())
+		}
+		switch {
+		case ci == "true" && cj == "false":
+			return true
+		case ci == "false" && cj == "true":
+			return false
+		}
+		// Figure out a better way to handle case conditions. Use natural sorting
+		// order for now, as that sorts x == 1 before x == 2.
+		return natsort.Less(ci, cj)
+	}
+	sort.Slice(nodes, less)
+	return nodes
 }

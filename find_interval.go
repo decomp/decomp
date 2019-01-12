@@ -1,8 +1,6 @@
 package interval
 
 import (
-	"fmt"
-
 	"github.com/mewmew/lnp/pkg/cfa"
 )
 
@@ -28,7 +26,6 @@ func Intervals(g cfa.Graph) []*Interval {
 		n := H.pop()
 		//fmt.Println("==== n:", n.DOTID()) // TODO: remove debug output
 		I := NewInterval(g, n)
-		fmt.Printf("=== [ building interval I(%s) ] ========================\n", n.DOTID())
 		// repeat
 		for {
 			// I(n) := I(n) + {m \in N | \forall p \in immedPred(m), p \in I(n)}
@@ -100,8 +97,6 @@ func Intervals(g cfa.Graph) []*Interval {
 // predecessors of n in the control flow graph, and whether n has at least one
 // predecessor.
 func containsAllPreds(g cfa.Graph, I *Interval, n cfa.Node) bool {
-	fmt.Println("--> n:", n.DOTID())
-	fmt.Println(I.String())
 	preds := g.To(n.ID())
 	if preds.Len() == 0 {
 		// Ignore nodes without predecessors (e.g. entry node); otherwise they
@@ -111,11 +106,9 @@ func containsAllPreds(g cfa.Graph, I *Interval, n cfa.Node) bool {
 	for preds.Next() {
 		p := preds.Node()
 		if I.Node(p.ID()) == nil {
-			fmt.Println("   false")
 			return false
 		}
 	}
-	fmt.Println("   true")
 	return true
 }
 

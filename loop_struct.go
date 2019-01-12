@@ -31,8 +31,8 @@ func loopStruct(g cfa.Graph) {
 			// if ((\exists x \in N^i, (x, h_j) \in E^i) \land (inLoop(x) == False))
 			if latch, ok := findLatch(Gi, I.head); ok && latch.LoopHead == nil {
 				// for (all n \in loop (x, h_j))
-				nodesInLoop := markNodesInLoop(I, latch)
 				fmt.Println("=== [ loop nodes ] ===")
+				nodesInLoop := markNodesInLoop(I, latch)
 				printNodes(nodesInLoop)
 				// loopType(h_j) = findLoopType((x, h_j))
 				I.head.LoopType = findLoopType(g, I.head, latch, nodesInLoop)
@@ -70,6 +70,9 @@ func findLatch(g cfa.Graph, head *Node) (latch *Node, ok bool) {
 //
 // ref: Figure 6-27; Cifuentes' Reverse Comilation Techniques.
 func markNodesInLoop(I *Interval, latch *Node) []*Node {
+	fmt.Println("head: ", I.head.DOTID())
+	fmt.Println("latch:", latch.DOTID())
+	fmt.Println()
 	fmt.Println(I.String())
 	// nodesInLoop := {x}
 	nodesInLoop := []*Node{I.head}
