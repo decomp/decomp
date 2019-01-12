@@ -95,7 +95,16 @@ func (i *Interval) String() string {
 func (i *Interval) From(id int64) graph.Nodes {
 	// TODO: determine if we only want to consider nodes in I, now we consider
 	// nodes of the entire graph.
-	return i.g.From(id)
+	var nodes []graph.Node
+	for succs := i.g.From(id); succs.Next(); {
+		succ := succs.Node()
+		if i.Node(succ.ID()) == nil {
+			// Skip node if not present in interval.
+			continue
+		}
+		nodes = append(nodes, succ)
+	}
+	return iterator.NewOrderedNodes(nodes)
 }
 
 // HasEdgeBetween returns whether an edge exists between nodes with IDs xid and
@@ -103,6 +112,9 @@ func (i *Interval) From(id int64) graph.Nodes {
 func (i *Interval) HasEdgeBetween(xid, yid int64) bool {
 	// TODO: determine if we only want to consider nodes in I, now we consider
 	// nodes of the entire graph.
+	if i.Node(xid) == nil || i.Node(yid) == nil {
+		return false
+	}
 	return i.g.HasEdgeBetween(xid, yid)
 }
 
@@ -112,6 +124,9 @@ func (i *Interval) HasEdgeBetween(xid, yid int64) bool {
 func (i *Interval) Edge(uid, vid int64) graph.Edge {
 	// TODO: determine if we only want to consider nodes in I, now we consider
 	// nodes of the entire graph.
+	if !i.HasEdgeBetween(uid, vid) {
+		return nil
+	}
 	return i.g.Edge(uid, vid)
 }
 
@@ -120,6 +135,9 @@ func (i *Interval) Edge(uid, vid int64) graph.Edge {
 func (i *Interval) HasEdgeFromTo(uid, vid int64) bool {
 	// TODO: determine if we only want to consider nodes in I, now we consider
 	// nodes of the entire graph.
+	if !i.HasEdgeBetween(uid, vid) {
+		return false
+	}
 	return i.g.HasEdgeFromTo(uid, vid)
 }
 
@@ -129,7 +147,17 @@ func (i *Interval) HasEdgeFromTo(uid, vid int64) bool {
 func (i *Interval) To(id int64) graph.Nodes {
 	// TODO: determine if we only want to consider nodes in I, now we consider
 	// nodes of the entire graph.
-	return i.g.To(id)
+	var nodes []graph.Node
+	for preds := i.g.To(id); preds.Next(); {
+		pred := preds.Node()
+		if i.Node(pred.ID()) == nil {
+			// Skip node if not present in interval.
+			continue
+		}
+		nodes = append(nodes, pred)
+	}
+	return iterator.NewOrderedNodes(nodes)
+
 }
 
 // --- [/ skip? ] ---

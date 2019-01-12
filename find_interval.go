@@ -1,10 +1,13 @@
 package interval
 
 import (
+	"fmt"
+
 	"github.com/mewmew/lnp/pkg/cfa"
 )
 
-// Intervals returns the intervals of the given control flow graph.
+// Intervals returns the unique set of intervals of the given control flow
+// graph.
 //
 // Pre: G is a control flow graph.
 //
@@ -25,6 +28,7 @@ func Intervals(g cfa.Graph) []*Interval {
 		n := H.pop()
 		//fmt.Println("==== n:", n.DOTID()) // TODO: remove debug output
 		I := NewInterval(g, n)
+		fmt.Printf("=== [ building interval I(%s) ] ========================\n", n.DOTID())
 		// repeat
 		for {
 			// I(n) := I(n) + {m \in N | \forall p \in immedPred(m), p \in I(n)}
@@ -40,19 +44,9 @@ func Intervals(g cfa.Graph) []*Interval {
 					// skip entry node.
 					continue
 				}
-				allPredsInI := true
-				for preds := g.To(m.ID()); preds.Next(); {
-					p := preds.Node().(*Node)
-					//fmt.Println("   p:", p.DOTID()) // TODO: remove debug output
-					if I.Node(p.ID()) == nil {
-						allPredsInI = false
-						break
-					}
-				}
-				if allPredsInI {
-					added = true
-					//fmt.Println(" -> adding node:", m.DOTID()) // TODO: remove debug output
+				if containsAllPreds(g, I, m) {
 					I.addNode(m)
+					added = true
 				}
 			}
 			// until no more nodes can be added to I(n).
@@ -102,9 +96,33 @@ func Intervals(g cfa.Graph) []*Interval {
 	return Is
 }
 
+// containsAllPreds reports whether the interval I(h) contains all the immediate
+// predecessors of n in the control flow graph, and whether n has at least one
+// predecessor.
+func containsAllPreds(g cfa.Graph, I *Interval, n cfa.Node) bool {
+	fmt.Println("--> n:", n.DOTID())
+	fmt.Println(I.String())
+	preds := g.To(n.ID())
+	if preds.Len() == 0 {
+		// Ignore nodes without predecessors (e.g. entry node); otherwise they
+		// would be added to every interval.
+		return false
+	}
+	for preds.Next() {
+		p := preds.Node()
+		if I.Node(p.ID()) == nil {
+			fmt.Println("   false")
+			return false
+		}
+	}
+	fmt.Println("   true")
+	return true
+}
+
 // --- [ Queue ] ---------------------------------------------------------------
 
-// A queue is a FIFO queue of nodes.
+// A queue is a FIFO queue of nodes which keeps track of all nodes that has been
+// in the queue.
 type queue struct {
 	// List of nodes in queue.
 	ns []*Node
@@ -119,7 +137,8 @@ func newQueue() *queue {
 	}
 }
 
-// push appends the node to the end of the queue, if not already present.
+// push appends the node to the end of the queue if it has not been in the queue
+// before.
 func (q *queue) push(n *Node) {
 	if !q.has(n.ID()) {
 		q.ns = append(q.ns, n)
@@ -141,7 +160,8 @@ func (q *queue) empty() bool {
 	return len(q.ns[q.i:]) == 0
 }
 
-// has reports whether the node is present in the queue.
+// has reports whether the given node is present in the queue or has been
+// present before.
 func (q *queue) has(id int64) bool {
 	for _, n := range q.ns {
 		if id == n.ID() {
