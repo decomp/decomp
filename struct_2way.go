@@ -73,9 +73,9 @@ func (s *stack) pop() *Node {
 	if s.empty() {
 		panic("invalid call to pop; empty stack")
 	}
-	last := len(s.ns) - 1
-	n := s.ns[last]
-	s.ns = s.ns[:last-1]
+	length := len(s.ns)
+	n := s.ns[length-1]
+	s.ns = s.ns[:length-1]
 	return n
 }
 
