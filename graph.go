@@ -62,6 +62,12 @@ type Node struct {
 
 	// Follow node of 2-way conditional.
 	Follow *Node
+
+	// Compound conditional structuring information.
+
+	// Node contains only conditional and branching information, no other
+	// instructions.
+	IsCondNode bool
 }
 
 // initDFSOrder initializes the DFS visit order of the control flow graph.

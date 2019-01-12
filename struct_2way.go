@@ -8,7 +8,7 @@ import "github.com/mewmew/lnp/pkg/cfa"
 // Pre: G is a control flow graph.
 //
 // Post: 2-way conditionals are marked in G. The follow node for all 2-way
-// conditionals is determined.
+//       conditionals is determined.
 //
 // ref: Figure 6-31; Cifuentes' Reverse Comilation Techniques.
 func struct2way(g cfa.Graph, dom cfa.DominatorTree) {
