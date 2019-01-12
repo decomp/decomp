@@ -55,10 +55,6 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 			for preds := Gprev.To(I.head.ID()); preds.Next(); {
 				p := preds.Node().(cfa.Node)
 				//fmt.Println("   p:", p.DOTID()) // TODO: remove debug output
-				if I.Node(p.ID()) != nil {
-					// skip predecessor p if present in interval I(h).
-					continue
-				}
 				// Find interval to which p belongs, so that we can connect the
 				// header node of that interval with p in the derived graph.
 				var pred cfa.Node
