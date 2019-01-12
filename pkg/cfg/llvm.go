@@ -74,6 +74,7 @@ func edgeWithLabel(g cfa.Graph, from, to cfa.Node, label string) cfa.Edge {
 		default:
 			e.SetAttribute(encoding.Attribute{Key: "label", Value: label})
 		}
+		e.SetAttribute(encoding.Attribute{Key: "cond", Value: label})
 	}
 	g.SetEdge(e)
 	return e
