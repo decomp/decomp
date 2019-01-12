@@ -19,13 +19,16 @@ func Analyze(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primit
 	// structuring, and 2-way conditional structuring last.
 
 	// Structure n-way conditionals.
-	// TODO: structNway
+	dom := cfa.NewDom(g)
+	structNway(g, dom)
 	// Structure loops of the control flow graph.
 	loopStruct(g)
 	// Structure 2-way conditionals.
-	dom := cfa.NewDom(g)
 	struct2way(g, dom)
 	// Structure compound conditionals.
 	structCompCond(g)
+
+	// TODO: compute recovered primitives (prims) from structuring information.
+
 	return prims, nil
 }
