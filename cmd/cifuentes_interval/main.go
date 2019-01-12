@@ -53,21 +53,25 @@ func f(dotPath string) error {
 func printNodes(ns []*interval.Node) {
 	sortNodes(ns)
 	for _, n := range ns {
-		fmt.Println("Node:      ", n.Node.DOTID())
-		fmt.Println("PreNum:    ", n.PreNum)
-		fmt.Println("RevPostNum:", n.RevPostNum)
+		fmt.Printf("Node:       %v   (pre: %d, rev-post: %d)\n", n.Node.DOTID(), n.PreNum, n.RevPostNum)
 		if n.LoopHead != nil {
 			fmt.Println("LoopHead:  ", n.LoopHead.DOTID())
 		}
-		fmt.Println("LoopType:  ", n.LoopType)
+		if n.LoopType != interval.LoopTypeNone {
+			fmt.Println("LoopType:  ", n.LoopType)
+		}
 		if n.LoopFollow != nil {
 			fmt.Println("LoopFollow:", n.LoopFollow.DOTID())
 		}
 		if n.Follow != nil {
 			fmt.Println("Follow:    ", n.Follow.DOTID())
 		}
-		fmt.Println("IsCondNode:", n.IsCondNode)
-		fmt.Println("CompCond:  ", n.CompCond)
+		if n.IsCondNode != false {
+			fmt.Println("IsCondNode:", n.IsCondNode)
+		}
+		if len(n.CompCond) > 0 {
+			fmt.Println("CompCond:  ", n.CompCond)
+		}
 		fmt.Println()
 	}
 }

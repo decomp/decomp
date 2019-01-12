@@ -55,7 +55,7 @@ type Node struct {
 	// Loop header node; or nil if not part of loop.
 	LoopHead *Node
 	// Type of the loop.
-	LoopType loopType
+	LoopType LoopType
 	// Follow node of the loop.
 	LoopFollow *Node
 

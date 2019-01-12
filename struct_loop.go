@@ -119,18 +119,20 @@ func markNodesInLoop(I *Interval, latch *Node) []*Node {
 	*/
 }
 
-// loopType is the set of loop types.
-type loopType uint8
+//go:generate stringer -linecomment -type LoopType
+
+// LoopType is the set of loop types.
+type LoopType uint8
 
 // Loop types.
 const (
-	loopTypeNone loopType = iota
+	LoopTypeNone LoopType = iota
 	// Pre-test loop.
-	loopTypePreTest
+	LoopTypePreTest // pre_loop
 	// Post-test loop.
-	loopTypePostTest
+	LoopTypePostTest // post_loop
 	// Endless loop.
-	loopTypeEndless
+	LoopTypeEndless // inf_loop
 )
 
 // findLoopType returns the type of the loop (latch, head).
@@ -143,7 +145,7 @@ const (
 // Post: loopType(head) has the type of loop induces by (latch, head).
 //
 // ref: Figure 6-28; Cifuentes' Reverse Comilation Techniques.
-func findLoopType(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) loopType {
+func findLoopType(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) LoopType {
 	headSuccs := NodesOf(g.From(head.ID()))
 	latchSuccs := NodesOf(g.From(latch.ID()))
 	switch len(latchSuccs) {
@@ -155,15 +157,15 @@ func findLoopType(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) loopType 
 			// if (outEdge(x, 1) \in nodesInLoop \land (outEdge(x, 2) \in nodesInLoop)
 			if contains(nodesInLoop, headSuccs[0]) && contains(nodesInLoop, headSuccs[1]) {
 				// loopType(x) = Post_Tested.
-				return loopTypePostTest
+				return LoopTypePostTest
 			} else {
 				// loopType(x) = Pre_Tested.
-				return loopTypePreTest
+				return LoopTypePreTest
 			}
 		// 1-way header node.
 		case 1:
 			// loopType(x) = Post_Tested.
-			return loopTypePostTest
+			return LoopTypePostTest
 		default:
 			panic(fmt.Errorf("support for %d-way header node not yet implemented", len(headSuccs)))
 		}
@@ -173,11 +175,11 @@ func findLoopType(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) loopType 
 		// if nodeType(x) == 2-way
 		case 2:
 			// loopType(x) = Pre_Tested.
-			return loopTypePreTest
+			return LoopTypePreTest
 		// 1-way header node.
 		case 1:
 			// loopType(x) = Endless.
-			return loopTypeEndless
+			return LoopTypeEndless
 		default:
 			panic(fmt.Errorf("support for %d-way header node not yet implemented", len(headSuccs)))
 		}
@@ -202,7 +204,7 @@ func findLoopFollow(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) *Node {
 	latchSuccs := NodesOf(g.From(latch.ID()))
 	switch head.LoopType {
 	// if (loopType(x) == Pre_Tested)
-	case loopTypePreTest:
+	case LoopTypePreTest:
 		switch {
 		// if (outEdges(x, 1) \in nodesInLoop)
 		case contains(nodesInLoop, headSuccs[0]):
@@ -215,7 +217,7 @@ func findLoopFollow(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) *Node {
 			panic(fmt.Errorf("unable to locate follow loop of pre-test header node %q", head.DOTID()))
 		}
 	// else if (loopType(x) == Post_Tested)
-	case loopTypePostTest:
+	case LoopTypePostTest:
 		switch {
 		// if (outEdges(y, 1) \in nodesInLoop)
 		case contains(nodesInLoop, latchSuccs[0]):
@@ -228,7 +230,7 @@ func findLoopFollow(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) *Node {
 			panic(fmt.Errorf("unable to locate follow loop of post-test latch node %q", latch.DOTID()))
 		}
 	// endless loop.
-	case loopTypeEndless:
+	case LoopTypeEndless:
 		// fol = Max // a large constant.
 		followRevPostNum := math.MaxInt64
 		var follow *Node
