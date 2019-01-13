@@ -24,8 +24,7 @@ func struct2way(g cfa.Graph, dom cfa.DominatorTree) []*primitive.Primitive {
 	for _, m := range descRevPostOrder(NodesOf(g.Nodes())) {
 		// if ((nodeType(m) == 2-way) \land (inHeadLatch(m) == False))
 		mSuccs := g.From(m.ID())
-		// TODO: verify what is meant by inHeadLatch. Does this correspond to LoopHead?
-		if mSuccs.Len() == 2 && m.LoopHead == nil {
+		if mSuccs.Len() == 2 && !m.IsLoopLatch {
 			// if (\exists n, n = max{i | immedDom(i) = m \land #inEdges(i) >= 2})
 			var follow *Node
 			for _, i := range dom.DominatedBy(m.ID()) {

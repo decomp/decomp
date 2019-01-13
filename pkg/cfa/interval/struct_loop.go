@@ -32,6 +32,8 @@ func loopStruct(g cfa.Graph) []*primitive.Primitive {
 			_ = j
 			// if ((\exists x \in N^i, (x, h_j) \in E^i) \land (inLoop(x) == False))
 			if latch, ok := findLatch(Gi, I.head); ok && latch.LoopHead == nil {
+				// Mark node as latch node (to not be used in 2-way conditions).
+				latch.IsLoopLatch = true
 				// for (all n \in loop (x, h_j))
 				//fmt.Println("=== [ loop nodes ] ===") // TODO: remove debug output.
 				nodesInLoop := markNodesInLoop(I, latch)

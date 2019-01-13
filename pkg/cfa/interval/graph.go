@@ -58,6 +58,8 @@ type Node struct {
 	LoopType LoopType
 	// Follow node of the loop.
 	LoopFollow *Node
+	// Node used as latch node in loop.
+	IsLoopLatch bool
 
 	// 2-way conditional structuring information.
 
