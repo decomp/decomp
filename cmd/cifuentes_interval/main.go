@@ -8,7 +8,7 @@ import (
 	"log"
 	"sort"
 
-	interval "github.com/mewmew/cifuentes_interval"
+	"github.com/mewmew/cifuentes_interval/interval"
 	"github.com/mewmew/lnp/pkg/cfg"
 	"github.com/pkg/errors"
 	"github.com/rickypai/natsort"
