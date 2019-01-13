@@ -113,22 +113,8 @@ func main() {
 		dbg.SetOutput(ioutil.Discard)
 	}
 
-	// Parse control flow graph.
-	g, err := parseCFG(dotPath)
-	if err != nil {
-		log.Fatalf("%+v", err)
-	}
-
 	// Perform control flow analysis.
-	var stepPrefix string
-	switch dotPath {
-	case "-":
-		// Use "stdin" prefix for intermediate step files.
-		dotPath = "stdin"
-	default:
-		stepPrefix = pathutil.TrimExt(dotPath)
-	}
-	prims, err := restructure(g, method, stepPrefix, steps, img)
+	prims, err := restructure(dotPath, method, steps, img)
 	if err != nil {
 		log.Fatalf("%+v", err)
 	}
@@ -160,7 +146,15 @@ func main() {
 //
 // img specifies whether to output image representations of the intermediate
 // control flow graphs.
-func restructure(g cfa.Graph, method, stepPrefix string, steps, img bool) ([]*primitive.Primitive, error) {
+func restructure(dotPath, method string, steps, img bool) ([]*primitive.Primitive, error) {
+	var stepPrefix string
+	switch dotPath {
+	case "-":
+		// Use "stdin" prefix for intermediate step files.
+		stepPrefix = "stdin"
+	default:
+		stepPrefix = pathutil.TrimExt(dotPath)
+	}
 	// Output intermediate steps in Graphviz DOT format.
 	var (
 		before func(g cfa.Graph, prim *primitive.Primitive)
@@ -204,6 +198,12 @@ func restructure(g cfa.Graph, method, stepPrefix string, steps, img bool) ([]*pr
 	// Recovery control flow primitives.
 	switch method {
 	case "hammock":
+		// Parse control flow graph.
+		g := cfg.NewGraph()
+		if err := parseCFGInto(dotPath, g); err != nil {
+			return nil, errors.WithStack(err)
+		}
+		// Perform control flow analysis.
 		prims, err := hammock.Analyze(g, before, after)
 		if err != nil {
 			if errors.Cause(err) == cfa.ErrIncomplete {
@@ -214,6 +214,12 @@ func restructure(g cfa.Graph, method, stepPrefix string, steps, img bool) ([]*pr
 		}
 		return prims, nil
 	case "interval":
+		// Parse control flow graph.
+		g := interval.NewGraph()
+		if err := parseCFGInto(dotPath, g); err != nil {
+			return nil, errors.WithStack(err)
+		}
+		// Perform control flow analysis.
 		prims := interval.Analyze(g, before, after)
 		return prims, nil
 	default:
@@ -285,14 +291,15 @@ func clearFillColor(n cfa.Node) {
 	n.DelAttribute("style")
 }
 
-// parseCFG parses the given control flow graph in Graphviz DOT format.
-func parseCFG(dotPath string) (*cfg.Graph, error) {
+// parseCFGInto parses the given control flow graph in Graphviz DOT format into
+// dst.
+func parseCFGInto(dotPath string, dst cfa.Graph) error {
 	switch dotPath {
 	case "-":
 		// Read from standard input.
-		return cfg.Parse(os.Stdin)
+		return cfg.ParseInto(os.Stdin, dst)
 	default:
-		return cfg.ParseFile(dotPath)
+		return cfg.ParseFileInto(dotPath, dst)
 	}
 }
 
