@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mewmew/lnp/pkg/cfa"
+	"github.com/mewmew/lnp/pkg/cfa/primitive"
 )
 
 // structCompCond structures compound conditionals in the given control flow
@@ -16,7 +17,8 @@ import (
 // Post: compound conditionals are structured in G.
 //
 // ref: Figure 6-34; Cifuentes' Reverse Comilation Techniques.
-func structCompCond(g cfa.Graph) {
+func structCompCond(g cfa.Graph) []*primitive.Primitive {
+	var prims []*primitive.Primitive
 	// change = True
 	change := true
 	// while (change)
@@ -56,6 +58,18 @@ loop:
 						compCond := fmt.Sprintf("NOT %q AND %q", n.DOTID(), t.DOTID())
 						n.CompCond = compCond
 						g.RemoveNode(t.ID())
+						g.SetEdge(g.NewEdge(n, tSuccs[1]))
+						// Create primitive.
+						prim := &primitive.Primitive{
+							Prim:  "comp_cond_NOT_a_AND_b",
+							Entry: n.DOTID(),
+							Nodes: map[string]string{
+								"a": n.DOTID(),
+								"b": t.DOTID(),
+								// TODO: add e as follow?
+							},
+						}
+						prims = append(prims, prim)
 						// change = True
 						change = true
 						continue loop
@@ -66,6 +80,18 @@ loop:
 						compCond := fmt.Sprintf("%q OR %q", n.DOTID(), t.DOTID())
 						n.CompCond = compCond
 						g.RemoveNode(t.ID())
+						g.SetEdge(g.NewEdge(n, tSuccs[0]))
+						// Create primitive.
+						prim := &primitive.Primitive{
+							Prim:  "comp_cond_a_OR_b",
+							Entry: n.DOTID(),
+							Nodes: map[string]string{
+								"a": n.DOTID(),
+								"b": t.DOTID(),
+								// TODO: add e as follow?
+							},
+						}
+						prims = append(prims, prim)
 						// change = True
 						change = true
 						continue loop
@@ -80,6 +106,18 @@ loop:
 						compCond := fmt.Sprintf("%q AND %q", n.DOTID(), e.DOTID())
 						n.CompCond = compCond
 						g.RemoveNode(e.ID())
+						g.SetEdge(g.NewEdge(n, eSuccs[1]))
+						// Create primitive.
+						prim := &primitive.Primitive{
+							Prim:  "comp_cond_a_AND_b",
+							Entry: n.DOTID(),
+							Nodes: map[string]string{
+								"a": n.DOTID(),
+								"b": e.DOTID(),
+								// TODO: add t as follow?
+							},
+						}
+						prims = append(prims, prim)
 						// change = True
 						change = true
 						continue loop
@@ -90,6 +128,18 @@ loop:
 						compCond := fmt.Sprintf("NOT %q OR %q", n.DOTID(), e.DOTID())
 						n.CompCond = compCond
 						g.RemoveNode(e.ID())
+						g.SetEdge(g.NewEdge(n, eSuccs[0]))
+						// Create primitive.
+						prim := &primitive.Primitive{
+							Prim:  "comp_cond_NOT_a_OR_b",
+							Entry: n.DOTID(),
+							Nodes: map[string]string{
+								"a": n.DOTID(),
+								"b": e.DOTID(),
+								// TODO: add t as follow?
+							},
+						}
+						prims = append(prims, prim)
 						// change = True
 						change = true
 						continue loop
@@ -98,4 +148,5 @@ loop:
 			}
 		}
 	}
+	return prims
 }

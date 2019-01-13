@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/mewmew/lnp/pkg/cfa"
+	"github.com/mewmew/lnp/pkg/cfa/primitive"
 	"github.com/rickypai/natsort"
 )
 
@@ -18,7 +19,8 @@ import (
 //       have information on the type of loop and the latching node.
 //
 // ref: Figure 6-25; Cifuentes' Reverse Comilation Techniques.
-func loopStruct(g cfa.Graph) {
+func loopStruct(g cfa.Graph) []*primitive.Primitive {
+	var prims []*primitive.Primitive
 	Gs, IIs := DerivedSequence(g)
 	if len(Gs) != len(IIs) {
 		panic(fmt.Errorf("length mismatch between derived sequence of graphs (%d) and corresponding intervals (%d)", len(Gs), len(IIs)))
@@ -38,9 +40,25 @@ func loopStruct(g cfa.Graph) {
 				I.head.LoopType = findLoopType(g, I.head, latch, nodesInLoop)
 				// loopFollow(h_j) = findLoopFollow((x, h_j))
 				I.head.LoopFollow = findLoopFollow(g, I.head, latch, nodesInLoop)
+				// Create primitive.
+				prim := &primitive.Primitive{
+					Prim:  I.head.LoopType.String(), // pre_loop, post_loop or inf_loop
+					Entry: I.head.DOTID(),
+					Nodes: map[string]string{
+						// TODO: Include entry node?
+						"latch": latch.DOTID(),
+					},
+				}
+				// Add loop body nodes to primitive.
+				for i, n := range nodesInLoop {
+					name := fmt.Sprintf("body_%d", i)
+					prim.Nodes[name] = n.DOTID()
+				}
+				prims = append(prims, prim)
 			}
 		}
 	}
+	return prims
 }
 
 // findLatch locates the loop latch node in the control flow graph, based on the

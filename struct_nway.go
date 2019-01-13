@@ -1,9 +1,11 @@
 package interval
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/mewmew/lnp/pkg/cfa"
+	"github.com/mewmew/lnp/pkg/cfa/primitive"
 )
 
 // structNway structures n-way conditionals in the given control flow graph and
@@ -15,7 +17,8 @@ import (
 //       for all n-way subgraphs.
 //
 // ref: Figure 6-37; Cifuentes' Reverse Comilation Techniques.
-func structNway(g cfa.Graph, dom cfa.DominatorTree) {
+func structNway(g cfa.Graph, dom cfa.DominatorTree) []*primitive.Primitive {
+	var prims []*primitive.Primitive
 	// unresoved := {}
 	unresolved := newStack()
 	// for (all nodes m in postorder)
@@ -52,19 +55,33 @@ func structNway(g cfa.Graph, dom cfa.DominatorTree) {
 				}
 			}
 			if follow != nil {
+				// Create primitive.
+				prim := &primitive.Primitive{
+					Prim:  "switch",
+					Entry: m.DOTID(),
+					Nodes: map[string]string{
+						"follow": follow.DOTID(),
+					},
+				}
 				// follow(m) = j
 				m.Follow = follow
 				// for (all i \in unresolved)
-				for !unresolved.empty() {
+				for i := 0; !unresolved.empty(); i++ {
 					x := unresolved.pop()
 					// follow(i) = j
 					x.Follow = follow
 					// unresolved = unresolved - {i}
+
+					// Add loop body nodes to primitive.
+					name := fmt.Sprintf("body_%d", i)
+					prim.Nodes[name] = x.DOTID()
 				}
+				prims = append(prims, prim)
 			} else {
 				// unresolved  = unresolved \union {m}
 				unresolved.push(m)
 			}
 		}
 	}
+	return prims
 }

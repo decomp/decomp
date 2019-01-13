@@ -1,6 +1,11 @@
 package interval
 
-import "github.com/mewmew/lnp/pkg/cfa"
+import (
+	"fmt"
+
+	"github.com/mewmew/lnp/pkg/cfa"
+	"github.com/mewmew/lnp/pkg/cfa/primitive"
+)
 
 // struct2way structures 2-way conditionals in the given control flow graph and
 // its dominator tree.
@@ -11,15 +16,16 @@ import "github.com/mewmew/lnp/pkg/cfa"
 //       conditionals is determined.
 //
 // ref: Figure 6-31; Cifuentes' Reverse Comilation Techniques.
-func struct2way(g cfa.Graph, dom cfa.DominatorTree) {
+func struct2way(g cfa.Graph, dom cfa.DominatorTree) []*primitive.Primitive {
+	var prims []*primitive.Primitive
 	// unresoved := {}
 	unresolved := newStack()
 	// for (all nodes m in descending order)
 	for _, m := range descRevPostOrder(NodesOf(g.Nodes())) {
 		// if ((nodeType(m) == 2-way) \land (inHeadLatch(m) == False))
-		succs := g.From(m.ID())
+		mSuccs := g.From(m.ID())
 		// TODO: verify what is meant by inHeadLatch. Does this correspond to LoopHead?
-		if succs.Len() == 2 && m.LoopHead == nil {
+		if mSuccs.Len() == 2 && m.LoopHead == nil {
 			// if (\exists n, n = max{i | immedDom(i) = m \land #inEdges(i) >= 2})
 			var follow *Node
 			for _, i := range dom.DominatedBy(m.ID()) {
@@ -33,21 +39,35 @@ func struct2way(g cfa.Graph, dom cfa.DominatorTree) {
 				}
 			}
 			if follow != nil {
+				// Create primitive.
+				prim := &primitive.Primitive{
+					Prim:  "if",
+					Entry: m.DOTID(),
+					Nodes: map[string]string{
+						"follow": follow.DOTID(),
+					},
+				}
 				// follow(m) = n
 				m.Follow = follow
 				// for (all x \in unresolved)
-				for !unresolved.empty() {
+				for i := 0; !unresolved.empty(); i++ {
 					x := unresolved.pop()
 					// follow(x) = n
 					x.Follow = follow
 					//unresolved = unresolved - {x}
+
+					// Add loop body nodes to primitive.
+					name := fmt.Sprintf("body_%d", i)
+					prim.Nodes[name] = x.DOTID()
 				}
+				prims = append(prims, prim)
 			} else {
 				// unresolved = unresolved \union {m}
 				unresolved.push(m)
 			}
 		}
 	}
+	return prims
 }
 
 // stack is a LIFO stack of nodes.

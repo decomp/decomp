@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -44,9 +45,14 @@ func f(dotPath string) error {
 		}
 	}
 
-	interval.Analyze(dst, nil, nil)
+	prims := interval.Analyze(dst, nil, nil)
 	fmt.Println("=== [ graph nodes ] ========")
 	printNodes(interval.NodesOf(dst.Nodes()))
+	buf, err := json.MarshalIndent(prims, "", "\t")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	fmt.Println(string(buf))
 	return nil
 }
 
