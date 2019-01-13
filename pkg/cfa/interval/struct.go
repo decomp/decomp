@@ -1,8 +1,25 @@
+// Package interval implements the Interval method control flow recovery
+// algorithm.
+//
+// At a high-level, the Interval method TODO...
 package interval
 
 import (
+	"log"
+	"os"
+
+	"github.com/mewkiz/pkg/term"
 	"github.com/mewmew/lnp/pkg/cfa"
 	"github.com/mewmew/lnp/pkg/cfa/primitive"
+)
+
+var (
+	// dbg represents a logger with the "interval:" prefix, which logs debug
+	// messages to standard error.
+	dbg = log.New(os.Stderr, term.YellowBold("interval:")+" ", 0)
+	// warn represents a logger with the "interval:" prefix, which logs warning
+	// messages to standard error.
+	warn = log.New(os.Stderr, term.RedBold("interval:")+" ", 0)
 )
 
 // Analyze analyzes the given control flow graph and returns the list of

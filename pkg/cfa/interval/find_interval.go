@@ -1,6 +1,8 @@
 package interval
 
 import (
+	"fmt"
+
 	"github.com/mewmew/lnp/pkg/cfa"
 )
 
@@ -11,105 +13,128 @@ import (
 //
 // Post: the intervals of G are contained in the list Is.
 //
-// ref: Figure 6-8; Cifuentes' Reverse Comilation Techniques.
+// ref: Allen, Frances E., and John Cocke. "A program data flow analysis
+// procedure." Communications of the ACM 19.3 (1976): 137. [1]
+//
+// [1] https://pdfs.semanticscholar.org/81b9/49a01506a09fcd7ec4faf28e2fa0ec63f1e0.pdf
 func Intervals(g cfa.Graph) []*Interval {
-	// Is := {}
 	var Is []*Interval
-	// H := {h}
+	// From [1] Algorithm for Finding Intervals.
+	//
+	// 1. Establish a set H for header nodes and initialize it with n_0, the
+	//    unique entry node for the graph.
 	H := newQueue()
-	entry := g.Entry().(*Node)
-	//fmt.Println("entry:", entry.DOTID()) // TODO: remove debug output
-	H.push(entry)
-	// for (all unprocessed n \in H) do
+	H.push(g.Entry().(*Node))
+	// 2. For h \in H find I(h) as follows:
 	for !H.empty() {
-		// I(n) := {n}
-		n := H.pop()
-		//fmt.Println("==== n:", n.DOTID()) // TODO: remove debug output
-		I := NewInterval(g, n)
-		// repeat
+		h := H.pop()
+		// 2.1. Put h in I(h) as the first element of I(h).
+		I := NewInterval(g, h)
 		for {
-			// I(n) := I(n) + {m \in N | \forall p \in immedPred(m), p \in I(n)}
-			added := false
-			for nodes := g.Nodes(); nodes.Next(); {
-				m := nodes.Node().(*Node)
-				if I.Node(m.ID()) != nil {
-					// Interval already contains node.
-					continue
-				}
-				//fmt.Println("m:", m.DOTID()) // TODO: remove debug output
-				if m.ID() == entry.ID() {
-					// skip entry node.
-					continue
-				}
-				if containsAllPreds(g, I, m) {
-					I.addNode(m)
-					added = true
-				}
-			}
-			// until no more nodes can be added to I(n).
-			if !added {
+			// 2.2. Add to I(h) any node all of whose immediate predecessors are
+			//      already in I(h).
+			n, ok := findNodeWithImmPredsInInterval(g, I)
+			if !ok {
+				// 2.3. Repeat 2.2 until no more nodes can be added to I(h).
 				break
 			}
+			I.addNode(n)
 		}
-		// H := H + {m \in N | m \not \int H \land m \not in I(n) \land {\exists p \in immedPred(m), p \in I(n)}}
-		for nodes := g.Nodes(); nodes.Next(); {
-			m := nodes.Node().(*Node)
-			//fmt.Printf("id: %v, dotid: %q\n", m.ID(), m.DOTID()) // TODO: remove debug output
-			//fmt.Println("m2:", m.DOTID()) // TODO: remove debug output
-			if m.ID() == entry.ID() {
-				// skip entry node.
-				continue
+		// 3. Add to H all nodes in G which are not already in H and which are not
+		//    in I(h) but which have immediate predecessors in I(h). Therefore a
+		//    node is added to H the first time any (but not all) of its immediate
+		//    predecessors become members of an interval.
+		for {
+			n, ok := findUnusedNodeWithImmPredInInterval(g, I, H)
+			if !ok {
+				break
 			}
-			if H.has(m.ID()) {
-				// skip nodes in queue.
-				//fmt.Println("present in queue; skipping:", m.DOTID()) // TODO: remove debug output
-				continue
-			}
-			if I.Node(m.ID()) != nil {
-				// skip nodes in interval.
-				//fmt.Println("m.ID():", m.ID()) // TODO: remove debug output
-				//fmt.Println("already in interval; skipping:", m.DOTID()) // TODO: remove debug output
-				continue
-			}
-			// keep node if it has a predecessor in the interval.
-			hasPredInI := false
-			for preds := g.To(m.ID()); preds.Next(); {
-				p := preds.Node().(*Node)
-				//fmt.Println("   p2:", p.DOTID()) // TODO: remove debug output
-				if I.Node(p.ID()) != nil {
-					hasPredInI = true
-					break
-				}
-			}
-			if hasPredInI {
-				// Add node to queue.
-				//fmt.Println("push to queue:", m.DOTID()) // TODO: remove debug output
-				H.push(m)
-			}
+			H.push(n)
 		}
-		// Is := Is + I(n)
+		// 4. Add I(h) to a set Is of intervals being developed.
 		Is = append(Is, I)
+		// 5. Select the next unprocessed node in H and repeat steps 2, 3, 4, 5.
+		//    When there are no more unprocessed nodes in H, the procedure
+		//    terminates.
 	}
 	return Is
 }
 
-// containsAllPreds reports whether the interval I(h) contains all the immediate
-// predecessors of n in the control flow graph, and whether n has at least one
-// predecessor.
-func containsAllPreds(g cfa.Graph, I *Interval, n cfa.Node) bool {
-	preds := g.To(n.ID())
-	if preds.Len() == 0 {
-		// Ignore nodes without predecessors (e.g. entry node); otherwise they
-		// would be added to every interval.
-		return false
+// findNodeWithImmPredsInInterval locates a node in G not in I, all of whose
+// immediate predecessors in the interval I. The boolean return value indicates
+// success.
+func findNodeWithImmPredsInInterval(g cfa.Graph, I *Interval) (*Node, bool) {
+	// 2.2. Add to I(h) any node all of whose immediate predecessors are already
+	//      in I(h).
+
+	// Note, we use rev post order here only to make output deterministic. The
+	// computed interval would still be valid even without it.
+loop:
+	for _, n := range cfa.RevPostOrder(g) {
+		if n.ID() == g.Entry().ID() {
+			// skip entry node as it has no predecessors. Also, if entry is to be
+			// part of I, then it is the header of I which is already added by
+			// newInterval. constructor.
+			continue
+		}
+		if I.Node(n.ID()) != nil {
+			// skip if present in I.
+			continue
+		}
+		preds := g.To(n.ID())
+		// All nodes in a control flow graph, except the entry node, must have at
+		// least one predecessor.
+		if preds.Len() == 0 {
+			panic(fmt.Errorf("invalid node %q; missing predecessors", n.DOTID()))
+		}
+		for preds.Next() {
+			pred := preds.Node()
+			if I.Node(pred.ID()) == nil {
+				// skip node as not all immediate predecessors are in I.
+				continue loop
+			}
+		}
+		// node has all predecessors in I.
+		return n.(*Node), true
 	}
-	for preds.Next() {
-		p := preds.Node()
-		if I.Node(p.ID()) == nil {
-			return false
+	return nil, false
+}
+
+// findUnusedNodeWithImmPredInInterval locates a node in G not in I nor H, which
+// has one or more immediate predecessors in I. The boolean return value
+// indicates success.
+func findUnusedNodeWithImmPredInInterval(g cfa.Graph, I *Interval, H *queue) (*Node, bool) {
+	// 3. Add to H all nodes in G which are not already in H and which are not in
+	//    I(h) but which have immediate predecessors in I(h). Therefore a node is
+	//    added to H the first time any (but not all) of its immediate
+	//    predecessors become members of an interval.
+
+	// Note, we use rev post order here only to make output deterministic. The
+	// computed interval would still be valid even without it.
+	for _, n := range cfa.RevPostOrder(g) {
+		if H.has(n.ID()) {
+			// skip if present in H.
+			continue
+		}
+		if I.Node(n.ID()) != nil {
+			// skip if present in I.
+			continue
+		}
+		preds := g.To(n.ID())
+		// All nodes in a control flow graph, except the entry node, must have at
+		// least one predecessor.
+		if preds.Len() == 0 {
+			panic(fmt.Errorf("invalid node %q; missing predecessors", n.DOTID()))
+		}
+		for preds.Next() {
+			pred := preds.Node()
+			if I.Node(pred.ID()) != nil {
+				// node has at least one predecessor in I.
+				return n.(*Node), true
+			}
 		}
 	}
-	return true
+	return nil, false
 }
 
 // --- [ Queue ] ---------------------------------------------------------------
