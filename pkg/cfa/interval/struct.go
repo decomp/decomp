@@ -2,6 +2,11 @@
 // algorithm.
 //
 // At a high-level, the Interval method TODO...
+//
+// ref: Cifuentes, Cristina. Reverse Compilation Techniques. Queensland
+// University of Technology, Brisbane, 1994 [1].
+//
+// [1] http://www.phatcode.net/res/228/files/decompilation_thesis.pdf
 package interval
 
 import (
