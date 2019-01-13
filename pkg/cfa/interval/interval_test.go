@@ -27,13 +27,13 @@ func TestIntervals(t *testing.T) {
 	}
 	for _, gold := range golden {
 		// Parse input.
-		in, err := cfg.ParseFile(gold.path)
-		if err != nil {
+		in := NewGraph()
+		if err := cfg.ParseFileInto(gold.path, in); err != nil {
 			t.Errorf("%q; unable to parse file; %v", gold.path, err)
 			continue
 		}
 		// Locate intervals.
-		is := intervals(in)
+		is := Intervals(in)
 		if len(is) != len(gold.want) {
 			t.Errorf("%q: number of intervals mismatch; expected %d, got %d", gold.path, len(gold.want), len(is))
 			continue
@@ -63,4 +63,4 @@ func TestIntervals(t *testing.T) {
 }
 
 // Assert that the interval implements the graph.Directed interface.
-var _ graph.Directed = (*interval)(nil)
+var _ graph.Directed = (*Interval)(nil)

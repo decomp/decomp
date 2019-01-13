@@ -214,14 +214,7 @@ func restructure(g cfa.Graph, method, stepPrefix string, steps, img bool) ([]*pr
 		}
 		return prims, nil
 	case "interval":
-		prims, err := interval.Analyze(g, before, after)
-		if err != nil {
-			if errors.Cause(err) == cfa.ErrIncomplete {
-				warn.Printf("warning: %v", err)
-			} else {
-				return nil, errors.WithStack(err)
-			}
-		}
+		prims := interval.Analyze(g, before, after)
 		return prims, nil
 	default:
 		panic(fmt.Errorf("support for control flow recovery method %q not yet implemented", method))

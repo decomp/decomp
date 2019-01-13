@@ -14,7 +14,7 @@ var killposFix = fix{
 	"2018-01-09",
 	killpos,
 	`Remove position information.`,
-	false,
+	true, // disabled by default.
 }
 
 func killpos(file *ast.File) bool {
