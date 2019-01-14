@@ -55,22 +55,26 @@ loop:
 					// if (succ[t, 1] == e)
 					switch {
 					case tSuccs[0].ID() == e.ID():
+						// if (n && !t)
 						// modifyGraph(\lnot n \land t)
 						// TODO: figure out how to represent compound condition.
-						compCond := fmt.Sprintf("NOT %q AND %q", n.DOTID(), t.DOTID())
+						// Wrong in Cifuentes', which states NOT n AND t. Should be n AND NOT t.
+						compCond := fmt.Sprintf("%q AND NOT %q", n.DOTID(), t.DOTID())
 						n.CompCond = compCond
-						prim := modifyGraph(g, n, t, tSuccs[1], "comp_cond_NOT_a_AND_b", before, after)
+						prim := modifyGraph(g, n, t, tSuccs[1], "comp_cond_a_AND_NOT_b", before, after)
 						prims = append(prims, prim)
 						// change = True
 						change = true
 						continue loop
 					// else if (succ[t, 2] == e)
 					case tSuccs[1].ID() == e.ID():
+						// if (n && t)
 						// modifyGraph(n \lor t)
 						// TODO: figure out how to represent compound condition.
-						compCond := fmt.Sprintf("%q OR %q", n.DOTID(), t.DOTID())
+						// Wrong in Cifuentes', which states n OR t. Should be n AND t.
+						compCond := fmt.Sprintf("%q AND %q", n.DOTID(), t.DOTID())
 						n.CompCond = compCond
-						prim := modifyGraph(g, n, t, tSuccs[0], "comp_cond_a_OR_b", before, after)
+						prim := modifyGraph(g, n, t, tSuccs[0], "comp_cond_a_AND_b", before, after)
 						prims = append(prims, prim)
 						// change = True
 						change = true
@@ -81,11 +85,13 @@ loop:
 					switch {
 					// if (succ[e, 1] = t)
 					case eSuccs[0].ID() == t.ID():
+						// if (n || e)
 						// modifyGraph(n \land e)
 						// TODO: figure out how to represent compound condition.
-						compCond := fmt.Sprintf("%q AND %q", n.DOTID(), e.DOTID())
+						// Wrong in Cifuentes', which states n AND e. Should be n OR e.
+						compCond := fmt.Sprintf("%q OR %q", n.DOTID(), e.DOTID())
 						n.CompCond = compCond
-						prim := modifyGraph(g, n, e, eSuccs[1], "comp_cond_a_AND_b", before, after)
+						prim := modifyGraph(g, n, e, eSuccs[1], "comp_cond_a_OR_b", before, after)
 						prims = append(prims, prim)
 						// change = True
 						change = true
@@ -94,9 +100,10 @@ loop:
 					case eSuccs[1].ID() == t.ID():
 						// modifyGraph(\lnot n \lor e)
 						// TODO: figure out how to represent compound condition.
-						compCond := fmt.Sprintf("NOT %q OR %q", n.DOTID(), e.DOTID())
+						// Wrong in Cifuentes', which states NOT n OR e. Should be n OR NOT e.
+						compCond := fmt.Sprintf("%q OR NOT %q", n.DOTID(), e.DOTID())
 						n.CompCond = compCond
-						prim := modifyGraph(g, n, e, eSuccs[0], "comp_cond_NOT_a_OR_b", before, after)
+						prim := modifyGraph(g, n, e, eSuccs[0], "comp_cond_a_OR_NOT_b", before, after)
 						prims = append(prims, prim)
 						// change = True
 						change = true
