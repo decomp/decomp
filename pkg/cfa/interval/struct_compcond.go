@@ -5,6 +5,7 @@ import (
 
 	"github.com/mewmew/lnp/pkg/cfa"
 	"github.com/mewmew/lnp/pkg/cfa/primitive"
+	"github.com/mewmew/lnp/pkg/cfg"
 )
 
 // structCompCond structures compound conditionals in the given control flow
@@ -32,20 +33,21 @@ loop:
 		// tested first)
 		//
 		// for (all nodes n in postorder)
+		fmt.Println("=== [ compcond ] ===")
 		for _, n := range ascRevPostOrder(NodesOf(g.Nodes())) {
-			//fmt.Println("n:", n.DOTID()) // TODO: remove debug output
 			// Order of nSuccs matter, as we have nSuccs[0] denote the true branch
 			// and nSuccs[1] denote the false branch.
 			nSuccs := successors(g, n.ID())
 			// if (nodeType(n) == 2-way)
 			if len(nSuccs) == 2 {
+				fmt.Println("n:", n.DOTID()) // TODO: remove debug output
 				// t = succ[n, 1]
 				t := nSuccs[0]
-				//fmt.Println("   t:", t.DOTID()) // TODO: remove debug output
+				fmt.Println("   t:", t.DOTID()) // TODO: remove debug output
 				tSuccs := successors(g, t.ID()) // used to make output deterministic.
 				// e = succ[n, 2]
 				e := nSuccs[1]
-				//fmt.Println("   e:", e.DOTID()) // TODO: remove debug output
+				fmt.Println("   e:", e.DOTID()) // TODO: remove debug output
 				eSuccs := successors(g, e.ID()) // used to make output deterministic.
 				switch {
 				// if ((nodeType(t) == 2-way) \land (numInst(t) == 1) \land (numInEdges(t) == 1))
@@ -83,7 +85,7 @@ loop:
 						// TODO: figure out how to represent compound condition.
 						compCond := fmt.Sprintf("%q AND %q", n.DOTID(), e.DOTID())
 						n.CompCond = compCond
-						prim := modifyGraph(g, n, e, tSuccs[1], "comp_cond_a_AND_b", before, after)
+						prim := modifyGraph(g, n, e, eSuccs[1], "comp_cond_a_AND_b", before, after)
 						prims = append(prims, prim)
 						// change = True
 						change = true
@@ -94,7 +96,7 @@ loop:
 						// TODO: figure out how to represent compound condition.
 						compCond := fmt.Sprintf("NOT %q OR %q", n.DOTID(), e.DOTID())
 						n.CompCond = compCond
-						prim := modifyGraph(g, n, e, tSuccs[0], "comp_cond_NOT_a_OR_b", before, after)
+						prim := modifyGraph(g, n, e, eSuccs[0], "comp_cond_NOT_a_OR_b", before, after)
 						prims = append(prims, prim)
 						// change = True
 						change = true
@@ -116,15 +118,19 @@ func modifyGraph(g cfa.Graph, n, c, follow cfa.Node, compCond string, before, af
 		Nodes: map[string]string{
 			"a": n.DOTID(),
 			"b": c.DOTID(),
-			// TODO: add follow?
+			//"follow": follow.DOTID(),
 		},
 	}
 	if before != nil {
 		before(g, prim)
 	}
 	// Merge n and c nodes.
+	olde := g.Edge(n.ID(), c.ID()).(*cfg.Edge)
+	attrs := olde.Attrs
 	g.RemoveNode(c.ID())
-	g.SetEdge(g.NewEdge(n, follow))
+	newe := g.NewEdge(n, follow).(*cfg.Edge)
+	newe.Attrs = attrs
+	g.SetEdge(newe)
 	if after != nil {
 		after(g, prim)
 	}
