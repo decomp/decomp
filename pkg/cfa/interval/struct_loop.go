@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/mewmew/lnp/pkg/cfa"
 	"github.com/mewmew/lnp/pkg/cfa/primitive"
@@ -19,33 +21,35 @@ import (
 //       have information on the type of loop and the latching node.
 //
 // ref: Figure 6-25; Cifuentes' Reverse Comilation Techniques.
-func loopStruct(g cfa.Graph) []*primitive.Primitive {
+func loopStruct(g cfa.Graph, dom cfa.DominatorTree) []*primitive.Primitive {
 	var prims []*primitive.Primitive
 	Gs, IIs := DerivedSequence(g)
 	if len(Gs) != len(IIs) {
 		panic(fmt.Errorf("length mismatch between derived sequence of graphs (%d) and corresponding intervals (%d)", len(Gs), len(IIs)))
 	}
 	// for (G^i := G^1 ... G^n)
-	for i, Gi := range Gs {
+	for i := range Gs {
+		fmt.Printf("G_%d\n", i)
 		// for (I^i(h_j)) := I^1(h_1) ... I^m(h_m)
-		for j, I := range IIs[i] {
-			_ = j
+		for _, I := range IIs[i] {
 			// if ((\exists x \in N^i, (x, h_j) \in E^i) \land (inLoop(x) == False))
-			if latch, ok := findLatch(Gi, I.head); ok && latch.LoopHead == nil {
+			if head, latch, ok := findLatch(g, I, IIs); ok && latch.LoopHead == nil {
+				fmt.Println("head:", head.DOTID())
+				fmt.Println("latch:", latch.DOTID())
 				// Mark node as latch node (to not be used in 2-way conditions).
 				latch.IsLoopLatch = true
 				// for (all n \in loop (x, h_j))
 				//fmt.Println("=== [ loop nodes ] ===") // TODO: remove debug output.
-				nodesInLoop := markNodesInLoop(I, latch)
+				nodesInLoop := markNodesInLoop(g, head, latch, dom)
 				//printNodes(nodesInLoop) // TODO: remove debug output
 				// loopType(h_j) = findLoopType((x, h_j))
-				I.head.LoopType = findLoopType(g, I.head, latch, nodesInLoop)
+				head.LoopType = findLoopType(g, head, latch, nodesInLoop)
 				// loopFollow(h_j) = findLoopFollow((x, h_j))
-				I.head.LoopFollow = findLoopFollow(g, I.head, latch, nodesInLoop)
+				head.LoopFollow = findLoopFollow(g, head, latch, nodesInLoop)
 				// Create primitive.
 				prim := &primitive.Primitive{
-					Prim:  I.head.LoopType.String(), // pre_loop, post_loop or inf_loop
-					Entry: I.head.DOTID(),
+					Prim:  head.LoopType.String(), // pre_loop, post_loop or inf_loop
+					Entry: head.DOTID(),
 					Nodes: map[string]string{
 						// TODO: Include entry node?
 						"latch": latch.DOTID(),
@@ -63,18 +67,162 @@ func loopStruct(g cfa.Graph) []*primitive.Primitive {
 	return prims
 }
 
-// findLatch locates the loop latch node in the control flow graph, based on the
-// given loop header node. The boolean return value indicates success.
-func findLatch(g cfa.Graph, head *Node) (latch *Node, ok bool) {
-	for preds := g.To(head.ID()); preds.Next(); {
-		latch := preds.Node().(*Node)
-		// Find back-edge.
-		if latch.RevPostNum > head.RevPostNum {
+// findLatch locates the loop latch node in the interval, based on the interval
+// header node. The boolean return value indicates success.
+func findLatch(g cfa.Graph, I *Interval, IIs [][]*Interval) (head, latch *Node, ok bool) {
+	// iis is used to look up the nodes belonging to an interval, e.g. I_1. Note,
+	// iis is 0-indexed.
+	var iis []*Interval
+	for _, Is := range IIs {
+		iis = append(iis, Is...)
+	}
+	fmt.Println("=== [ findLatch ] ===")
+	fmt.Println("   head:", I.head.DOTID())
+	for preds := I.To(I.head.ID()); preds.Next(); {
+		pred := preds.Node().(*Node)
+		if latch == nil || pred.RevPostNum > latch.RevPostNum {
+			latch = pred
+		}
+	}
+	if latch != nil {
+		fmt.Println("   candidate latch:", latch.DOTID())
+		// Find original latch node.
+		if l, ok := g.NodeWithDOTID(latch.DOTID()); ok {
+			fmt.Println("   orig latch:", l.DOTID())
+			return I.head, l.(*Node), true
+		}
+		h := findOrigHead(iis, I.head)
+		fmt.Println("   orig head:", h.DOTID())
+		latchCands := descRevPostOrder(NodesOf(g.To(h.ID())))
+		for i, latchCand := range latchCands {
+			if latchCand.RevPostNum < h.RevPostNum {
+				latchCands = latchCands[:i]
+				break
+			}
+		}
+		fmt.Println("   latch candidates:")
+		printNodes(latchCands)
+		l := findOrigLatch(iis, latchCands, latch)
+		fmt.Println("   orig latch located:", l.DOTID())
+		return h, l, true
+	}
+	return nil, nil, false
+
+	/*
+		I := IIs[i][j]
+		// iis is used to look up the nodes belonging to an interval, e.g. I_1. Note,
+		// iis is 0-indexed.
+		var iis []*Interval
+		for _, Is := range IIs {
+			iis = append(iis, Is...)
+		}
+		head := I.head
+		fmt.Println("=== [ find latch ] ===")
+		fmt.Println("head:", head.DOTID())
+		fmt.Println(I.String())
+		fmt.Println()
+		// Each header of an interval in G^i is checked for having a back-edge from a
+		// latching node that belong to the same interval.
+		for preds := I.To(head.ID()); preds.Next(); {
+			x := preds.Node().(*Node)
+			// Find back-edge.
 			// Latch node located.
+			fmt.Println("   ==> candidate latch located:", x.DOTID())
+			if latch == nil || x.RevPostNum > latch.RevPostNum {
+				latch = x
+			}
+		}
+		h := findOrigHead(iis, head)
+		// TODO: use h hence forth.
+		// Latch node candidates in original graph.
+		fmt.Println("orig head:", h.DOTID())
+		latchCands := descRevPostOrder(NodesOf(g.To(h.ID())))
+		fmt.Printf("~~~~~~~ [[ latch candidates of %q ]] ~~~~~~~~~~~~~~~~~~~\n", h.DOTID())
+		printNodes(latchCands)
+		fmt.Println("~~~~~~~ [[/ latch candidates ]] ~~~~~~~~~~~~~~~~~~~")
+		// Skip candidates with reverse post-order number less than loop header.
+		l := 0
+		for _, latchCand := range latchCands {
+			if latchCand.RevPostNum < h.RevPostNum {
+				break
+			}
+			l++
+		}
+		latchCands = latchCands[:l]
+		fmt.Printf("~~~~~~~>> [[ latch candidates 2 of %q ]] ~~~~~~~~~~~~~~~~~~~\n", h.DOTID())
+		fmt.Println("h rev post:", h.RevPostNum)
+		printNodes(latchCands)
+		fmt.Println("~~~~~~~>> [[/ latch candidates 2 ]] ~~~~~~~~~~~~~~~~~~~")
+		if latch != nil {
+			// Locate node in original control flow graph corresponding to the latch
+			// node in the derived sequence of graphs.
+			headID := h.ID()
+			// Find the outer-most interval which has the loop header as interval
+			// header.
+			for ii := i; ii >= 0; ii-- {
+				for _, J := range IIs[ii] {
+					if J.head.ID() == headID {
+					}
+				}
+			}
 			return latch, true
+		}
+		return nil, false
+	*/
+}
+
+func findOrigHead(iis []*Interval, head *Node) *Node {
+	i, ok := getInterval(iis, head.DOTID())
+	if !ok {
+		return head
+	}
+	fmt.Println("#### [ interval lookup ] ####")
+	fmt.Println("interval head:", head.DOTID())
+	fmt.Println(i.String())
+	fmt.Println("#### [/ interval lookup ] ####")
+	return findOrigHead(iis, i.head)
+}
+
+func findOrigLatch(iis []*Interval, latchCands []*Node, latch *Node) *Node {
+	i, ok := getInterval(iis, latch.DOTID())
+	if !ok {
+		return latch
+	}
+	l, ok := findNodeInInterval(iis, i, latchCands)
+	if !ok {
+		panic(fmt.Errorf("unable to locate original latch node %q", latch.DOTID()))
+	}
+	return l
+}
+
+func findNodeInInterval(iis []*Interval, i *Interval, latchCands []*Node) (*Node, bool) {
+	for _, latchCand := range latchCands {
+		for nodes := i.Nodes(); nodes.Next(); {
+			n := nodes.Node().(*Node)
+			j, ok := getInterval(iis, n.DOTID())
+			if !ok {
+				if n.DOTID() == latchCand.DOTID() {
+					return n, true
+				}
+			} else if l, ok := findNodeInInterval(iis, j, latchCands); ok {
+				return l, true
+			}
 		}
 	}
 	return nil, false
+}
+
+func getInterval(iis []*Interval, dotID string) (*Interval, bool) {
+	if !strings.HasPrefix(dotID, "I_") {
+		return nil, false
+	}
+	dotID = dotID[len("I_"):]
+	hid, err := strconv.Atoi(dotID)
+	if err != nil {
+		panic(fmt.Errorf("unable to parse interval node ID %q; %v", dotID, err))
+	}
+	i := iis[hid-1]
+	return i, true
 }
 
 // TODO: implement and use markNodesInLoop instead of loop. Get rid of n.inLoop
@@ -89,38 +237,60 @@ func findLatch(g cfa.Graph, head *Node) (latch *Node, ok bool) {
 // Post: the nodes that belong to the loop (latch, I.head) are marked.
 //
 // ref: Figure 6-27; Cifuentes' Reverse Comilation Techniques.
-func markNodesInLoop(I *Interval, latch *Node) []*Node {
-	// The nodes belong to the same interval, since the interval header (i.e. x)
-	// dominates all nodes of the interval, and in a loop, the loop header node
-	// dominates all nodes of the loop. If a node belongs to a different
-	// interval, it is not dominated by the loop header node, thus it cannot
-	// belong to the same loop.
-
-	//fmt.Println("head: ", I.head.DOTID()) // TODO: remove debug output
-	//fmt.Println("latch:", latch.DOTID()) // TODO: remove debug output
-	//fmt.Println() // TODO: remove debug output
-	//fmt.Println(I.String()) // TODO: remove debug output
-	// nodesInLoop := {x}
-	nodesInLoop := []*Node{I.head}
-	// loopHead(x) = x
-	I.head.LoopHead = I.head
-	// for (all nodes n \in {x + 1 ... y})
-	for nodes := I.Nodes(); nodes.Next(); {
-		// if n \in I(x)
-		n := nodes.Node().(*Node)
-		// The loop is formed of all nodes that are between x and y in terms of
-		// node numbering.
-		if I.head.RevPostNum < n.RevPostNum && n.RevPostNum <= latch.RevPostNum {
-			// nodesInLoop = nodesInLoop \union {n}
-			nodesInLoop = append(nodesInLoop, n)
-			// if (loopHead(n) == No_Node)
-			if n.LoopHead == nil {
-				// loopHead(n) = x
-				n.LoopHead = I.head
+func markNodesInLoop(g cfa.Graph, head, latch *Node, dom cfa.DominatorTree) []*Node {
+	fmt.Println("=== [ markNodesInLoop] ===")
+	nodesInLoop := []*Node{head}
+	for _, n := range ascRevPostOrder(NodesOf(g.Nodes())) {
+		if head.RevPostNum < n.RevPostNum && n.RevPostNum <= latch.RevPostNum {
+			fmt.Printf("dom %q: %v\n", n.DOTID(), dom.DominatorOf(n.ID()))
+			if dom.Dominates(head.ID(), n.ID()) {
+				nodesInLoop = append(nodesInLoop, n)
 			}
 		}
+		if n.RevPostNum > latch.RevPostNum {
+			break
+		}
 	}
+	fmt.Println("   [ nodes in loop ]")
+	printNodes(nodesInLoop)
+	fmt.Println("   [/ nodes in loop ]")
+	fmt.Println()
 	return nodesInLoop
+
+	/*
+		I := IIs[i][j]
+		// The nodes belong to the same interval, since the interval header (i.e. x)
+		// dominates all nodes of the interval, and in a loop, the loop header node
+		// dominates all nodes of the loop. If a node belongs to a different
+		// interval, it is not dominated by the loop header node, thus it cannot
+		// belong to the same loop.
+
+		//fmt.Println("head: ", I.head.DOTID()) // TODO: remove debug output
+		//fmt.Println("latch:", latch.DOTID()) // TODO: remove debug output
+		//fmt.Println() // TODO: remove debug output
+		//fmt.Println(I.String()) // TODO: remove debug output
+		// nodesInLoop := {x}
+		nodesInLoop := []*Node{I.head}
+		// loopHead(x) = x
+		I.head.LoopHead = I.head
+		// for (all nodes n \in {x + 1 ... y})
+		for nodes := I.Nodes(); nodes.Next(); {
+			// if n \in I(x)
+			n := nodes.Node().(*Node)
+			// The loop is formed of all nodes that are between x and y in terms of
+			// node numbering.
+			if I.head.RevPostNum < n.RevPostNum && n.RevPostNum <= latch.RevPostNum {
+				// nodesInLoop = nodesInLoop \union {n}
+				nodesInLoop = append(nodesInLoop, n)
+				// if (loopHead(n) == No_Node)
+				if n.LoopHead == nil {
+					// loopHead(n) = x
+					n.LoopHead = I.head
+				}
+			}
+		}
+		return nodesInLoop
+	*/
 }
 
 //go:generate stringer -linecomment -type LoopType
@@ -206,6 +376,9 @@ func findLoopType(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) LoopType 
 func findLoopFollow(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) *Node {
 	headSuccs := NodesOf(g.From(head.ID()))
 	latchSuccs := NodesOf(g.From(latch.ID()))
+	fmt.Println("=== [ nodes in loop ] ===")
+	printNodes(nodesInLoop)
+	fmt.Println()
 	switch head.LoopType {
 	// if (loopType(x) == Pre_Tested)
 	case LoopTypePreTest:
@@ -281,20 +454,23 @@ func contains(ns []*Node, n *Node) bool {
 // TODO: remove debug output.
 
 func printNodes(ns []*Node) {
-	sortNodes(ns)
 	for _, n := range ns {
-		fmt.Println("Node:      ", n.Node.DOTID())
-		fmt.Println("PreNum:    ", n.PreNum)
-		fmt.Println("RevPostNum:", n.RevPostNum)
-		if n.LoopHead != nil {
-			fmt.Println("LoopHead:  ", n.LoopHead.DOTID())
-		}
-		fmt.Println("LoopType:  ", n.LoopType)
-		if n.LoopFollow != nil {
-			fmt.Println("LoopFollow:", n.LoopFollow.DOTID())
-		}
-		fmt.Println()
+		printNode(n)
 	}
+}
+
+func printNode(n *Node) {
+	fmt.Println("Node:      ", n.Node.DOTID())
+	fmt.Println("PreNum:    ", n.PreNum)
+	fmt.Println("RevPostNum:", n.RevPostNum)
+	if n.LoopHead != nil {
+		fmt.Println("LoopHead:  ", n.LoopHead.DOTID())
+	}
+	fmt.Println("LoopType:  ", n.LoopType)
+	if n.LoopFollow != nil {
+		fmt.Println("LoopFollow:", n.LoopFollow.DOTID())
+	}
+	fmt.Println()
 }
 
 // sortNodes sorts the list of nodes by DOTID.

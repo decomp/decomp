@@ -26,18 +26,29 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 	IIs := [][]*Interval{Intervals(Gs[0])}
 	// i = 2
 	// repeat, Construction of G^i
+	intNum := 1
 	for i := 1; ; i++ {
 		Gprev := Gs[i-1]
 		// Make each interval of G^{i-1} a node in G^i.
 		//
 		//    N^i = {n^i | I^{i-1}(n^{i-1}) \in IIs^{i-1}}
 		Gi := NewGraph()
+		var ns []*Node
 		for _, I := range IIs[i-1] {
 			//fmt.Printf("G_%d\n", i) // TODO: remove debug output
 			//fmt.Println("adding header node:", I.head.DOTID()) // TODO: remove debug output
-			Gi.AddNode(I.head) // TODO: use Gi.addNode?
+			n := Gi.NewNode().(*Node)
+			n.SetDOTID(fmt.Sprintf("I_%d", intNum))
+			ns = append(ns, n)
+			Gi.AddNode(n)
+			if g.Entry().ID() == I.head.ID() {
+				Gi.SetEntry(n)
+			}
+			intNum++
 		}
-		Gi.SetEntry(g.Entry())
+		initDFSOrder(Gi)
+		// TODO: is this the right entry node of Gi?
+		//Gi.SetEntry(g.Entry())
 		// The collapsed node n of an interval I(h) has the immediate predecessors
 		// of h not part of the interval I(h).
 		//
@@ -50,7 +61,8 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 		//          \land p \in immedPred(m)
 		//          \land p \not \in I^{i-1}(m)
 		//       )
-		for _, I := range IIs[i-1] {
+		for j, I := range IIs[i-1] {
+			n := ns[j]
 			//fmt.Println("I.head -- pred:", I.head.DOTID()) // TODO: remove debug output
 			for preds := Gprev.To(I.head.ID()); preds.Next(); {
 				p := preds.Node().(cfa.Node)
@@ -62,9 +74,9 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 				// Find interval to which p belongs, so that we can connect the
 				// header node of that interval with p in the derived graph.
 				var pred cfa.Node
-				for _, J := range IIs[i-1] {
+				for k, J := range IIs[i-1] {
 					if J.Node(p.ID()) != nil {
-						pred = J.head
+						pred = ns[k]
 						break
 					}
 				}
@@ -73,7 +85,7 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 				}
 				//fmt.Println("   pred:", pred.DOTID()) // TODO: remove debug output
 				e := &cfg.Edge{
-					Edge: simple.Edge{F: pred, T: I.head},
+					Edge: simple.Edge{F: pred, T: n},
 				}
 				Gi.SetEdge(e)
 			}
@@ -92,7 +104,8 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 		//       \land n \in I^{i-1}(h_k^{i-1})
 		//       \land (m, n) \in E^{i-1}
 		//    )
-		for _, I := range IIs[i-1] {
+		for j, I := range IIs[i-1] {
+			n := ns[j]
 			//fmt.Println("I.head -- succ:", I.head.DOTID()) // TODO: remove debug output
 			for succs := Gprev.From(I.head.ID()); succs.Next(); {
 				s := succs.Node().(cfa.Node)
@@ -104,9 +117,9 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 				// Find interval to which s belongs, so that we can connect the
 				// header node of that interval with s in the derived graph.
 				var succ cfa.Node
-				for _, J := range IIs[i-1] {
+				for k, J := range IIs[i-1] {
 					if J.Node(s.ID()) != nil {
-						succ = J.head
+						succ = ns[k]
 						break
 					}
 				}
@@ -115,7 +128,7 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 				}
 				//fmt.Println("   succ:", succ.DOTID()) // TODO: remove debug output
 				e := &cfg.Edge{
-					Edge: simple.Edge{F: I.head, T: succ},
+					Edge: simple.Edge{F: n, T: succ},
 				}
 				Gi.SetEdge(e)
 			}

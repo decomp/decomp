@@ -17,7 +17,7 @@ import (
 // Post: compound conditionals are structured in G.
 //
 // ref: Figure 6-34; Cifuentes' Reverse Comilation Techniques.
-func structCompCond(g cfa.Graph) []*primitive.Primitive {
+func structCompCond(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primitive)) []*primitive.Primitive {
 	var prims []*primitive.Primitive
 	// change = True
 	change := true
@@ -57,18 +57,7 @@ loop:
 						// TODO: figure out how to represent compound condition.
 						compCond := fmt.Sprintf("NOT %q AND %q", n.DOTID(), t.DOTID())
 						n.CompCond = compCond
-						g.RemoveNode(t.ID())
-						g.SetEdge(g.NewEdge(n, tSuccs[1]))
-						// Create primitive.
-						prim := &primitive.Primitive{
-							Prim:  "comp_cond_NOT_a_AND_b",
-							Entry: n.DOTID(),
-							Nodes: map[string]string{
-								"a": n.DOTID(),
-								"b": t.DOTID(),
-								// TODO: add e as follow?
-							},
-						}
+						prim := modifyGraph(g, n, t, tSuccs[1], "comp_cond_NOT_a_AND_b", before, after)
 						prims = append(prims, prim)
 						// change = True
 						change = true
@@ -79,18 +68,7 @@ loop:
 						// TODO: figure out how to represent compound condition.
 						compCond := fmt.Sprintf("%q OR %q", n.DOTID(), t.DOTID())
 						n.CompCond = compCond
-						g.RemoveNode(t.ID())
-						g.SetEdge(g.NewEdge(n, tSuccs[0]))
-						// Create primitive.
-						prim := &primitive.Primitive{
-							Prim:  "comp_cond_a_OR_b",
-							Entry: n.DOTID(),
-							Nodes: map[string]string{
-								"a": n.DOTID(),
-								"b": t.DOTID(),
-								// TODO: add e as follow?
-							},
-						}
+						prim := modifyGraph(g, n, t, tSuccs[0], "comp_cond_a_OR_b", before, after)
 						prims = append(prims, prim)
 						// change = True
 						change = true
@@ -105,18 +83,7 @@ loop:
 						// TODO: figure out how to represent compound condition.
 						compCond := fmt.Sprintf("%q AND %q", n.DOTID(), e.DOTID())
 						n.CompCond = compCond
-						g.RemoveNode(e.ID())
-						g.SetEdge(g.NewEdge(n, eSuccs[1]))
-						// Create primitive.
-						prim := &primitive.Primitive{
-							Prim:  "comp_cond_a_AND_b",
-							Entry: n.DOTID(),
-							Nodes: map[string]string{
-								"a": n.DOTID(),
-								"b": e.DOTID(),
-								// TODO: add t as follow?
-							},
-						}
+						prim := modifyGraph(g, n, e, tSuccs[1], "comp_cond_a_AND_b", before, after)
 						prims = append(prims, prim)
 						// change = True
 						change = true
@@ -127,18 +94,7 @@ loop:
 						// TODO: figure out how to represent compound condition.
 						compCond := fmt.Sprintf("NOT %q OR %q", n.DOTID(), e.DOTID())
 						n.CompCond = compCond
-						g.RemoveNode(e.ID())
-						g.SetEdge(g.NewEdge(n, eSuccs[0]))
-						// Create primitive.
-						prim := &primitive.Primitive{
-							Prim:  "comp_cond_NOT_a_OR_b",
-							Entry: n.DOTID(),
-							Nodes: map[string]string{
-								"a": n.DOTID(),
-								"b": e.DOTID(),
-								// TODO: add t as follow?
-							},
-						}
+						prim := modifyGraph(g, n, e, tSuccs[0], "comp_cond_NOT_a_OR_b", before, after)
 						prims = append(prims, prim)
 						// change = True
 						change = true
@@ -149,4 +105,28 @@ loop:
 		}
 	}
 	return prims
+}
+
+// modifyGraph modifies the control flow graph to merge the compound condition
+func modifyGraph(g cfa.Graph, n, c, follow cfa.Node, compCond string, before, after func(g cfa.Graph, prim *primitive.Primitive)) *primitive.Primitive {
+	// Create primitive.
+	prim := &primitive.Primitive{
+		Prim:  compCond,
+		Entry: n.DOTID(),
+		Nodes: map[string]string{
+			"a": n.DOTID(),
+			"b": c.DOTID(),
+			// TODO: add follow?
+		},
+	}
+	if before != nil {
+		before(g, prim)
+	}
+	// Merge n and c nodes.
+	g.RemoveNode(c.ID())
+	g.SetEdge(g.NewEdge(n, follow))
+	if after != nil {
+		after(g, prim)
+	}
+	return prim
 }

@@ -42,12 +42,12 @@ func Analyze(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primit
 	// structuring, and 2-way conditional structuring last.
 
 	// Structure compound conditionals.
-	prims = append(prims, structCompCond(g)...)
+	prims = append(prims, structCompCond(g, before, after)...)
 	// Structure n-way conditionals.
 	dom := cfa.NewDom(g)
 	prims = append(prims, structNway(g, dom)...)
 	// Structure loops of the control flow graph.
-	prims = append(prims, loopStruct(g)...)
+	prims = append(prims, loopStruct(g, dom)...)
 	// Structure 2-way conditionals.
 	prims = append(prims, struct2way(g, dom)...)
 	return prims

@@ -219,6 +219,24 @@ func restructure(dotPath, method string, steps, img bool) ([]*primitive.Primitiv
 		if err := parseCFGInto(dotPath, g); err != nil {
 			return nil, errors.WithStack(err)
 		}
+		// Output derived sequence of graphs.
+		if steps {
+			Gs, IIs := interval.DerivedSequence(g)
+			for i, g := range Gs {
+				name := fmt.Sprintf("G_%d.dot", i+1)
+				if err := ioutil.WriteFile(name, []byte(g.String()), 0644); err != nil {
+					return nil, errors.WithStack(err)
+				}
+			}
+			for i, Is := range IIs {
+				for j, I := range Is {
+					name := fmt.Sprintf("I_%d_%d.dot", i+1, j+1)
+					if err := ioutil.WriteFile(name, []byte(I.String()), 0644); err != nil {
+						return nil, errors.WithStack(err)
+					}
+				}
+			}
+		}
 		// Perform control flow analysis.
 		prims := interval.Analyze(g, before, after)
 		return prims, nil

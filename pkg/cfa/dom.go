@@ -19,5 +19,6 @@ func NewDom(g Graph) DominatorTree {
 
 // Dominates reports whether node x dominates y, with node IDs xid and yid.
 func (dom DominatorTree) Dominates(xid, yid int64) bool {
-	return xid == dom.DominatorTree.DominatorOf(yid).ID()
+	dominator := dom.DominatorTree.DominatorOf(yid)
+	return dominator != nil && dominator.ID() == xid
 }
