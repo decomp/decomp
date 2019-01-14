@@ -90,6 +90,12 @@ func findLatch(g cfa.Graph, head *Node) (latch *Node, ok bool) {
 //
 // ref: Figure 6-27; Cifuentes' Reverse Comilation Techniques.
 func markNodesInLoop(I *Interval, latch *Node) []*Node {
+	// The nodes belong to the same interval, since the interval header (i.e. x)
+	// dominates all nodes of the interval, and in a loop, the loop header node
+	// dominates all nodes of the loop. If a node belongs to a different
+	// interval, it is not dominated by the loop header node, thus it cannot
+	// belong to the same loop.
+
 	//fmt.Println("head: ", I.head.DOTID()) // TODO: remove debug output
 	//fmt.Println("latch:", latch.DOTID()) // TODO: remove debug output
 	//fmt.Println() // TODO: remove debug output
@@ -102,6 +108,8 @@ func markNodesInLoop(I *Interval, latch *Node) []*Node {
 	for nodes := I.Nodes(); nodes.Next(); {
 		// if n \in I(x)
 		n := nodes.Node().(*Node)
+		// The loop is formed of all nodes that are between x and y in terms of
+		// node numbering.
 		if I.head.RevPostNum < n.RevPostNum && n.RevPostNum <= latch.RevPostNum {
 			// nodesInLoop = nodesInLoop \union {n}
 			nodesInLoop = append(nodesInLoop, n)
@@ -113,30 +121,6 @@ func markNodesInLoop(I *Interval, latch *Node) []*Node {
 		}
 	}
 	return nodesInLoop
-
-	/*
-		// The nodes belong to the same interval, since the interval header (i.e. x)
-		// dominates all nodes of the interval, and in a loop, the loop header node
-		// dominates all nodes of the loop. If a node belongs to a different
-		// interval, it is not dominated by the loop header node, thus it cannot
-		// belong to the same loop.
-		//
-		//    \forall n \in loop(y, x), n \in I(x)
-		fmt.Println("head:", I.head.DOTID())
-		fmt.Println("latch:", latch.DOTID())
-		var ns []*Node
-		for nodes := I.Nodes(); nodes.Next(); {
-			n := nodes.Node().(*Node)
-			// The loop is formed of all nodes that are between x and y in terms of
-			// node numbering.
-			//
-			//    \forall n \in loop(y, x), n \in {x ... y}
-			if I.head.RevPostNum <= n.RevPostNum && n.RevPostNum <= latch.RevPostNum {
-				ns = append(ns, n)
-			}
-		}
-		return ns
-	*/
 }
 
 //go:generate stringer -linecomment -type LoopType

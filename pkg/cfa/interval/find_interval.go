@@ -1,3 +1,14 @@
+// Find the unique set of intervals of a control flow graph, as described in:
+//
+// * Figure 1 "Interval Algorithm" in C. Cifuentes, "A Structuring Algorithm for
+//   Decompilation", 1993.
+//
+// * Allen, Frances E., and John Cocke. "A program data flow analysis
+//   procedure." Communications of the ACM 19.3 (1976): 137.
+//
+// * Figure 6-8 "Interval Algorithm" in C. Cifuentes, "Reverse Comilation
+//   Techniques", 1994.
+
 package interval
 
 import (
@@ -9,7 +20,8 @@ import (
 // Intervals returns the unique set of intervals of the given control flow
 // graph.
 //
-// Pre: G is a control flow graph.
+// Pre: G is a control flow graph. The depth-first search visit order of G has
+//      been calculated.
 //
 // Post: the intervals of G are contained in the list Is.
 //

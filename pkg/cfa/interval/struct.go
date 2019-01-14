@@ -1,5 +1,6 @@
-// Package interval implements the Interval method control flow recovery
-// algorithm.
+// Package interval implements control flow recovery based on the interval
+// method, as described in C. Cifuentes, "A Structuring Algorithm for
+// Decompilation", 1993.
 //
 // At a high-level, the Interval method TODO...
 //
