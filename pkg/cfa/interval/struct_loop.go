@@ -240,11 +240,15 @@ func getInterval(iis []*Interval, dotID string) (*Interval, bool) {
 func markNodesInLoop(g cfa.Graph, head, latch *Node, dom cfa.DominatorTree) []*Node {
 	fmt.Println("=== [ markNodesInLoop] ===")
 	nodesInLoop := []*Node{head}
+	head.LoopHead = head
 	for _, n := range ascRevPostOrder(NodesOf(g.Nodes())) {
 		if head.RevPostNum < n.RevPostNum && n.RevPostNum <= latch.RevPostNum {
 			fmt.Printf("dom %q: %v\n", n.DOTID(), dom.DominatorOf(n.ID()))
 			if dom.Dominates(head.ID(), n.ID()) {
 				nodesInLoop = append(nodesInLoop, n)
+				if n.LoopHead == nil {
+					n.LoopHead = head
+				}
 			}
 		}
 		if n.RevPostNum > latch.RevPostNum {
