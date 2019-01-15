@@ -43,6 +43,7 @@ func Analyze(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primit
 
 	// Structure compound conditionals.
 	prims = append(prims, structCompCond(g, before, after)...)
+	n := len(prims) // track prims added after compound conditions.
 	// Structure n-way conditionals.
 	dom := cfa.NewDom(g)
 	prims = append(prims, structNway(g, dom)...)
@@ -50,5 +51,13 @@ func Analyze(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primit
 	prims = append(prims, loopStruct(g, dom)...)
 	// Structure 2-way conditionals.
 	prims = append(prims, struct2way(g, dom)...)
+	for i := n; i < len(prims); i++ {
+		if before != nil {
+			before(g, prims[i])
+		}
+		if after != nil {
+			after(g, prims[i])
+		}
+	}
 	return prims
 }

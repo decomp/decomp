@@ -43,6 +43,7 @@ func struct2way(g cfa.Graph, dom cfa.DominatorTree) []*primitive.Primitive {
 					Prim:  "if",
 					Entry: m.DOTID(),
 					Nodes: map[string]string{
+						"cond":   m.DOTID(),
 						"follow": follow.DOTID(),
 					},
 				}

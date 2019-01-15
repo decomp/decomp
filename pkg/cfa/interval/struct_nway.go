@@ -60,6 +60,7 @@ func structNway(g cfa.Graph, dom cfa.DominatorTree) []*primitive.Primitive {
 					Prim:  "switch",
 					Entry: m.DOTID(),
 					Nodes: map[string]string{
+						"cond":   m.DOTID(),
 						"follow": follow.DOTID(),
 					},
 				}
