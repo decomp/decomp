@@ -463,14 +463,7 @@ func (block *IfElse) SetHasTerm(hasTerm bool) {
 // liftInst lifts the LLVM IR instruction to Go source code, emitting to f.
 func (fgen *funcGen) liftInst(inst ir.Instruction) {
 	switch inst := inst.(type) {
-	case *ir.InstAlloca:
-		fgen.liftInstAlloca(inst)
-	case *ir.InstStore:
-		fgen.liftInstStore(inst)
-	case *ir.InstLoad:
-		fgen.liftInstLoad(inst)
-	case *ir.InstICmp:
-		fgen.liftInstICmp(inst)
+	// Binary instructions
 	case *ir.InstAdd:
 		// Variable name.
 		name := newIdent(inst)
@@ -478,6 +471,9 @@ func (fgen *funcGen) liftInst(inst ir.Instruction) {
 		x := fgen.liftValue(inst.X)
 		y := fgen.liftValue(inst.Y)
 		fgen.emitAssignBinOp(name, x, y, token.ADD)
+	//case *ir.InstFAdd:
+	//case *ir.InstSub:
+	//case *ir.InstFSub:
 	case *ir.InstMul:
 		// Variable name.
 		name := newIdent(inst)
@@ -485,6 +481,58 @@ func (fgen *funcGen) liftInst(inst ir.Instruction) {
 		x := fgen.liftValue(inst.X)
 		y := fgen.liftValue(inst.Y)
 		fgen.emitAssignBinOp(name, x, y, token.MUL)
+	//case *ir.InstFMul:
+	//case *ir.InstUDiv:
+	//case *ir.InstSDiv:
+	//case *ir.InstFDiv:
+	//case *ir.InstURem:
+	//case *ir.InstSRem:
+	//case *ir.InstFRem:
+	// Bitwise instructions
+	//case *ir.InstShl:
+	//case *ir.InstLShr:
+	//case *ir.InstAShr:
+	//case *ir.InstAnd:
+	//case *ir.InstOr:
+	//case *ir.InstXor:
+	// Vector instructions
+	//case *ir.InstExtractElement:
+	//case *ir.InstInsertElement:
+	//case *ir.InstShuffleVector:
+	// Aggregate instructions
+	//case *ir.InstExtractValue:
+	//case *ir.InstInsertValue:
+	// Memory instructions
+	case *ir.InstAlloca:
+		fgen.liftInstAlloca(inst)
+	case *ir.InstLoad:
+		fgen.liftInstLoad(inst)
+	case *ir.InstStore:
+		fgen.liftInstStore(inst)
+	//case *ir.InstFence:
+	//case *ir.InstCmpXchg:
+	//case *ir.InstAtomicRMW:
+	//case *ir.InstGetElementPtr:
+	// Conversion instructions
+	//case *ir.InstTrunc:
+	//case *ir.InstZExt:
+	//case *ir.InstSExt:
+	//case *ir.InstFPTrunc:
+	//case *ir.InstFPExt:
+	//case *ir.InstFPToUI:
+	//case *ir.InstFPToSI:
+	//case *ir.InstUIToFP:
+	//case *ir.InstSIToFP:
+	//case *ir.InstPtrToInt:
+	//case *ir.InstIntToPtr:
+	//case *ir.InstBitCast:
+	//case *ir.InstAddrSpaceCast:
+	// Other instructions
+	case *ir.InstICmp:
+		fgen.liftInstICmp(inst)
+	//case *ir.InstFCmp:
+	//case *ir.InstPhi:
+	//case *ir.InstSelect:
 	case *ir.InstCall:
 		// Variable name.
 		name := newIdent(inst)
@@ -506,6 +554,10 @@ func (fgen *funcGen) liftInst(inst ir.Instruction) {
 			Rhs: []ast.Expr{callExpr},
 		}
 		fgen.cur.List = append(fgen.cur.List, assignStmt)
+	//case *ir.InstVAArg:
+	//case *ir.InstLandingPad:
+	//case *ir.InstCatchPad:
+	//case *ir.InstCleanupPad:
 	default:
 		panic(fmt.Errorf("support for instruction type %T not yet implemented", inst))
 	}
