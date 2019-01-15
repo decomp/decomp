@@ -33,7 +33,7 @@ var (
 // are invoked if non-nil before and after merging the nodes of located
 // primitives.
 func Analyze(g cfa.Graph, before, after func(g cfa.Graph, prim *primitive.Primitive)) []*primitive.Primitive {
-	var prims []*primitive.Primitive
+	prims := []*primitive.Primitive{}
 	// Initialize depth-first search visit order.
 	initDFSOrder(g)
 
