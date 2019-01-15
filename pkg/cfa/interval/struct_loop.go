@@ -324,6 +324,10 @@ const (
 //
 // ref: Figure 6-28; Cifuentes' Reverse Comilation Techniques.
 func findLoopType(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) LoopType {
+	// Add extra case not present in Cifuentes' for when head == latch.
+	if head.ID() == latch.ID() {
+		return LoopTypePostTest
+	}
 	headSuccs := NodesOf(g.From(head.ID()))
 	latchSuccs := NodesOf(g.From(latch.ID()))
 	switch len(latchSuccs) {

@@ -24,7 +24,7 @@ func struct2way(g cfa.Graph, dom cfa.DominatorTree) []*primitive.Primitive {
 	for _, m := range descRevPostOrder(NodesOf(g.Nodes())) {
 		// if ((nodeType(m) == 2-way) \land (inHeadLatch(m) == False))
 		mSuccs := g.From(m.ID())
-		if mSuccs.Len() == 2 && m.LoopHead == nil && !m.IsLoopLatch {
+		if mSuccs.Len() == 2 && !isLoopHead(m) && !m.IsLoopLatch {
 			// if (\exists n, n = max{i | immedDom(i) = m \land #inEdges(i) >= 2})
 			var follow *Node
 			for _, i := range dom.DominatedBy(m.ID()) {
@@ -67,6 +67,14 @@ func struct2way(g cfa.Graph, dom cfa.DominatorTree) []*primitive.Primitive {
 		}
 	}
 	return prims
+}
+
+// isLoopHead reports whether the given node is the header of a loop.
+func isLoopHead(n *Node) bool {
+	if n.LoopHead == nil {
+		return false
+	}
+	return n.LoopHead.ID() == n.ID()
 }
 
 // stack is a LIFO stack of nodes.
