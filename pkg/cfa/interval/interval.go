@@ -83,18 +83,11 @@ func (i *Interval) String() string {
 	return string(buf)
 }
 
-// --- [ skip? ] ---
-//
-// TODO: skip these methods by embedding graph.Directed in interval and
-// implementing only the Node and Nodes methods.
-
 // From returns all nodes that can be reached directly from the node with the
 // given ID.
 //
 // From must not return nil.
 func (i *Interval) From(id int64) graph.Nodes {
-	// TODO: determine if we only want to consider nodes in I, now we consider
-	// nodes of the entire graph.
 	var nodes []graph.Node
 	for succs := i.g.From(id); succs.Next(); {
 		succ := succs.Node()
@@ -110,8 +103,6 @@ func (i *Interval) From(id int64) graph.Nodes {
 // HasEdgeBetween returns whether an edge exists between nodes with IDs xid and
 // yid without considering direction.
 func (i *Interval) HasEdgeBetween(xid, yid int64) bool {
-	// TODO: determine if we only want to consider nodes in I, now we consider
-	// nodes of the entire graph.
 	if i.Node(xid) == nil || i.Node(yid) == nil {
 		return false
 	}
@@ -122,8 +113,6 @@ func (i *Interval) HasEdgeBetween(xid, yid int64) bool {
 // exists and nil otherwise. The node v must be directly reachable from u as
 // defined by the From method.
 func (i *Interval) Edge(uid, vid int64) graph.Edge {
-	// TODO: determine if we only want to consider nodes in I, now we consider
-	// nodes of the entire graph.
 	if !i.HasEdgeBetween(uid, vid) {
 		return nil
 	}
@@ -133,8 +122,6 @@ func (i *Interval) Edge(uid, vid int64) graph.Edge {
 // HasEdgeFromTo returns whether an edge exists in the graph from u to v with
 // IDs uid and vid.
 func (i *Interval) HasEdgeFromTo(uid, vid int64) bool {
-	// TODO: determine if we only want to consider nodes in I, now we consider
-	// nodes of the entire graph.
 	if !i.HasEdgeBetween(uid, vid) {
 		return false
 	}
@@ -145,8 +132,6 @@ func (i *Interval) HasEdgeFromTo(uid, vid int64) bool {
 //
 // To must not return nil.
 func (i *Interval) To(id int64) graph.Nodes {
-	// TODO: determine if we only want to consider nodes in I, now we consider
-	// nodes of the entire graph.
 	var nodes []graph.Node
 	for preds := i.g.To(id); preds.Next(); {
 		pred := preds.Node()
@@ -157,7 +142,4 @@ func (i *Interval) To(id int64) graph.Nodes {
 		nodes = append(nodes, pred)
 	}
 	return iterator.NewOrderedNodes(nodes)
-
 }
-
-// --- [/ skip? ] ---

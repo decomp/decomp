@@ -33,21 +33,17 @@ loop:
 		// tested first)
 		//
 		// for (all nodes n in postorder)
-		fmt.Println("=== [ compcond ] ===")
 		for _, n := range ascRevPostOrder(NodesOf(g.Nodes())) {
 			// Order of nSuccs matter, as we have nSuccs[0] denote the true branch
 			// and nSuccs[1] denote the false branch.
 			nSuccs := successors(g, n.ID())
 			// if (nodeType(n) == 2-way)
 			if len(nSuccs) == 2 {
-				fmt.Println("n:", n.DOTID()) // TODO: remove debug output
 				// t = succ[n, 1]
 				t := nSuccs[0]
-				fmt.Println("   t:", t.DOTID()) // TODO: remove debug output
 				tSuccs := successors(g, t.ID()) // used to make output deterministic.
 				// e = succ[n, 2]
 				e := nSuccs[1]
-				fmt.Println("   e:", e.DOTID()) // TODO: remove debug output
 				eSuccs := successors(g, e.ID()) // used to make output deterministic.
 				switch {
 				// if ((nodeType(t) == 2-way) \land (numInst(t) == 1) \land (numInEdges(t) == 1))
@@ -57,7 +53,6 @@ loop:
 					case tSuccs[0].ID() == e.ID():
 						// if (n && !t)
 						// modifyGraph(\lnot n \land t)
-						// TODO: figure out how to represent compound condition.
 						// Wrong in Cifuentes', which states NOT n AND t. Should be n AND NOT t.
 						compCond := fmt.Sprintf("%q AND NOT %q", n.DOTID(), t.DOTID())
 						n.CompCond = compCond
@@ -70,7 +65,6 @@ loop:
 					case tSuccs[1].ID() == e.ID():
 						// if (n && t)
 						// modifyGraph(n \lor t)
-						// TODO: figure out how to represent compound condition.
 						// Wrong in Cifuentes', which states n OR t. Should be n AND t.
 						compCond := fmt.Sprintf("%q AND %q", n.DOTID(), t.DOTID())
 						n.CompCond = compCond
@@ -87,7 +81,6 @@ loop:
 					case eSuccs[0].ID() == t.ID():
 						// if (n || e)
 						// modifyGraph(n \land e)
-						// TODO: figure out how to represent compound condition.
 						// Wrong in Cifuentes', which states n AND e. Should be n OR e.
 						compCond := fmt.Sprintf("%q OR %q", n.DOTID(), e.DOTID())
 						n.CompCond = compCond
@@ -99,7 +92,6 @@ loop:
 					// else if (succ[e, 2] = t)
 					case eSuccs[1].ID() == t.ID():
 						// modifyGraph(\lnot n \lor e)
-						// TODO: figure out how to represent compound condition.
 						// Wrong in Cifuentes', which states NOT n OR e. Should be n OR NOT e.
 						compCond := fmt.Sprintf("%q OR NOT %q", n.DOTID(), e.DOTID())
 						n.CompCond = compCond

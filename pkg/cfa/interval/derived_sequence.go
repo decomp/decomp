@@ -35,8 +35,6 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 		Gi := NewGraph()
 		var ns []*Node
 		for _, I := range IIs[i-1] {
-			//fmt.Printf("G_%d\n", i) // TODO: remove debug output
-			//fmt.Println("adding header node:", I.head.DOTID()) // TODO: remove debug output
 			n := Gi.NewNode().(*Node)
 			n.SetDOTID(fmt.Sprintf("I_%d", intNum))
 			ns = append(ns, n)
@@ -47,8 +45,6 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 			intNum++
 		}
 		initDFSOrder(Gi)
-		// TODO: is this the right entry node of Gi?
-		//Gi.SetEntry(g.Entry())
 		// The collapsed node n of an interval I(h) has the immediate predecessors
 		// of h not part of the interval I(h).
 		//
@@ -63,10 +59,8 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 		//       )
 		for j, I := range IIs[i-1] {
 			n := ns[j]
-			//fmt.Println("I.head -- pred:", I.head.DOTID()) // TODO: remove debug output
 			for preds := Gprev.To(I.head.ID()); preds.Next(); {
 				p := preds.Node().(cfa.Node)
-				//fmt.Println("   p:", p.DOTID()) // TODO: remove debug output
 				if I.Node(p.ID()) != nil {
 					// skip predecessor p if present in interval I(h).
 					continue
@@ -83,7 +77,6 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 				if pred == nil {
 					panic(fmt.Errorf("unable to locate interval to which node %q belong", p.DOTID()))
 				}
-				//fmt.Println("   pred:", pred.DOTID()) // TODO: remove debug output
 				e := &cfg.Edge{
 					Edge: simple.Edge{F: pred, T: n},
 				}
@@ -106,10 +99,8 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 		//    )
 		for j, I := range IIs[i-1] {
 			n := ns[j]
-			//fmt.Println("I.head -- succ:", I.head.DOTID()) // TODO: remove debug output
 			for succs := Gprev.From(I.head.ID()); succs.Next(); {
 				s := succs.Node().(cfa.Node)
-				//fmt.Println("   s:", s.DOTID()) // TODO: remove debug output
 				if I.Node(s.ID()) != nil {
 					// skip successor s if present in interval I(h).
 					continue
@@ -126,7 +117,6 @@ func DerivedSequence(g cfa.Graph) ([]cfa.Graph, [][]*Interval) {
 				if succ == nil {
 					panic(fmt.Errorf("unable to locate interval to which node %s belong", s.DOTID()))
 				}
-				//fmt.Println("   succ:", succ.DOTID()) // TODO: remove debug output
 				e := &cfg.Edge{
 					Edge: simple.Edge{F: n, T: succ},
 				}
