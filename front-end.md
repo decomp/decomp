@@ -4,6 +4,23 @@ Translate machine code (e.g. x86 assembly) to LLVM IR.
 
 For a (perhaps biased) comparison of machine code to LLVM IR lifters, see https://github.com/trailofbits/mcsema#comparison-with-other-machine-code-to-llvm-bitcode-lifters.
 
+## Miasm
+
+https://github.com/cea-sec/miasm
+
+Supported:
+* ARM -> Miasm IR
+* Aarch64 -> Miasm IR
+* MEP (big endian) -> Miasm IR
+* PowerPC (32-bit big-endian) -> Miasm IR
+* MIPS (32-bit) -> Miasm IR
+* MSP430 -> Miasm IR
+* x86 -> Miasm IR
+* x86-64 -> Miasm IR
+
+Miasm IR -> LLVM IR ([#904](https://github.com/cea-sec/miasm/pull/904))
+
+
 ## WAVM
 
 https://github.com/WAVM/WAVM
