@@ -243,8 +243,23 @@ func findLoopType(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) LoopType 
 		case 1:
 			// loopType(x) = Post_Tested.
 			return LoopTypePostTest
+		// n-way header node.
 		default:
-			panic(fmt.Errorf("support for %d-way header node not yet implemented", len(headSuccs)))
+			// Note, code to handle n-way conditional header nodes is added, as the
+			// details were not specified in Cifuentes' paper.
+			allInLoop := true
+			for _, headSucc := range headSuccs {
+				if !contains(nodesInLoop, headSucc) {
+					allInLoop = false
+				}
+			}
+			if allInLoop {
+				// loopType(x) = Post_Tested.
+				return LoopTypePostTest
+			} else {
+				// loopType(x) = Pre_Tested.
+				return LoopTypePreTest
+			}
 		}
 	// 1-way latching node.
 	case 1:
