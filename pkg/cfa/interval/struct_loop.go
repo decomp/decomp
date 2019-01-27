@@ -272,8 +272,9 @@ func findLoopType(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) LoopType 
 		case 1:
 			// loopType(x) = Endless.
 			return LoopTypeEndless
+		// n-way header node.
 		default:
-			panic(fmt.Errorf("support for %d-way header node not yet implemented", len(headSuccs)))
+			return LoopTypePreTest
 		}
 	default:
 		panic(fmt.Errorf("support for %d-way latch node not yet implemented", len(latchSuccs)))
