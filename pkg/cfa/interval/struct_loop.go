@@ -226,8 +226,31 @@ func findLoopType(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) LoopType 
 	headSuccs := NodesOf(g.From(head.ID()))
 	latchSuccs := NodesOf(g.From(latch.ID()))
 	switch len(latchSuccs) {
+	// 1-way latching node.
+	case 1:
+		switch len(headSuccs) {
+		// if nodeType(x) == 2-way
+		case 2:
+			// loopType(x) = Pre_Tested.
+			return LoopTypePreTest
+		// 1-way header node.
+		case 1:
+			// loopType(x) = Endless.
+			return LoopTypeEndless
+		// n-way header node.
+		default:
+			// Note, code to handle n-way conditional header nodes is added, as the
+			// details were not specified in Cifuentes' paper.
+			return LoopTypePreTest
+		}
 	// if (nodeType(y) == 2-way)
-	case 2:
+	//
+	// Note, code to handle n-way conditional latch nodes is added, as the
+	// details were not specified in Cifuentes' paper.
+	//
+	// We handle n-way conditional latch nodes in the same way as we do 2-way
+	// conditional latch nodes.
+	default:
 		switch len(headSuccs) {
 		// if (nodeType(x) == 2-way)
 		case 2:
@@ -261,25 +284,6 @@ func findLoopType(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) LoopType 
 				return LoopTypePreTest
 			}
 		}
-	// 1-way latching node.
-	case 1:
-		switch len(headSuccs) {
-		// if nodeType(x) == 2-way
-		case 2:
-			// loopType(x) = Pre_Tested.
-			return LoopTypePreTest
-		// 1-way header node.
-		case 1:
-			// loopType(x) = Endless.
-			return LoopTypeEndless
-		// n-way header node.
-		default:
-			// Note, code to handle n-way conditional header nodes is added, as the
-			// details were not specified in Cifuentes' paper.
-			return LoopTypePreTest
-		}
-	default:
-		panic(fmt.Errorf("support for %d-way latch node not yet implemented", len(latchSuccs)))
 	}
 }
 
