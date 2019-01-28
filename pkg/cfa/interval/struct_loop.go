@@ -274,6 +274,8 @@ func findLoopType(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) LoopType 
 			return LoopTypeEndless
 		// n-way header node.
 		default:
+			// Note, code to handle n-way conditional header nodes is added, as the
+			// details were not specified in Cifuentes' paper.
 			return LoopTypePreTest
 		}
 	default:
@@ -307,7 +309,20 @@ func findLoopFollow(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) *Node {
 			// loopFollow(x) = outEdges(x, 1)
 			return headSuccs[0]
 		default:
-			panic(fmt.Errorf("unable to locate follow loop of pre-test header node %q", head.DOTID()))
+			// Note, code to handle n-way conditional header nodes is added, as the
+			// details were not specified in Cifuentes' paper.
+			var follow *Node
+			for _, headSucc := range headSuccs {
+				if !contains(nodesInLoop, headSucc) {
+					if follow == nil || headSucc.RevPostNum > follow.RevPostNum {
+						follow = headSucc
+					}
+				}
+			}
+			if follow == nil {
+				panic(fmt.Errorf("unable to locate follow loop of pre-test latch node %q with n-way conditional loop header node %q", latch.DOTID(), head.DOTID()))
+			}
+			return follow
 		}
 	// else if (loopType(x) == Post_Tested)
 	case LoopTypePostTest:
