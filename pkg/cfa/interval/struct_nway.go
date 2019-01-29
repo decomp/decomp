@@ -36,7 +36,14 @@ func structNway(g cfa.Graph, dom cfa.DominatorTree) []*primitive.Primitive {
 				// header node.
 				if dom.DominatorOf(s.ID()).ID() != m.ID() {
 					// n = commonImmedDom({s | s = succ(m)})
-					n = commonImmedDom(mSuccs, dom).(*Node)
+
+					// TODO: trouble-shoot commonImmedDom implementation. Example of
+					// strange test: the switch statement (in step 1 of the interval
+					// method) is recognized with a switch header 147, and a follow
+					// node 10. However, 10 dominates 147, not the other way around.
+					// So something is wrong.
+
+					//n = commonImmedDom(mSuccs, dom).(*Node)
 				}
 			}
 			// else
