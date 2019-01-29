@@ -313,7 +313,7 @@ func findLoopFollow(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) *Node {
 			// loopFollow(x) = outEdges(x, 1)
 			return headSuccs[0]
 		default:
-			// Note, code to handle n-way conditional header nodes is added, as the
+			// Note, code to handle n-way conditional header node is added, as the
 			// details were not specified in Cifuentes' paper.
 			var follow *Node
 			for _, headSucc := range headSuccs {
@@ -330,16 +330,36 @@ func findLoopFollow(g cfa.Graph, head, latch *Node, nodesInLoop []*Node) *Node {
 		}
 	// else if (loopType(x) == Post_Tested)
 	case LoopTypePostTest:
-		switch {
-		// if (outEdges(y, 1) \in nodesInLoop)
-		case contains(nodesInLoop, latchSuccs[0]):
-			// loopFollow(x) = outEdges(y, 2)
-			return latchSuccs[1]
-		case contains(nodesInLoop, latchSuccs[1]):
-			// loopFollow(x) = outEdges(y, 1)
-			return latchSuccs[0]
+		switch len(latchSuccs) {
+		// 2-way conditional latch node.
+		case 2:
+			switch {
+			// if (outEdges(y, 1) \in nodesInLoop)
+			case contains(nodesInLoop, latchSuccs[0]):
+				// loopFollow(x) = outEdges(y, 2)
+				return latchSuccs[1]
+			case contains(nodesInLoop, latchSuccs[1]):
+				// loopFollow(x) = outEdges(y, 1)
+				return latchSuccs[0]
+			default:
+				panic(fmt.Errorf("unable to locate follow loop of post-test latch node %q", latch.DOTID()))
+			}
+		// n-way conditional latch node.
 		default:
-			panic(fmt.Errorf("unable to locate follow loop of post-test latch node %q", latch.DOTID()))
+			// Note, code to handle n-way conditional latch node is added, as the
+			// details were not specified in Cifuentes' paper.
+			var follow *Node
+			for _, latchSucc := range latchSuccs {
+				if !contains(nodesInLoop, latchSucc) {
+					if follow == nil || latchSucc.RevPostNum > follow.RevPostNum {
+						follow = latchSucc
+					}
+				}
+			}
+			if follow == nil {
+				panic(fmt.Errorf("unable to locate follow loop of pre-test latch node %q with n-way conditional loop header node %q", latch.DOTID(), head.DOTID()))
+			}
+			return follow
 		}
 	// endless loop.
 	case LoopTypeEndless:
