@@ -18,30 +18,32 @@ func NewGraphFromFunc(f *ir.Func) *Graph {
 	}
 	// Generate control flow graph of function.
 	for i, block := range f.Blocks {
-		from := nodeWithName(g, localIdent(block.LocalIdent))
+		from := nodeWithName(g, block.Name())
 		if i == 0 {
 			// Set entry basic block.
 			g.SetEntry(from)
 		}
 		switch term := block.Term.(type) {
 		case *ir.TermRet:
-			// TODO: consider adding attribute to distinguish this case in CFG?
+			// TODO: consider adding attribute to distinguish return instructions
+			// in CFG.
+
 			// nothing to do.
 		case *ir.TermBr:
-			to := nodeWithName(g, localIdent(term.Target.LocalIdent))
+			to := nodeWithName(g, term.Target.Name())
 			edgeWithLabel(g, from, to, "")
 		case *ir.TermCondBr:
-			targetTrue := nodeWithName(g, localIdent(term.TargetTrue.LocalIdent))
-			targetFalse := nodeWithName(g, localIdent(term.TargetFalse.LocalIdent))
+			targetTrue := nodeWithName(g, term.TargetTrue.Name())
+			targetFalse := nodeWithName(g, term.TargetFalse.Name())
 			edgeWithLabel(g, from, targetTrue, "true")
 			edgeWithLabel(g, from, targetFalse, "false")
 		case *ir.TermSwitch:
 			for _, c := range term.Cases {
-				to := nodeWithName(g, localIdent(c.Target.LocalIdent))
-				label := fmt.Sprintf("case (x=%v)", c.X.Ident())
+				to := nodeWithName(g, c.Target.Name())
+				label := fmt.Sprintf("case (%v=%v)", term.X.Ident(), c.X.Ident())
 				edgeWithLabel(g, from, to, label)
 			}
-			to := nodeWithName(g, localIdent(term.TargetDefault.LocalIdent))
+			to := nodeWithName(g, term.TargetDefault.Name())
 			edgeWithLabel(g, from, to, "default case")
 		//case *ir.TermIndirectBr:
 		//case *ir.TermInvoke:
@@ -65,7 +67,7 @@ func NewGraphFromFunc(f *ir.Func) *Graph {
 func edgeWithLabel(g cfa.Graph, from, to cfa.Node, label string) cfa.Edge {
 	e := g.NewEdge(from, to).(cfa.Edge)
 	if len(label) > 0 {
-		// Skip label for true and false, just color edge.
+		// Skip label for true and false, just colour edge.
 		switch label {
 		case "true":
 			e.SetAttribute(encoding.Attribute{Key: "color", Value: "darkgreen"})
@@ -86,18 +88,8 @@ func nodeWithName(g cfa.Graph, name string) cfa.Node {
 	if n, ok := g.NodeWithDOTID(name); ok {
 		return n
 	}
-	// Note: This run-time type assertion goes away, should Gonum graph start to
-	// leverage generics in Go2.
 	n := g.NewNode().(cfa.Node)
 	n.SetDOTID(name)
 	g.AddNode(n)
 	return n
-}
-
-// localIdent returns the identifier (without '%' prefix) of the local
-// identifier.
-func localIdent(ident ir.LocalIdent) string {
-	const prefix = "%"
-	s := ident.Ident()
-	return s[len(prefix):]
 }

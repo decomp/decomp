@@ -46,11 +46,11 @@ import (
 )
 
 var (
-	// dbg represents a logger with the "ll2dot:" prefix, which logs debug
-	// messages to standard error.
+	// dbg is a logger which logs debug messages to standard error, prepending
+	// the "ll2dot:" prefix.
 	dbg = log.New(os.Stderr, term.GreenBold("ll2dot:")+" ", 0)
-	// warn represents a logger with the "ll2dot:" prefix, which logs warning
-	// messages to standard error.
+	// warn is a logger which logs warning messages to standard error, prepending
+	// the "ll2dot:" prefix.
 	warn = log.New(os.Stderr, term.RedBold("ll2dot:")+" ", 0)
 )
 
@@ -170,7 +170,7 @@ func ll2dot(m *ir.Module, dotDir string, funcNames map[string]bool, img bool) er
 }
 
 // createDOTDir creates and returns a DOT graphs output directory based on the
-// path of the LLVM IR file.
+// path of the LLVM IR assembly file.
 //
 // For a source file "foo.ll" the output directory "foo_graphs/" is created. If
 // the `-force` flag is set, existing graph directories are overwritten by

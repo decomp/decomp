@@ -15,7 +15,7 @@ import (
 	"gonum.org/v1/gonum/graph/encoding/dot"
 )
 
-// Graph is a control flow graph rooted at entry.
+// Graph is a control flow graph rooted at the entry node.
 type Graph struct {
 	// Entry node of control flow graph.
 	entry cfa.Node
@@ -45,7 +45,6 @@ func ParseFile(dotPath string) (*Graph, error) {
 // ParseFileInto parses the given Graphviz DOT file into the control flow graph
 // dst.
 func ParseFileInto(dotPath string, dst cfa.Graph) error {
-	// Parse DOT file.
 	data, err := ioutil.ReadFile(dotPath)
 	if err != nil {
 		return errors.WithStack(err)
@@ -79,22 +78,19 @@ func ParseBytes(data []byte) (*Graph, error) {
 	return dst, err
 }
 
-// ParseBytes parses the given Graphviz DOT file into the control flow graph
+// ParseBytesInto parses the given Graphviz DOT file into the control flow graph
 // dst, reading from data.
 func ParseBytesInto(data []byte, dst cfa.Graph) error {
 	if err := dot.Unmarshal(data, dst); err != nil {
 		return errors.WithStack(err)
 	}
 	// Locate entry node.
-	nodes := dst.Nodes()
-	for nodes.Next() {
-		// Note: This run-time type assertion goes away, should Gonum graph start
-		// to leverage generics in Go2.
+	for nodes := dst.Nodes(); nodes.Next(); {
 		n := nodes.Node().(cfa.Node)
 		if _, ok := n.Attribute("entry"); ok {
-			entry := dst.Entry()
-			if entry != nil {
-				return errors.Errorf("multiple entry nodes in control flow graph; prev %q, new %q", entry.DOTID(), n.DOTID())
+			prev := dst.Entry()
+			if prev != nil {
+				return errors.Errorf("multiple entry nodes in control flow graph; prev %q, new %q", prev.DOTID(), n.DOTID())
 			}
 			dst.SetEntry(n)
 		}
@@ -109,6 +105,12 @@ func ParseBytesInto(data []byte, dst cfa.Graph) error {
 // from s.
 func ParseString(s string) (*Graph, error) {
 	return ParseBytes([]byte(s))
+}
+
+// ParseStringInto parses the given Graphviz DOT file into the control flow graph
+// dst, reading from s.
+func ParseStringInto(s string, dst cfa.Graph) error {
+	return ParseBytesInto([]byte(s), dst)
 }
 
 // NewNode returns a new Node with a unique arbitrary ID.
@@ -152,8 +154,6 @@ func (g *Graph) Entry() cfa.Node {
 // SetEntry sets the entry node of the control flow graph to entry.
 func (g *Graph) SetEntry(entry cfa.Node) {
 	entry.SetAttribute(encoding.Attribute{Key: "entry", Value: "true"})
-	// Note: This run-time type assertion goes away, should Gonum graph start to
-	// leverage generics in Go2.
 	g.entry = entry
 }
 
@@ -167,8 +167,6 @@ func (g *Graph) NodeWithDOTID(dotID string) (cfa.Node, bool) {
 // AddNode adds a node to the graph. AddNode panics if the added node ID matches
 // an existing node ID.
 func (g *Graph) AddNode(n graph.Node) {
-	// Note: This run-time type assertion goes away, should Gonum graph start to
-	// leverage generics in Go2.
 	nn := n.(cfa.Node)
 	dotID := nn.DOTID()
 	if prev, ok := g.nodes[dotID]; ok {
@@ -185,8 +183,6 @@ func (g *Graph) AddNode(n graph.Node) {
 // RemoveNode removes the node with the given ID from the graph, as well as any
 // edges attached to it. If the node is not in the graph it is a no-op.
 func (g *Graph) RemoveNode(id int64) {
-	// Note: This run-time type assertion goes away, should Gonum graph start to
-	// leverage generics in Go2.
 	n := g.Node(id).(cfa.Node)
 	if _, ok := n.Attribute("entry"); ok {
 		// Remove entry node.
