@@ -1,7 +1,11 @@
+*.dot
 *.png
 *.gif
 *.jpg
 *.pdf
 *.xcf
 *.exe
+*.json
+*.txt
 vendor
+examples
