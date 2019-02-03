@@ -1,6 +1,5 @@
 # The decomp.org project
 
-[![Join the chat at https://gitter.im/decomp/decomp](https://badges.gitter.im/decomp/decomp.svg)](https://gitter.im/decomp/decomp)
 [![Build Status](https://travis-ci.org/decomp/decomp.svg?branch=master)](https://travis-ci.org/decomp/decomp)
 [![Coverage Status](https://coveralls.io/repos/github/decomp/decomp/badge.svg?branch=master)](https://coveralls.io/github/decomp/decomp?branch=master)
 [![GoDoc](https://godoc.org/github.com/decomp/decomp?status.svg)](https://godoc.org/github.com/decomp/decomp)
