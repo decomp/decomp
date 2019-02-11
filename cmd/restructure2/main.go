@@ -50,11 +50,11 @@ import (
 )
 
 var (
-	// dbg represents a logger with the "restructure:" prefix, which logs debug
-	// messages to standard error.
+	// dbg is a logger which logs debug messages to standard error, prepending
+	// the "restructure:" prefix.
 	dbg = log.New(os.Stderr, term.MagentaBold("restructure:")+" ", 0)
-	// warn represents a logger with the "restructure:" prefix, which logs
-	// warning messages to standard error.
+	// warn is a logger which logs warning messages to standard error, prepending
+	// the "restructure:" prefix.
 	warn = log.New(os.Stderr, term.RedBold("restructure:")+" ", 0)
 )
 
@@ -135,14 +135,13 @@ func main() {
 }
 
 // restructure attempts to recover the control flow primitives of a given
-// control flow graph. It does so by repeatedly locating and merging structured
-// subgraphs (canonical graph representations of control flow primitives) into
-// single nodes until the entire graph is reduced into a single node or no
-// structured subgraphs may be located.
+// control flow graph.
 //
-// The steps argument specifies whether to record the intermediate control flow
-// graphs at each step. The returned list of primitives is ordered in the same
-// sequence as they were located.
+// method specifies the control flow recovery method to use.
+//
+// steps specifies whether to record the intermediate control flow graphs at
+// each step. The returned list of primitives is ordered in the same sequence as
+// they were located.
 //
 // img specifies whether to output image representations of the intermediate
 // control flow graphs.
