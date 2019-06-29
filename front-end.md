@@ -20,7 +20,6 @@ Supported:
 
 Miasm IR -> LLVM IR ([#904](https://github.com/cea-sec/miasm/pull/904))
 
-
 ## WAVM
 
 https://github.com/WAVM/WAVM
@@ -84,7 +83,7 @@ Supported:
 https://github.com/cojocar/bin2llvm
 
 Supported:
-* ARM
+* ARM -> LLVM IR
 
 ## fcd
 
