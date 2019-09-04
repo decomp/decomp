@@ -508,7 +508,7 @@ func (d *decompiler) instSelect(inst *ir.InstSelect) []ast.Stmt {
 func (d *decompiler) instCall(inst *ir.InstCall) ast.Stmt {
 	var callee ast.Expr
 	switch c := inst.Callee.(type) {
-	case *ir.Function:
+	case *ir.Func:
 		// global function identifier.
 		callee = d.globalIdent(c.GlobalName)
 	case *ir.Param:

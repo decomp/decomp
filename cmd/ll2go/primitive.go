@@ -167,7 +167,7 @@ func (d *decompiler) primIf(condBlock, bodyBlock, exitBlock *basicBlock) (*basic
 	if _, ok := bodyBlock.Term.(*ir.TermBr); !ok {
 		return nil, errors.Errorf("invalid body terminator type; expected *ir.TermBr, got %T", bodyBlock.Term)
 	}
-	block := &basicBlock{BasicBlock: &ir.BasicBlock{}}
+	block := &basicBlock{Block: &ir.Block{}}
 	block.Term = exitBlock.Term
 	// Handle instructions.
 	block.stmts = append(block.stmts, d.stmts(condBlock)...)
@@ -213,7 +213,7 @@ func (d *decompiler) primIfElse(condBlock, bodyTrueBlock, bodyFalseBlock, exitBl
 	if _, ok := bodyFalseBlock.Term.(*ir.TermBr); !ok {
 		return nil, errors.Errorf("invalid body_false terminator type; expected *ir.TermBr, got %T", bodyFalseBlock.Term)
 	}
-	block := &basicBlock{BasicBlock: &ir.BasicBlock{}}
+	block := &basicBlock{Block: &ir.Block{}}
 	block.Term = exitBlock.Term
 	// Handle instructions.
 	block.stmts = append(block.stmts, d.stmts(condBlock)...)
@@ -246,7 +246,7 @@ func (d *decompiler) primIfReturn(condBlock, bodyBlock, exitBlock *basicBlock) (
 	// branch or the false branch. If body is the false branch, negate the
 	// condition.
 	bodyTermStmt := d.term(bodyBlock.Term)
-	block := &basicBlock{BasicBlock: &ir.BasicBlock{}}
+	block := &basicBlock{Block: &ir.Block{}}
 	block.Term = exitBlock.Term
 	// Handle instructions.
 	block.stmts = append(block.stmts, d.stmts(condBlock)...)
@@ -278,7 +278,7 @@ func (d *decompiler) primPreLoop(condBlock, bodyBlock, exitBlock *basicBlock) (*
 	if _, ok := bodyBlock.Term.(*ir.TermBr); !ok {
 		return nil, errors.Errorf("invalid body terminator type; expected *ir.TermBr, got %T", bodyBlock.Term)
 	}
-	block := &basicBlock{BasicBlock: &ir.BasicBlock{}}
+	block := &basicBlock{Block: &ir.Block{}}
 	block.Term = exitBlock.Term
 	// Handle instructions.
 	block.stmts = append(block.stmts, d.stmts(condBlock)...)
@@ -310,7 +310,7 @@ func (d *decompiler) primPostLoop(condBlock, exitBlock *basicBlock) (*basicBlock
 	// TODO: Figure out a clean way to check if the exit basic block is the true
 	// branch or the false branch. If exit is the true branch, negate the
 	// condition.
-	block := &basicBlock{BasicBlock: &ir.BasicBlock{}}
+	block := &basicBlock{Block: &ir.Block{}}
 	block.Term = exitBlock.Term
 	// Handle instructions.
 	body := &ast.BlockStmt{
@@ -339,7 +339,7 @@ func (d *decompiler) primSeq(entryBlock, exitBlock *basicBlock) (*basicBlock, er
 	if _, ok := entryBlock.Term.(*ir.TermBr); !ok {
 		return nil, errors.Errorf("invalid entry terminator type; expected *ir.TermBr, got %T", entryBlock.Term)
 	}
-	block := &basicBlock{BasicBlock: &ir.BasicBlock{}}
+	block := &basicBlock{Block: &ir.Block{}}
 	block.Term = exitBlock.Term
 	// Handle instructions.
 	block.stmts = append(block.stmts, d.stmts(entryBlock)...)

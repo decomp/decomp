@@ -34,7 +34,7 @@ func (d *decompiler) constant(c constant.Constant) ast.Expr {
 	// Global variable and function addresses
 	case *ir.Global:
 		return d.globalIdent(c.GlobalName)
-	case *ir.Function:
+	case *ir.Func:
 		return d.globalIdent(c.GlobalName)
 	// Constant expressions
 	case constant.Expression:
@@ -330,7 +330,7 @@ func (d *decompiler) exprGetElementPtr(expr *constant.ExprGetElementPtr) ast.Exp
 	for _, index := range expr.Indices {
 		src = &ast.IndexExpr{
 			X:     src,
-			Index: d.constant(index.Index),
+			Index: d.constant(index),
 		}
 	}
 	e := &ast.UnaryExpr{

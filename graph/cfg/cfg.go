@@ -22,7 +22,7 @@ type Graph struct {
 }
 
 // New returns a new control flow graph based on the given function.
-func New(f *ir.Function) *Graph {
+func New(f *ir.Func) *Graph {
 	g := &Graph{
 		DirectedGraph: simple.NewDirectedGraph(),
 		nodes:         make(map[string]*Node),
