@@ -3,14 +3,12 @@ language: go
 notifications:
   email: false
 
-matrix:
-  env:
+env:
+  global:
     - GO111MODULE=on
-  env:
     - GO111MODULE=off
-    global:
-      - secure: "I5aI/oS2frPKuAWiHwNbcnYzIfJm2nQ9qDlabeurkB8FrN643Yetf5p3Az3QbbPhPO7ntIFAoxQBqov4jGv/dAFbygii+WiTQ6n7E1/bCg5rPDMUxo+TWJdqfNmNBdnYt5xE/3C4PpuDqqKKwXkUlc3i/xGHBvGNCD248mbooZw="
-      - PATH=$HOME/gopath/bin:$PATH
+    - secure: "I5aI/oS2frPKuAWiHwNbcnYzIfJm2nQ9qDlabeurkB8FrN643Yetf5p3Az3QbbPhPO7ntIFAoxQBqov4jGv/dAFbygii+WiTQ6n7E1/bCg5rPDMUxo+TWJdqfNmNBdnYt5xE/3C4PpuDqqKKwXkUlc3i/xGHBvGNCD248mbooZw="
+    - PATH=$HOME/gopath/bin:$PATH
 
 install:
   - go get ./...
