@@ -6,7 +6,6 @@ github.com/fogleman/gg v1.2.1-0.20190220221249-0403632d5b90/go.mod h1:R/bRT+9gY/
 github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0/go.mod h1:E/TSTwGwJL78qG/PmXZO1EjYhfJinVAhrmmHX6Z8B9k=
 github.com/graphism/exp v0.0.0-20190904093716-eaf14ca0c511 h1:clCBylphJ0eAdkTWgEddn791f7CI0Tw9QeiLDFeJwVo=
 github.com/graphism/exp v0.0.0-20190904093716-eaf14ca0c511/go.mod h1:o6FrvUmFz48/wwB1fvhQYmGA14Zq5sXb3PPZD55KTwM=
-github.com/graphism/simple v0.0.0-20181208150621-c42395dbfa50 h1:0dZv/2+dMWaPPFN6BMrBuq2Bh4jd5UmoED8iO543dYE=
 github.com/graphism/simple v0.0.0-20181208150621-c42395dbfa50/go.mod h1:cox5q9v+f1rnFijpHx1qN0aS9dkJS4rFxCNHgcjBa8c=
 github.com/graphism/simple v0.0.0-20190824091927-3dbe7f1633cb h1:mg5G3mdtpMb3TLnvTnhb4lrMLfXBm2VyRCYVRBWIHvk=
 github.com/graphism/simple v0.0.0-20190824091927-3dbe7f1633cb/go.mod h1:sYheWgIrtuh/RhKOczh7iOzK61IdSpcu1+bqe0A67AY=
@@ -56,13 +55,11 @@ golang.org/x/tools v0.0.0-20190330180304-aef51cc3777c/go.mod h1:LCzVGOaR6xXOjkQ3
 golang.org/x/tools v0.0.0-20190628222527-fb37f6ba8261 h1:KP5slYyJf3GFQbPLTWjQ0TCqBQ73hYpqtCElF+iSruQ=
 golang.org/x/tools v0.0.0-20190628222527-fb37f6ba8261/go.mod h1:jcCCGcm9btYwXyDqrUWc6MKQKKGJCWEQ3AfLSRIbEuI=
 gonum.org/v1/gonum v0.0.0-20180816165407-929014505bf4/go.mod h1:Y+Yx5eoAFn32cQvJDxZx5Dpnq+c3wtXuadVZAcxbbBo=
-gonum.org/v1/gonum v0.0.0-20181208091643-b71a28080e0f h1:mTXdxjj6u0sKi+UItZVxq7mfSaNBQFpeu0AOv8u/CCU=
 gonum.org/v1/gonum v0.0.0-20181208091643-b71a28080e0f/go.mod h1:Y+Yx5eoAFn32cQvJDxZx5Dpnq+c3wtXuadVZAcxbbBo=
 gonum.org/v1/gonum v0.0.0-20181210083604-572d9101fe4f/go.mod h1:Y+Yx5eoAFn32cQvJDxZx5Dpnq+c3wtXuadVZAcxbbBo=
 gonum.org/v1/gonum v0.0.0-20190331200053-3d26580ed485/go.mod h1:2ltnJ7xHfj0zHS40VVPYEAAMTa3ZGguvHGBSJeRWqE0=
 gonum.org/v1/gonum v0.0.0-20190821101010-d61003946d0d h1:6lN6mPOoQL2pCuKVr+GGvWa5yz3hDZAC1eroxeE6WUg=
 gonum.org/v1/gonum v0.0.0-20190821101010-d61003946d0d/go.mod h1:9mxDZsDKxgMAuccQkewq682L+0eCu4dCN2yonUJTCLU=
-gonum.org/v1/netlib v0.0.0-20181029234149-ec6d1f5cefe6 h1:4WsZyVtkthqrHTbDCJfiTs8IWNYE4uvsSDgaV6xpp+o=
 gonum.org/v1/netlib v0.0.0-20181029234149-ec6d1f5cefe6/go.mod h1:wa6Ws7BG/ESfp6dHfk7C6KdzKA7wR7u/rKwOGE66zvw=
 gonum.org/v1/netlib v0.0.0-20190313105609-8cb42192e0e0/go.mod h1:wa6Ws7BG/ESfp6dHfk7C6KdzKA7wR7u/rKwOGE66zvw=
 gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e h1:jRyg0XfpwWlhEV8mDfdNGBeSJM2fuyh9Yjrnd8kF2Ts=

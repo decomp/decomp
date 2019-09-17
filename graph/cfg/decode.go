@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/graphism/simple"
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph/encoding/dot"
+	"gonum.org/v1/gonum/graph/simple"
 )
 
 // ParseFile parses the given Graphviz DOT file into a control flow graph.
