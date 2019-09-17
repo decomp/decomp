@@ -84,7 +84,7 @@ Supported:
 https://github.com/cojocar/bin2llvm
 
 Supported:
-* ARM
+* ARM -> LLVM IR
 
 ## fcd
 
