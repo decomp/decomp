@@ -77,7 +77,8 @@ func parseFixPrint(t *testing.T, fn func(*ast.File) bool, desc, in string, mustB
 func TestRewrite(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.Name, func(t *testing.T) {
-			t.Parallel()
+			// Note: do not run test in parallel since then we always get PASS.
+			//t.Parallel()
 			// Apply fix: should get tt.Out.
 			out, fixed, ok := parseFixPrint(t, tt.Fn, tt.Name, tt.In, true)
 			if !ok {
@@ -89,7 +90,6 @@ func TestRewrite(t *testing.T) {
 			if !ok {
 				return
 			}
-
 			if out != tt.Out {
 				t.Errorf("incorrect output.\n")
 				if !strings.HasPrefix(tt.Name, "testdata/") {
