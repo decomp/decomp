@@ -34,7 +34,7 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		block.LocalName = prim.Entry
+		block.LocalIdent = ir.NewLocalIdent(prim.Entry)
 		block.num = condBlock.num
 		return block, nil
 	case "if_else":
@@ -62,7 +62,7 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		block.LocalName = prim.Entry
+		block.LocalIdent = ir.NewLocalIdent(prim.Entry)
 		block.num = condBlock.num
 		return block, nil
 	case "if_return":
@@ -85,7 +85,7 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		block.LocalName = prim.Entry
+		block.LocalIdent = ir.NewLocalIdent(prim.Entry)
 		block.num = condBlock.num
 		return block, nil
 	case "pre_loop":
@@ -108,7 +108,7 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		block.LocalName = prim.Entry
+		block.LocalIdent = ir.NewLocalIdent(prim.Entry)
 		block.num = condBlock.num
 		return block, nil
 	case "post_loop":
@@ -126,7 +126,7 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		block.LocalName = prim.Entry
+		block.LocalIdent = ir.NewLocalIdent(prim.Entry)
 		block.num = condBlock.num
 		return block, nil
 	case "seq":
@@ -144,7 +144,7 @@ func (d *decompiler) prim(prim *primitive.Primitive) (*basicBlock, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		block.LocalName = prim.Entry
+		block.LocalIdent = ir.NewLocalIdent(prim.Entry)
 		block.num = entryBlock.num
 		return block, nil
 	default:

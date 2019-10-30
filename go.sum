@@ -24,8 +24,8 @@ github.com/llir/ll v0.0.0-20191028085432-be396df8b3bd h1:OUK2Zbvq53Q2VIdIURjxTRx
 github.com/llir/ll v0.0.0-20191028085432-be396df8b3bd/go.mod h1:8W5HJz80PitAyPZUpOcljQxTu6LD5YKW1URTo+OjVoc=
 github.com/llir/llvm v0.3.0-pre7.0.20190702100948-293cf9ae11e2 h1:HvPvVUkQUFwTv0VikBGc57IJnK8d3NpLOlgQzX6cFqQ=
 github.com/llir/llvm v0.3.0-pre7.0.20190702100948-293cf9ae11e2/go.mod h1:f82xl2Z6BY+9QxDjzF9+kg9ywwGCxH5+TkTylbl6+rA=
-github.com/llir/llvm v0.3.0-pre7.0.20191030071150-a8074fa503db h1:aBP2XbhWhgG11q8Voo+86nJEHtvD2WlQNCsxl88me+4=
-github.com/llir/llvm v0.3.0-pre7.0.20191030071150-a8074fa503db/go.mod h1:XjcUMlPPzJYcSRAoY61amH74LLpCen/bER7Qci+SSE0=
+github.com/llir/llvm v0.3.0-pre7.0.20191030085756-0d3fc3c34eb5 h1:jjTD2vKmIr4k4Zh7V4BgKIWbaFDcBl2ORJlr31YplRg=
+github.com/llir/llvm v0.3.0-pre7.0.20191030085756-0d3fc3c34eb5/go.mod h1:XjcUMlPPzJYcSRAoY61amH74LLpCen/bER7Qci+SSE0=
 github.com/mewkiz/pkg v0.0.0-20190317153131-e8616647c365/go.mod h1:NefHmmDOyP6U1WiFFk+jFR3YdHoTeueo8nOZ6i1vZbA=
 github.com/mewkiz/pkg v0.0.0-20190828003901-6b61f1db6192 h1:3bApyjJo5cTtEFjRdzyc+XqtTYZTTSksEsif2wvE/SQ=
 github.com/mewkiz/pkg v0.0.0-20190828003901-6b61f1db6192/go.mod h1:D1aXY6HcUk9IChUnRICtWcWwuK7yvN49X2c9EPM99oE=

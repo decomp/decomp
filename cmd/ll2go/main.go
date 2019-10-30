@@ -28,6 +28,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -377,7 +378,7 @@ func (d *decompiler) funcDecl(f *ir.Func, prims []*primitive.Primitive) (*ast.Fu
 	// Reset basic block mapping.
 	d.blocks = make(map[string]*basicBlock)
 	for i, block := range f.Blocks {
-		d.blocks[block.LocalName] = &basicBlock{Block: block, num: i}
+		d.blocks[localIdent(block.LocalIdent)] = &basicBlock{Block: block, num: i}
 	}
 
 	// Record outgoing PHI values.
@@ -390,8 +391,8 @@ func (d *decompiler) funcDecl(f *ir.Func, prims []*primitive.Primitive) (*ast.Fu
 			// The incoming values of PHI instructions are propagated as assignment
 			// statements to the predecessor basic blocks of the incoming values.
 			for _, inc := range phi.Incs {
-				pred := d.blocks[inc.Pred.LocalName]
-				assignStmt := d.assign(phi.LocalName, d.value(inc.X))
+				pred := d.blocks[localIdent(inc.Pred.LocalIdent)]
+				assignStmt := d.assign(localIdent(phi.LocalIdent), d.value(inc.X))
 				pred.out = append(pred.out, assignStmt)
 			}
 		}
@@ -408,7 +409,7 @@ func (d *decompiler) funcDecl(f *ir.Func, prims []*primitive.Primitive) (*ast.Fu
 			delete(d.blocks, node)
 		}
 		// Add primitive basic block.
-		d.blocks[block.LocalName] = block
+		d.blocks[localIdent(block.LocalIdent)] = block
 	}
 
 	// A single remaining basic block indicates successful control flow recovery.
@@ -436,7 +437,7 @@ func (d *decompiler) funcDecl(f *ir.Func, prims []*primitive.Primitive) (*ast.Fu
 			return nil, errors.New("empty basic block; expected at least 1 statement")
 		}
 		labelStmt := &ast.LabeledStmt{
-			Label: d.label(block.LocalName),
+			Label: d.label(localIdent(block.LocalIdent)),
 			Stmt:  block.stmts[0],
 		}
 		block.stmts[0] = labelStmt
@@ -675,4 +676,12 @@ func label(n graph.Node) string {
 		return n.Label
 	}
 	panic(fmt.Sprintf("invalid node type; expected *cfg.Node, got %T", n))
+}
+
+// localIdent returns a string representation of the given local identifier.
+func localIdent(ident ir.LocalIdent) string {
+	if len(ident.LocalName) > 0 {
+		return ident.LocalName
+	}
+	return strconv.FormatInt(ident.LocalID, 10)
 }
