@@ -364,6 +364,13 @@ func (d *decompiler) funcDecl(f *ir.Func, prims []*primitive.Primitive) (*ast.Fu
 	// Recover function declaration.
 	typ := d.goType(f.Sig)
 	sig := typ.(*ast.FuncType)
+	for i, p := range f.Params {
+		paramName := d.localIdent(localIdent(p.LocalIdent))
+		if len(sig.Params.List[i].Names) < 1 {
+			sig.Params.List[i].Names = make([]*ast.Ident, 1)
+		}
+		sig.Params.List[i].Names[0] = paramName
+	}
 	fn := &ast.FuncDecl{
 		Name: d.globalIdent(f.GlobalName),
 		Type: sig,
