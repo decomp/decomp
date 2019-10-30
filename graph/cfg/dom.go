@@ -20,5 +20,10 @@ func NewDom(g graph.Directed, entry graph.Node) DominatorTree {
 
 // Dominates reports whether A dominates B.
 func (dt DominatorTree) Dominates(a, b graph.Node) bool {
-	return a.ID() == dt.DominatorTree.DominatorOf(b.ID()).ID()
+	bDom := dt.DominatorTree.DominatorOf(b.ID())
+	if bDom == nil {
+		// B is root node, thus not dominated by A.
+		return false
+	}
+	return a.ID() == bDom.ID()
 }
