@@ -95,7 +95,7 @@ func localid(file *ast.File) bool {
 }
 
 // getScope returns all statements in which ident is in scope.
-func getScope(file *ast.File, ident *ast.Ident) []ast.Stmt {
+func getScope(root ast.Node, ident *ast.Ident) []ast.Stmt {
 	var scope []ast.Stmt
 	f := func(n interface{}) {
 		stmt, ok := n.(ast.Stmt)
@@ -111,7 +111,7 @@ func getScope(file *ast.File, ident *ast.Ident) []ast.Stmt {
 			scope = append(scope, stmt)
 		}
 	}
-	walk(file, f)
+	walk(root, f)
 	return scope
 }
 

@@ -13,7 +13,7 @@ var mem2varFix = fix{
 	name:     "mem2var",
 	date:     "2019-10-30",
 	f:        mem2var,
-	desc:     `Promote memory to variables.`,
+	desc:     `Promote memory to variables (_1 := new(int) -> var _1 int).`,
 	disabled: false,
 }
 
@@ -33,6 +33,21 @@ func mem2var(file *ast.File) bool {
 	//    _7 = 0
 	//    _12 = _7
 	walk(file, func(n interface{}) {
+		funcDecl, ok := n.(*ast.FuncDecl)
+		if !ok {
+			return
+		}
+		if mem2varFuncDecl(funcDecl) {
+			fixed = true
+		}
+	})
+
+	return fixed
+}
+
+func mem2varFuncDecl(funcDecl ast.Node) bool {
+	fixed := false
+	walk(funcDecl, func(n interface{}) {
 		stmt, ok := n.(*ast.Stmt)
 		if !ok {
 			return
@@ -77,6 +92,7 @@ func mem2var(file *ast.File) bool {
 				},
 			},
 		}
+		fixed = true
 		// rewrite memory uses to variable uses.
 		//
 		// from:
@@ -84,10 +100,8 @@ func mem2var(file *ast.File) bool {
 		//
 		// to:
 		//    _16
-		rewriteMem2Var(file, ident)
-		fixed = true
+		rewriteMem2Var(funcDecl, ident.Name)
 	})
-
 	return fixed
 }
 
@@ -98,8 +112,8 @@ func mem2var(file *ast.File) bool {
 //
 // to:
 //    _16
-func rewriteMem2Var(file *ast.File, ident *ast.Ident) {
-	walk(file, func(n interface{}) {
+func rewriteMem2Var(funcDecl ast.Node, identName string) {
+	walk(funcDecl, func(n interface{}) {
 		expr, ok := n.(*ast.Expr)
 		if !ok {
 			return
@@ -113,9 +127,9 @@ func rewriteMem2Var(file *ast.File, ident *ast.Ident) {
 		if !ok {
 			return
 		}
-		if ident.Name != starIdent.Name {
+		if identName != starIdent.Name {
 			return
 		}
-		*expr = ident
+		*expr = ast.NewIdent(identName)
 	})
 }
