@@ -125,6 +125,15 @@ func (prim IfElse) IsValid(g graph.Directed, dom cfg.DominatorTree) bool {
 		return false
 	}
 
+	// Verify that cond is dominated by its predecessors.
+	condPreds := g.To(cond.ID())
+	for condPreds.Next() {
+		condPred := condPreds.Node()
+		if !dom.Dominates(condPred, cond) {
+			return false
+		}
+	}
+
 	// Verify that cond has two successors (body_true and body_false).
 	condSuccs := g.From(cond.ID())
 	if condSuccs.Len() != 2 || !g.HasEdgeFromTo(cond.ID(), bodyTrue.ID()) || !g.HasEdgeFromTo(cond.ID(), bodyFalse.ID()) {
