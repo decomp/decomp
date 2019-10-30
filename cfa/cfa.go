@@ -63,24 +63,26 @@ func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
 		}
 		nodes = append(nodes, node)
 	}
-	entry, ok := g.NodeByLabel(prim.Entry)
+	primEntry, ok := g.NodeByLabel(prim.Entry)
 	if !ok {
-		return errors.Errorf("unable to locate entry node label %q", prim.Entry)
+		return errors.Errorf("unable to locate primitive entry node label %q", prim.Entry)
 	}
-	exit, ok := g.NodeByLabel(prim.Exit)
+	primExit, ok := g.NodeByLabel(prim.Exit)
 	if !ok {
-		return errors.Errorf("unable to locate exit node label %q", prim.Exit)
+		return errors.Errorf("unable to locate primitive exit node label %q", prim.Exit)
 	}
+	// Check if entry node of primitive is the root entry node of the graph.
+	isRootNode := primEntry.ID() == g.Entry().ID()
 
 	// Add new node for primitive.
-	entryLabel := entry.Label
-	p := g.NewNodeWithLabel(fmt.Sprintf("prim_node_of_%s", entryLabel))
+	primEntryLabel := primEntry.Label
+	p := g.NewNodeWithLabel(fmt.Sprintf("prim_node_of_%s", primEntryLabel))
 
-	// Connect incoming edges to entry.
-	fromNodes := g.To(entry.ID())
+	// Connect incoming edges to primitive entry.
+	fromNodes := g.To(primEntry.ID())
 	for fromNodes.Next() {
 		from := fromNodes.Node()
-		e := g.Edge(from.ID(), entry.ID())
+		e := g.Edge(from.ID(), primEntry.ID())
 		var label string
 		if e, ok := e.(*cfg.Edge); ok {
 			label = e.Label
@@ -88,11 +90,11 @@ func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
 		g.NewEdgeWithLabel(from, p, label)
 	}
 
-	// Connect outgoing edges from exit.
-	toNodes := g.From(exit.ID())
+	// Connect outgoing edges from primitive exit.
+	toNodes := g.From(primExit.ID())
 	for toNodes.Next() {
 		to := toNodes.Node()
-		e := g.Edge(exit.ID(), to.ID())
+		e := g.Edge(primExit.ID(), to.ID())
 		var label string
 		if e, ok := e.(*cfg.Edge); ok {
 			label = e.Label
@@ -105,9 +107,16 @@ func Merge(g *cfg.Graph, prim *primitive.Primitive) error {
 		g.RemoveNode(node)
 	}
 
-	// Set label of new primitive to the label of the entry node.
-	g.SetNodeLabel(p, entryLabel)
-	g.SetEntry(p)
+	// Set label of new primitive to the label of the prim entry node. The
+	// "prim_of_node_NN" label is only temporary to avoid name collisions during
+	// merge.
+	g.SetNodeLabel(p, primEntryLabel)
+
+	// If the primitive contained the root entry node of the graph, update the
+	// entry node of the graph to be the merged primitive node.
+	if isRootNode {
+		g.SetEntry(p)
+	}
 
 	return nil
 }
