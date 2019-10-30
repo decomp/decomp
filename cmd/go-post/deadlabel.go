@@ -11,10 +11,11 @@ func init() {
 }
 
 var deadlabelFix = fix{
-	"deadlabel",
-	"2016-11-17",
-	deadlabel,
-	`Remove unused labels.`,
+	name:     "deadlabel",
+	date:     "2016-11-17",
+	f:        deadlabel,
+	desc:     `Remove unused labels.`,
+	disabled: false,
 }
 
 func deadlabel(file *ast.File) bool {

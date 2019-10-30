@@ -14,10 +14,11 @@ func init() {
 }
 
 var unresolvedFix = fix{
-	"unresolved",
-	"2015-03-11",
-	unresolved,
-	`Replace assignment statements with declare and initialize statements at the first occurrence of an unresolved identifier.`,
+	name:     "unresolved",
+	date:     "2015-03-11",
+	f:        unresolved,
+	desc:     `Replace assignment statements with declare and initialize statements at the first occurrence of an unresolved identifier.`,
+	disabled: false,
 }
 
 func unresolved(file *ast.File) bool {

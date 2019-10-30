@@ -14,10 +14,11 @@ func init() {
 }
 
 var deadassignFix = fix{
-	"deadassign",
-	"2015-03-11",
-	deadassign,
-	`Remove "x = x" assignments.`,
+	name:     "deadassign",
+	date:     "2015-03-11",
+	f:        deadassign,
+	desc:     `Remove "x = x" assignments.`,
+	disabled: false,
 }
 
 func deadassign(file *ast.File) bool {

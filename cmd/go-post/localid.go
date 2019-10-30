@@ -12,24 +12,24 @@ import (
 )
 
 func init() {
-	// TODO: re-register localid when proper data-flow analysis has been
-	// implemented.
-	//register(localidFix)
+	register(localidFix)
 }
 
 var localidFix = fix{
-	"localid",
+	name:     "localid",
 	// HACK: Fixes are sorted by date. The Unix epoch makes sure that the local
 	// ID replacement rule happens before all other rules. This enables
 	// assignbinop simplification directly.
-	"1970-01-01",
-	localid,
-	`Replace the use of local variable IDs with their definition.`,
+	date:     "1970-01-01",
+	f:        localid,
+	desc:     `Replace the use of local variable IDs with their definition.`,
+	// Disable localid rule by default as its transformation is not sound. Enable
+	// once localid uses proper data flow analysis.
+	disabled: true,
 }
 
 func localid(file *ast.File) bool {
 	fixed := false
-
 	// Apply the following transitions:
 	//
 	// 1)
@@ -118,6 +118,9 @@ func getScope(file *ast.File, ident *ast.Ident) []ast.Stmt {
 // containsIdent reports if the statement contains the given identifier.
 func containsIdent(stmt ast.Stmt, ident *ast.Ident) bool {
 	found := false
+	if isDeclOfIdent(stmt, ident) {
+		return false
+	}
 	f := func(n interface{}) {
 		expr, ok := n.(ast.Expr)
 		if !ok {
@@ -129,6 +132,22 @@ func containsIdent(stmt ast.Stmt, ident *ast.Ident) bool {
 	}
 	walk(stmt, f)
 	return found
+}
+
+// isDeclOfIdent reports whether the given statement is a declaration statement
+// of the specified identifier.
+func isDeclOfIdent(stmt ast.Stmt, ident *ast.Ident) bool {
+	if assignStmt, ok := stmt.(*ast.AssignStmt); ok {
+		if len(assignStmt.Lhs) != 1 {
+			return false
+		}
+		lhsIdent, ok := assignStmt.Lhs[0].(*ast.Ident)
+		if !ok {
+			return false
+		}
+		return lhsIdent == ident
+	}
+	return false
 }
 
 // isLocalID returns true if the given variable name is a local ID (e.g. "_42").

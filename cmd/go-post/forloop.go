@@ -14,13 +14,14 @@ func init() {
 }
 
 var forloopFix = fix{
-	"forloop",
+	name:     "forloop",
 	// NOTE: The "forloop" go fix rule depends on the "unresolved" go fix rule as
 	// it locates undeclared variables and declares them using ":=". The date of
 	// "forloop" must therefore be later in time than the date of "unresolved".
-	"2015-03-12",
-	forloop,
-	`Add initialization and post-statements to for-loops.`,
+	date:     "2015-03-12",
+	f:        forloop,
+	desc:     `Add initialization and post-statements to for-loops.`,
+	disabled: false,
 }
 
 func forloop(file *ast.File) bool {

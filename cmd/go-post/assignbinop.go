@@ -15,10 +15,11 @@ func init() {
 }
 
 var assignbinopFix = fix{
-	"assignbinop",
-	"2015-03-11",
-	assignbinop,
-	`Replace "x = x + z" with "x += z".`,
+	name:     "assignbinop",
+	date:     "2015-03-11",
+	f:        assignbinop,
+	desc:     `Replace "x = x + z" with "x += z".`,
+	disabled: false,
 }
 
 func assignbinop(file *ast.File) bool {

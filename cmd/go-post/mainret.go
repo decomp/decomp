@@ -14,10 +14,11 @@ func init() {
 }
 
 var mainretFix = fix{
-	"mainret",
-	"2015-02-27",
-	mainret,
-	`Replace return statements with calls to os.Exit in the "main" function.`,
+	name:     "mainret",
+	date:     "2015-02-27",
+	f:        mainret,
+	desc:     `Replace return statements with calls to os.Exit in the "main" function.`,
+	disabled: false,
 }
 
 func mainret(file *ast.File) bool {
