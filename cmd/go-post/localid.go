@@ -145,7 +145,7 @@ func isDeclOfIdent(stmt ast.Stmt, ident *ast.Ident) bool {
 		if !ok {
 			return false
 		}
-		return lhsIdent == ident
+		return lhsIdent.Name == ident.Name
 	}
 	return false
 }
