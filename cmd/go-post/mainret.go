@@ -113,10 +113,10 @@ func mainret(file *ast.File) bool {
 		mainFunc.Type.Results = nil
 		fixed = true
 	}
-	if mainFunc.Type.Params != nil && len(mainFunc.Type.Params.List) > 0 {
-		mainFunc.Type.Params = nil
-		fixed = true
-	}
+	//if mainFunc.Type.Params != nil && len(mainFunc.Type.Params.List) > 0 {
+	//	mainFunc.Type.Params = nil
+	//	fixed = true
+	//}
 
 	return fixed
 }
@@ -132,7 +132,10 @@ func createExit(arg ast.Expr) *ast.ExprStmt {
 				Sel: ast.NewIdent("Exit"),
 			},
 			Args: []ast.Expr{
-				arg,
+				&ast.CallExpr{
+					Fun: ast.NewIdent("int"),
+					Args: []ast.Expr{arg},
+				},
 			},
 		},
 	}
