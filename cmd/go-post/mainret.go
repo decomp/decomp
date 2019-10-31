@@ -14,12 +14,13 @@ var mainretFix = fix{
 	date:     "2015-02-27",
 	f:        mainret,
 	desc:     `Replace return statements with calls to os.Exit in the "main" function.`,
-	disabled: false,
+	// Note: mainret is disabled by default, as it has been superseded by the
+	// "cmain" rule.
+	disabled: true,
 }
 
 func mainret(file *ast.File) bool {
 	fixed := false
-	hasOS := false
 
 	// Locate the "main" function.
 	mainFunc, ok := findMainFunc(file)
@@ -81,9 +82,7 @@ func mainret(file *ast.File) bool {
 				retStmt.Results = nil
 			} else {
 				// Add "os" import if needed.
-				if !hasOS {
-					addImport(file, "os")
-				}
+				addImport(file, "os")
 				// Replace "return 42" with "os.Exit(42)".
 				exit := createExit(result)
 				*stmt = exit
