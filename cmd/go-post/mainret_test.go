@@ -19,7 +19,7 @@ func main() {
 import "os"
 
 func main() {
-	os.Exit(42)
+	os.Exit(int(42))
 }
 `,
 	},
@@ -58,7 +58,7 @@ import "os"
 func main() {
 	i := 42
 	if i >= 128 {
-		os.Exit(i)
+		os.Exit(int(i))
 	}
 }
 `,
