@@ -14,7 +14,7 @@ go get github.com/decomp/decomp/...
 
 ## Usage
 
-See example usage at [examples/demo](examples/demo).
+See example usage at [examples/demo](examples/demo), and [this comment](https://github.com/decomp/decomp/issues/218#issuecomment-548506064) for further details.
 
 ## Decompilation pipeline
 
