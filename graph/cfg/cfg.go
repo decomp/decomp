@@ -8,6 +8,7 @@ import (
 
 	"github.com/graphism/simple"
 	"github.com/llir/llvm/ir"
+	"github.com/llir/llvm/ir/value"
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding"
@@ -32,7 +33,7 @@ func New(f *ir.Func) *Graph {
 		panic(fmt.Errorf("unable to assign IDs to locate variables of function %q; %v", f.Ident(), err))
 	}
 	for i, block := range f.Blocks {
-		from := g.NewNodeWithLabel(localIdent(block.LocalIdent))
+		from := g.NewNodeWithLabel(block.Name())
 		if i == 0 {
 			// Store entry node.
 			g.SetEntry(from)
@@ -41,20 +42,20 @@ func New(f *ir.Func) *Graph {
 		case *ir.TermRet:
 			// nothing to do.
 		case *ir.TermBr:
-			to := g.NewNodeWithLabel(localIdent(term.Target.LocalIdent))
+			to := g.NewNodeWithLabel(term.Target.(value.Named).Name())
 			g.NewEdgeWithLabel(from, to, "")
 		case *ir.TermCondBr:
-			t := g.NewNodeWithLabel(localIdent(term.TargetTrue.LocalIdent))
-			f := g.NewNodeWithLabel(localIdent(term.TargetFalse.LocalIdent))
+			t := g.NewNodeWithLabel(term.TargetTrue.(value.Named).Name())
+			f := g.NewNodeWithLabel(term.TargetFalse.(value.Named).Name())
 			g.NewEdgeWithLabel(from, t, "true")
 			g.NewEdgeWithLabel(from, f, "false")
 		case *ir.TermSwitch:
 			for _, c := range term.Cases {
-				to := g.NewNodeWithLabel(localIdent(c.Target.LocalIdent))
+				to := g.NewNodeWithLabel(c.Target.(value.Named).Name())
 				label := fmt.Sprintf("case (x=%v)", c.X.Ident())
 				g.NewEdgeWithLabel(from, to, label)
 			}
-			to := g.NewNodeWithLabel(localIdent(term.TargetDefault.LocalIdent))
+			to := g.NewNodeWithLabel(term.TargetDefault.(value.Named).Name())
 			g.NewEdgeWithLabel(from, to, "default case")
 		case *ir.TermUnreachable:
 			// nothing to do.
@@ -249,12 +250,4 @@ func (e *Edge) SetAttribute(attr encoding.Attribute) error {
 		// ignore attribute.
 	}
 	return nil
-}
-
-// localIdent returns a string representation of the given local identifier.
-func localIdent(ident ir.LocalIdent) string {
-	if len(ident.LocalName) > 0 {
-		return ident.LocalName
-	}
-	return strconv.FormatInt(ident.LocalID, 10)
 }

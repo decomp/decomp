@@ -398,7 +398,7 @@ func (d *decompiler) funcDecl(f *ir.Func, prims []*primitive.Primitive) (*ast.Fu
 			// The incoming values of PHI instructions are propagated as assignment
 			// statements to the predecessor basic blocks of the incoming values.
 			for _, inc := range phi.Incs {
-				pred := d.blocks[localIdent(inc.Pred.LocalIdent)]
+				pred := d.blocks[inc.Pred.(value.Named).Name()]
 				assignStmt := d.assign(localIdent(phi.LocalIdent), d.value(inc.X))
 				pred.out = append(pred.out, assignStmt)
 			}

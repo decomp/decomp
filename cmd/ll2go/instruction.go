@@ -483,7 +483,7 @@ func (d *decompiler) instFCmp(inst *ir.InstFCmp) ast.Stmt {
 func (d *decompiler) instSelect(inst *ir.InstSelect) []ast.Stmt {
 	spec := &ast.ValueSpec{
 		Names: []*ast.Ident{d.localIdent(localIdent(inst.LocalIdent))},
-		Type:  d.goType(inst.X.Type()),
+		Type:  d.goType(inst.ValueTrue.Type()),
 	}
 	declStmt := &ast.DeclStmt{
 		Decl: &ast.GenDecl{
@@ -494,10 +494,10 @@ func (d *decompiler) instSelect(inst *ir.InstSelect) []ast.Stmt {
 	ifStmt := &ast.IfStmt{
 		Cond: d.value(inst.Cond),
 		Body: &ast.BlockStmt{
-			List: []ast.Stmt{d.assign(localIdent(inst.LocalIdent), d.value(inst.X))},
+			List: []ast.Stmt{d.assign(localIdent(inst.LocalIdent), d.value(inst.ValueTrue))},
 		},
 		Else: &ast.BlockStmt{
-			List: []ast.Stmt{d.assign(localIdent(inst.LocalIdent), d.value(inst.Y))},
+			List: []ast.Stmt{d.assign(localIdent(inst.LocalIdent), d.value(inst.ValueFalse))},
 		},
 	}
 	return []ast.Stmt{declStmt, ifStmt}

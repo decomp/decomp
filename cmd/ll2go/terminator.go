@@ -6,6 +6,7 @@ import (
 	"go/token"
 
 	"github.com/llir/llvm/ir"
+	"github.com/llir/llvm/ir/value"
 )
 
 // term converts the given LLVM IR terminator to a corresponding Go statement.
@@ -41,10 +42,10 @@ func (d *decompiler) termRet(term *ir.TermRet) ast.Stmt {
 // statement.
 func (d *decompiler) termBr(term *ir.TermBr) ast.Stmt {
 	// Use goto-statements as a fallback for incomplete control flow recovery.
-	d.labels[localIdent(term.Target.LocalIdent)] = true
+	d.labels[term.Target.(value.Named).Name()] = true
 	return &ast.BranchStmt{
 		Tok:   token.GOTO,
-		Label: d.label(localIdent(term.Target.LocalIdent)),
+		Label: d.label(term.Target.(value.Named).Name()),
 	}
 }
 
@@ -52,15 +53,15 @@ func (d *decompiler) termBr(term *ir.TermBr) ast.Stmt {
 // corresponding Go statement.
 func (d *decompiler) termCondBr(term *ir.TermCondBr) ast.Stmt {
 	// Use goto-statements as a fallback for incomplete control flow recovery.
-	d.labels[localIdent(term.TargetTrue.LocalIdent)] = true
-	d.labels[localIdent(term.TargetFalse.LocalIdent)] = true
+	d.labels[term.TargetTrue.(value.Named).Name()] = true
+	d.labels[term.TargetFalse.(value.Named).Name()] = true
 	gotoTrueStmt := &ast.BranchStmt{
 		Tok:   token.GOTO,
-		Label: d.label(localIdent(term.TargetTrue.LocalIdent)),
+		Label: d.label(term.TargetTrue.(value.Named).Name()),
 	}
 	gotoFalseStmt := &ast.BranchStmt{
 		Tok:   token.GOTO,
-		Label: d.label(localIdent(term.TargetFalse.LocalIdent)),
+		Label: d.label(term.TargetFalse.(value.Named).Name()),
 	}
 	return &ast.IfStmt{
 		Cond: d.value(term.Cond),
@@ -81,7 +82,7 @@ func (d *decompiler) termSwitch(term *ir.TermSwitch) ast.Stmt {
 	for _, c := range term.Cases {
 		gotoStmt := &ast.BranchStmt{
 			Tok:   token.GOTO,
-			Label: d.localIdent(localIdent(c.Target.LocalIdent)),
+			Label: d.localIdent(c.Target.(value.Named).Name()),
 		}
 		cc := &ast.CaseClause{
 			List: []ast.Expr{d.value(c.X)},

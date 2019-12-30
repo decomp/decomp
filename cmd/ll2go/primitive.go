@@ -7,6 +7,7 @@ import (
 
 	"github.com/decomp/decomp/cfa/primitive"
 	"github.com/llir/llvm/ir"
+	"github.com/llir/llvm/ir/constant"
 	"github.com/pkg/errors"
 )
 
@@ -199,7 +200,7 @@ func (d *decompiler) primIfElse(condBlock, bodyTrueBlock, bodyFalseBlock, exitBl
 		cond = &ast.BinaryExpr{
 			X:  d.value(condTerm.X),
 			Op: token.EQL,
-			Y:  d.constant(cases[0].X),
+			Y:  d.constant(cases[0].X.(constant.Constant)),
 		}
 	default:
 		return nil, errors.Errorf("invalid cond terminator type; expected *ir.TermCondBr, got %T", condBlock.Term)
