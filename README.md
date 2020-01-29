@@ -104,7 +104,7 @@ Primary focus of version 0.3: *type-aware binary lifting*.
 
 *Decompilers rely on high-quality binary lifting.*
 
-The quality of the output IR of the binary lifting front-end fundamentally determines the quality of the output of the decompilation pipeline.
+The quality of the output IR of the binary lifting front-end fundamentally determines the quality of the output of the entire decompilation pipeline.
 
 Version 0.3 aims to improve the quality of the output LLVM IR by implementing a type-aware binary lifting front-end.
 
