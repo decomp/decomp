@@ -94,34 +94,44 @@ A decompilation pipeline should be composed of individual components, each with 
 
 Version 0.1 of the decomp project explores the feasibility of composing a decompilation pipeline from independent components, and the potential of exposing those components to the end-user.
 
-For further background, refer to the design documents at https://github.com/decomp/doc
+For further background, refer to the [Compositional Decompilation using LLVM IR](https://github.com/decomp/doc/raw/master/report/compositional_decompilation/compositional_decompilation.pdf) design document.
 
 ## Roadmap
 
 ### Version 0.3 (to be released)
 
-Primary focus of version 0.3: *control flow analysis*.
+Primary focus of version 0.3: *type-aware binary lifting*.
 
-*Decompilers should recover high-level control flow primitives.*
+*Decompilers rely on high-quality binary lifting.*
 
-One of the primary differences between low-level assembly and high-level source code is the use of control flow primitives.
+The quality of the output IR of the binary lifting front-end fundamentally determines the quality of the output of the decompilation pipeline.
 
-Version 0.3 seeks to recover high-level control flow primitives using robust control flow analysis algorithms.
+Version 0.3 aims to improve the quality of the output LLVM IR by implementing a type-aware binary lifting front-end.
 
 ### Version 0.4 (to be released)
 
-Primary focus of version 0.4: *fault tolerance*.
+Primary focus of version 0.4: *control flow analysis*.
+
+*Decompilers should recover high-level control flow primitives.*
+
+One of the primary differences between low-level assembly and high-level source code is the use of high-level control flow primitives; e.g. 1-way, 2-way and n-way conditionals (`if`, `if-else` and `switch`), pre- and post-test loops (`while` and `do-while`).
+
+Version 0.4 seeks to recover high-level control flow primitives using robust control flow analysis algorithms.
+
+### Version 0.5 (to be released)
+
+Primary focus of version 0.5: *fault tolerance*.
 
 *Decompilers should be robust.*
 
 Decompilation components should respond well to unexpected states and incomplete analysis.
 
-Version 0.4 focuses on stability, and seeks to stress test the decompilation pipeline using semi-real world software (see the [challenge issue series](https://github.com/decomp/decomp/labels/challenge)).
-
-### Version 0.5 (to be released)
-
-Primary focus of version 0.5: *data flow analysis*.
+Version 0.5 focuses on stability, and seeks to stress test the decompilation pipeline using semi-real world software (see the [challenge issue series](https://github.com/decomp/decomp/labels/challenge)).
 
 ### Version 0.6 (to be released)
 
-Primary focus of version 0.6: *type analysis*.
+Primary focus of version 0.6: *data flow analysis*.
+
+### Version 0.7 (to be released)
+
+Primary focus of version 0.7: *type analysis*.
