@@ -4,6 +4,13 @@ Translate machine code (e.g. x86 assembly) to LLVM IR.
 
 For a (perhaps biased) comparison of machine code to LLVM IR lifters, see https://github.com/trailofbits/mcsema#comparison-with-other-machine-code-to-llvm-bitcode-lifters.
 
+## Ghidra-to-LLVM
+
+https://github.com/toor-de-force/Ghidra-to-LLVM
+
+Supported:
+* [Ghidra](https://github.com/NationalSecurityAgency/ghidra) [P-code](https://ghidra.re/courses/languages/html/pcoderef.html) -> LLVM IR
+
 ## Miasm
 
 https://github.com/cea-sec/miasm
