@@ -1,4 +1,4 @@
-# The decomp.org project
+# The decomp project
 
 [![Build Status](https://travis-ci.org/decomp/decomp.svg?branch=master)](https://travis-ci.org/decomp/decomp)
 [![Coverage Status](https://coveralls.io/repos/github/decomp/decomp/badge.svg?branch=master)](https://coveralls.io/github/decomp/decomp?branch=master)
