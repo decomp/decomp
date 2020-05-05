@@ -4,6 +4,15 @@ Translate machine code (e.g. x86 assembly) to LLVM IR.
 
 For a (perhaps biased) comparison of machine code to LLVM IR lifters, see https://github.com/trailofbits/mcsema#comparison-with-other-machine-code-to-llvm-bitcode-lifters.
 
+## Anvill
+
+https://github.com/lifting-bits/anvill
+
+Supported:
+* x86 -> LLVM IR
+* x86_64 -> LLVM IR
+* Aarch64 -> LLVM IR
+
 ## Ghidra-to-LLVM
 
 https://github.com/toor-de-force/Ghidra-to-LLVM
@@ -26,7 +35,6 @@ Supported:
 * x86-64 -> Miasm IR
 
 Miasm IR -> LLVM IR ([#904](https://github.com/cea-sec/miasm/pull/904))
-
 
 ## WAVM
 
@@ -72,19 +80,21 @@ Supported:
 
 ## MC-Semantics
 
-https://github.com/trailofbits/mcsema
+https://github.com/lifting-bits/mcsema
 
 Supported:
 * x86 -> LLVM IR
 * x86_64 -> LLVM IR
+* Aarch64 -> LLVM IR
 
 ## Remill
 
-https://github.com/trailofbits/remill
+https://github.com/lifting-bits/remill
 
 Supported:
 * x86 -> LLVM IR
 * x86_64 -> LLVM IR
+* Aarch64 -> LLVM IR
 
 ## bin2llvm
 
