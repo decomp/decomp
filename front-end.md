@@ -120,7 +120,7 @@ Supported:
 Future:
 * ARM -> LLVM IR
 
-## RevGen
+## S2E - RevGen
 
 https://github.com/S2E/tools
 
@@ -147,7 +147,7 @@ Future:
 
 ## libbeauty
 
-https://github.com/jcdutton/libbeauty
+https://github.com/isgursoy/libbeauty
 
 Future:
 * x86 -> LLVM IR
