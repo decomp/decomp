@@ -201,6 +201,7 @@ strict digraph "main" {
 ```
 
 Original control flow graph.
+
 ![`foo_graphs/main.png`](generated_output_example/foo_graphs/main.png "Original control flow graph"):
 
 ### `foo_graphs/main.json`

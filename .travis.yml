@@ -1,26 +1,25 @@
 language: go
 
+go:
+  - stable
+
 notifications:
   email: false
 
 env:
   global:
+    # Coveralls.io token.
     - secure: "I5aI/oS2frPKuAWiHwNbcnYzIfJm2nQ9qDlabeurkB8FrN643Yetf5p3Az3QbbPhPO7ntIFAoxQBqov4jGv/dAFbygii+WiTQ6n7E1/bCg5rPDMUxo+TWJdqfNmNBdnYt5xE/3C4PpuDqqKKwXkUlc3i/xGHBvGNCD248mbooZw="
-    - PATH=$HOME/gopath/bin:$PATH
-  matrix:
-    - GO111MODULE=on
-    - GO111MODULE=off
 
 install:
-  - go get ./...
+  - go install -v ./...
 
 before_script:
-  - go get golang.org/x/tools/cmd/cover
-  - go get golang.org/x/tools/cmd/goimports
-  - go get golang.org/x/lint/golint
-  - go get github.com/mattn/goveralls
-  - wget https://gist.github.com/mewmew/379014c9a2e6885e238d/raw/goclean.sh
-  - chmod +x goclean.sh
+  - wget https://github.com/mewmew/ci/raw/master/get_tools.sh
+  - chmod +x get_tools.sh
+  - ./get_tools.sh
+  - wget https://github.com/mewmew/ci/raw/master/ci_checks.sh
+  - chmod +x ci_checks.sh
 
 script:
-  - ./goclean.sh
+  - ./ci_checks.sh
