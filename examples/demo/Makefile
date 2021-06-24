@@ -10,11 +10,10 @@
 # Install tools:
 #
 #    Clang and LLVM
-#    go get github.com/decomp/decomp/cmd/...
-#    go get github.com/decomp/exp/cmd/dot2png
-#    go get github.com/jackspirou/grind (fork of rsc.io/grind)
-#    go get github.com/mewkiz/cmd/sar
-#    go get golang.org/x/tools/cmd/goimports
+#    go install -v github.com/decomp/decomp/cmd/...@master
+#    go install -v github.com/decomp/exp/cmd/dot2png@master
+#    go install -v github.com/mewkiz/cmd/sar@master
+#    go install -v golang.org/x/tools/cmd/goimports@master
 
 all: foo.go foo.ll
 
@@ -62,7 +61,7 @@ foo.go: foo.ll
 	# Force run "localid" post-processing rule (disabled by default).
 	go-post -force localid $@
 	# Move variable declarations closer to their use.
-	grind $@
+	#grind $@
 	# The rewrites of Grind enabled further rewrite rules of go-post.
 	#
 	# Note: use -diff to see the change of an given go-post rewrite; e.g.
@@ -71,7 +70,7 @@ foo.go: foo.ll
 	go-post -r forloop $@
 	go-post -r unusedvar $@
 	# Use sar to remove useless newlines.
-	sar -i "\n\n" "\n" $@
+	sar -i -unescape-replace "\n\n" "\n" $@
 	sar -i '([*<])\n' '$$1 ' $@
 	# Use goimports to format the output Go source code.
 	#
@@ -79,7 +78,7 @@ foo.go: foo.ll
 	#    - output: foo.go
 	goimports -w $@
 	# Add whitespace between top-level function declarations.
-	sar -i "}\nfunc" "}\n\nfunc" $@
+	sar -i -unescape-replace "}\nfunc" "}\n\nfunc" $@
 
 .PHONY: all clean
 
