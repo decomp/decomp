@@ -17,17 +17,7 @@ Install tools used by demo.
 go install -v github.com/decomp/exp/cmd/dot2png@master
 go install -v github.com/mewkiz/cmd/sar@master
 go install -v golang.org/x/tools/cmd/goimports@master
-```
-
-(optional) Install the Grind tool used by demo.
-
-**Note**: the official repository of [Grind](https://github.com/rsc/grind) is no longer maintained, thus we rely on a fork.
-
-```bash
-git clone https://github.com/mewpull/grind
-cd grind
-git switch go-importer
-go install -v
+go install -v github.com/jackspirou/grind@master
 ```
 
 ## Installation
