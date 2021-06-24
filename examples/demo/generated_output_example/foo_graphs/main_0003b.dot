@@ -1,0 +1,11 @@
+strict digraph "main" {
+	// Node definitions.
+	2 [label=entry];
+	8 [
+		fillcolor=red
+		style=filled
+	];
+
+	// Edge definitions.
+	2 -> 8;
+}

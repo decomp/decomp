@@ -1,0 +1,40 @@
+[
+	{
+		"prim": "if",
+		"nodes": {
+			"body": "14",
+			"cond": "11",
+			"exit": "19"
+		},
+		"entry": "11",
+		"exit": "19"
+	},
+	{
+		"prim": "seq",
+		"nodes": {
+			"entry": "11",
+			"exit": "20"
+		},
+		"entry": "11",
+		"exit": "20"
+	},
+	{
+		"prim": "pre_loop",
+		"nodes": {
+			"body": "11",
+			"cond": "8",
+			"exit": "23"
+		},
+		"entry": "8",
+		"exit": "23"
+	},
+	{
+		"prim": "seq",
+		"nodes": {
+			"entry": "2",
+			"exit": "8"
+		},
+		"entry": "2",
+		"exit": "8"
+	}
+]

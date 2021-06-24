@@ -1,20 +1,3 @@
-# Description of files:
-#
-# * foo.c:                original C source file
-# * foo.ll:               LLVM IR assembly (produced by Clang)
-# * foo_graphs/main.dot:  control flow graph of "main" function in GraphViz DOT format
-# * foo_graphs/main.json: control flow recovery information (produced by restructure)
-# * foo_pre.go:           unpolished decompiled Go source code (before post-processing).
-# * foo.go:               decompiled Go source code (post-processed using go-post).
-
-# Install tools:
-#
-#    Clang and LLVM
-#    go install -v github.com/decomp/decomp/cmd/...@master
-#    go install -v github.com/decomp/exp/cmd/dot2png@master
-#    go install -v github.com/mewkiz/cmd/sar@master
-#    go install -v golang.org/x/tools/cmd/goimports@master
-
 all: foo.go foo.ll
 
 %.ll: %.c
@@ -61,7 +44,7 @@ foo.go: foo.ll
 	# Force run "localid" post-processing rule (disabled by default).
 	go-post -force localid $@
 	# Move variable declarations closer to their use.
-	#grind $@
+	grind $@
 	# The rewrites of Grind enabled further rewrite rules of go-post.
 	#
 	# Note: use -diff to see the change of an given go-post rewrite; e.g.
