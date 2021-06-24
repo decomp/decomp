@@ -9,7 +9,9 @@ The aim of this project is to implement a decompilation pipeline composed of ind
 ## Installation
 
 ```bash
-go get github.com/decomp/decomp/...
+git clone https://github.com/decomp/decomp
+cd decomp
+go install -v ./...
 ```
 
 ## Usage
