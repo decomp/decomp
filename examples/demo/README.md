@@ -25,6 +25,7 @@ go install -v golang.org/x/tools/cmd/goimports@master
 
 ```bash
 git clone https://github.com/mewpull/grind
+cd grind
 git switch go-importer
 go install -v
 ```
@@ -55,7 +56,7 @@ $ go run foo.go
 ./foo.go:8:6: v_5 declared but not used
 ```
 
-Run output Go source file (exist status should be `108`).
+Run Go source file produced by the decompilation pipeline (exist status should be `108`).
 
 ```bash
 # Remove v_3, v_4 and v_5 from source code, then recompile.
@@ -199,6 +200,9 @@ strict digraph "main" {
 }
 ```
 
+Original control flow graph.
+![`foo_graphs/main.png`](generated_output_example/foo_graphs/main.png "Original control flow graph"):
+
 ### `foo_graphs/main.json`
 
 Control flow recovery information (produced by `restructure`).
@@ -246,6 +250,15 @@ Control flow recovery information (produced by `restructure`).
 	}
 ]
 ```
+
+Control flow recovery information produced by `restructure` as follows.
+
+Restructure step number | Before step | After step
+------------------------|------------|-----------
+Step 1 | ![`foo_graphs/main_0001a.png`](generated_output_example/foo_graphs/main_0001a.png "Before step 1") | ![`foo_graphs/main_0001b.png`](generated_output_example/foo_graphs/main_0001b.png "After step 1"):
+Step 2 | ![`foo_graphs/main_0002a.png`](generated_output_example/foo_graphs/main_0002a.png "Before step 2") | ![`foo_graphs/main_0002b.png`](generated_output_example/foo_graphs/main_0002b.png "After step 2"):
+Step 3 | ![`foo_graphs/main_0003a.png`](generated_output_example/foo_graphs/main_0003a.png "Before step 3") | ![`foo_graphs/main_0003b.png`](generated_output_example/foo_graphs/main_0003b.png "After step 3"):
+Step 4 | ![`foo_graphs/main_0004a.png`](generated_output_example/foo_graphs/main_0004a.png "Before step 4") | ![`foo_graphs/main_0004b.png`](generated_output_example/foo_graphs/main_0004b.png "After step 4"):
 
 ### `foo_pre.go`
 
