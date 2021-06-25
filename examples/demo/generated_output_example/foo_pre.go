@@ -1,3 +1,5 @@
+//+build examples
+
 package main
 
 func main(_0 int32, _1 **int8) int32 {
