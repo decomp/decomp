@@ -13,4 +13,4 @@ require (
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
 )
 
-go 1.13
+go 1.16
