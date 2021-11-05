@@ -355,14 +355,8 @@ func (d *decompiler) pointerToConst(c constant.Constant) ast.Expr {
 		// handle nil constants 
 		// example error: panic: support for value <nil> not yet implemented
 		if c == nil {
-			
-			// return d.value(c)
-			// return d.constant(constant.Constant(0));
-
-			// make a new integer with value 0 for this
-			return d.value(constant.NewInt(irtypes.I32, 0))
-
-
+			// return d.value(constant.NewInt(irtypes.I32, 0))
+			return ast.NewIdent("nil")
 		}
 		// fmt.Println("Constant: %v", c)
 		panic(fmt.Sprintf("support for value %T not yet implemented", c))
