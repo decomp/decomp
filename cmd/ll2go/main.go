@@ -302,9 +302,12 @@ func (d *decompiler) typeDef(t irtypes.Type) *ast.GenDecl {
 // declaration.
 func (d *decompiler) globalDecl(g *ir.Global) *ast.GenDecl {
 	spec := &ast.ValueSpec{
-		Names:  []*ast.Ident{d.globalIdent(g.GlobalName)},
-		Type:   d.goType(g.Typ),
-		Values: []ast.Expr{d.pointerToConst(g.Init)},
+		Names: []*ast.Ident{d.globalIdent(g.GlobalName)},
+		Type:  d.goType(g.Typ),
+	}
+	if g.Init != nil {
+		// handle value initialization of global definition.
+		spec.Values = []ast.Expr{d.pointerToConst(g.Init)}
 	}
 	return &ast.GenDecl{
 		Tok:   token.VAR,
