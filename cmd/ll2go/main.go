@@ -28,7 +28,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"unicode"
 
@@ -120,7 +119,7 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 	// Get functions set by `-funcs` or all functions if `-funcs` not used.
 	var funcs []*ir.Func
 	for _, f := range module.Funcs {
-		if len(funcNames) > 0 && !funcNames[f.GlobalName] {
+		if len(funcNames) > 0 && !funcNames[f.Name()] {
 			dbg.Printf("skipping function %q.", f.Ident())
 			continue
 		}
@@ -145,7 +144,7 @@ func ll2go(llPath string, funcNames map[string]bool) (*ast.File, error) {
 	// Recover functions.
 	var hasMain bool
 	for _, f := range funcs {
-		if f.GlobalName == "main" {
+		if f.Name() == "main" {
 			hasMain = true
 		}
 		var prims []*primitive.Primitive
@@ -302,7 +301,7 @@ func (d *decompiler) typeDef(t irtypes.Type) *ast.GenDecl {
 // declaration.
 func (d *decompiler) globalDecl(g *ir.Global) *ast.GenDecl {
 	spec := &ast.ValueSpec{
-		Names: []*ast.Ident{d.globalIdent(g.GlobalName)},
+		Names: []*ast.Ident{d.globalIdent(g.Name())},
 		Type:  d.goType(g.Typ),
 	}
 	if g.Init != nil {
@@ -346,10 +345,10 @@ func (d *decompiler) pointerToConst(c constant.Constant) ast.Expr {
 	// Global variable and function addresses
 	case *ir.Global:
 		// TODO: Check if `&g` should be returned instead of `g`.
-		return d.globalIdent(c.GlobalName)
+		return d.globalIdent(c.Name())
 	case *ir.Func:
 		// TODO: Check if `&f` should be returned instead of `f`.
-		return d.globalIdent(c.GlobalName)
+		return d.globalIdent(c.Name())
 	// Constant expressions
 	case constant.Expression:
 		return d.expr(c)
@@ -368,14 +367,14 @@ func (d *decompiler) funcDecl(f *ir.Func, prims []*primitive.Primitive) (*ast.Fu
 	typ := d.goType(f.Sig)
 	sig := typ.(*ast.FuncType)
 	for i, p := range f.Params {
-		paramName := d.localIdent(localIdent(p.LocalIdent))
+		paramName := d.localIdent(p.Name())
 		if len(sig.Params.List[i].Names) < 1 {
 			sig.Params.List[i].Names = make([]*ast.Ident, 1)
 		}
 		sig.Params.List[i].Names[0] = paramName
 	}
 	fn := &ast.FuncDecl{
-		Name: d.globalIdent(f.GlobalName),
+		Name: d.globalIdent(f.Name()),
 		Type: sig,
 	}
 	if len(f.Blocks) == 0 {
@@ -388,7 +387,7 @@ func (d *decompiler) funcDecl(f *ir.Func, prims []*primitive.Primitive) (*ast.Fu
 	// Reset basic block mapping.
 	d.blocks = make(map[string]*basicBlock)
 	for i, block := range f.Blocks {
-		d.blocks[localIdent(block.LocalIdent)] = &basicBlock{Block: block, num: i}
+		d.blocks[block.Name()] = &basicBlock{Block: block, num: i}
 	}
 
 	// Record outgoing PHI values.
@@ -402,7 +401,7 @@ func (d *decompiler) funcDecl(f *ir.Func, prims []*primitive.Primitive) (*ast.Fu
 			// statements to the predecessor basic blocks of the incoming values.
 			for _, inc := range phi.Incs {
 				pred := d.blocks[inc.Pred.(value.Named).Name()]
-				assignStmt := d.assign(localIdent(phi.LocalIdent), d.value(inc.X))
+				assignStmt := d.assign(phi.Name(), d.value(inc.X))
 				pred.out = append(pred.out, assignStmt)
 			}
 		}
@@ -419,7 +418,7 @@ func (d *decompiler) funcDecl(f *ir.Func, prims []*primitive.Primitive) (*ast.Fu
 			delete(d.blocks, node)
 		}
 		// Add primitive basic block.
-		d.blocks[localIdent(block.LocalIdent)] = block
+		d.blocks[block.Name()] = block
 	}
 
 	// A single remaining basic block indicates successful control flow recovery.
@@ -447,7 +446,7 @@ func (d *decompiler) funcDecl(f *ir.Func, prims []*primitive.Primitive) (*ast.Fu
 			return nil, errors.New("empty basic block; expected at least 1 statement")
 		}
 		labelStmt := &ast.LabeledStmt{
-			Label: d.label(localIdent(block.LocalIdent)),
+			Label: d.label(block.Name()),
 			Stmt:  block.stmts[0],
 		}
 		block.stmts[0] = labelStmt
@@ -592,7 +591,7 @@ func (d *decompiler) stmts(block *basicBlock) []ast.Stmt {
 // primitives for the given function.
 func parsePrims(srcName string, f *ir.Func) ([]*primitive.Primitive, error) {
 	graphsDir := fmt.Sprintf("%s_graphs", srcName)
-	jsonName := f.GlobalName + ".json"
+	jsonName := f.Name() + ".json"
 	jsonPath := filepath.Join(graphsDir, jsonName)
 	// Generate primitives if not present on file system.
 	if !osutil.Exists(jsonPath) {
@@ -686,12 +685,4 @@ func label(n graph.Node) string {
 		return n.Label
 	}
 	panic(fmt.Sprintf("invalid node type; expected *cfg.Node, got %T", n))
-}
-
-// localIdent returns a string representation of the given local identifier.
-func localIdent(ident ir.LocalIdent) string {
-	if len(ident.LocalName) > 0 {
-		return ident.LocalName
-	}
-	return strconv.FormatInt(ident.LocalID, 10)
 }

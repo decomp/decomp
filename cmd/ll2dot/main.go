@@ -121,7 +121,7 @@ func ll2dot(llPath string, funcNames map[string]bool, force, img bool) error {
 	// Get functions set by `-funcs` or all functions if `-funcs` not used.
 	var funcs []*ir.Func
 	for _, f := range module.Funcs {
-		if len(funcNames) > 0 && !funcNames[f.GlobalName] {
+		if len(funcNames) > 0 && !funcNames[f.Name()] {
 			dbg.Printf("skipping function %q.", f.Ident())
 			continue
 		}
@@ -144,7 +144,7 @@ func ll2dot(llPath string, funcNames map[string]bool, force, img bool) error {
 		g := cfg.NewGraphFromFunc(f)
 
 		// Store DOT graph.
-		if err := storeCFG(g, f.GlobalName, dotDir, img); err != nil {
+		if err := storeCFG(g, f.Name(), dotDir, img); err != nil {
 			return errors.WithStack(err)
 		}
 	}

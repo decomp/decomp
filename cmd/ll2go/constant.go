@@ -33,9 +33,9 @@ func (d *decompiler) constant(c constant.Constant) ast.Expr {
 		return d.constZeroInitializer(c)
 	// Global variable and function addresses
 	case *ir.Global:
-		return d.globalIdent(c.GlobalName)
+		return d.globalIdent(c.Name())
 	case *ir.Func:
-		return d.globalIdent(c.GlobalName)
+		return d.globalIdent(c.Name())
 	// Constant expressions
 	case constant.Expression:
 		return d.expr(c)

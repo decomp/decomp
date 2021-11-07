@@ -36,7 +36,7 @@ func (d *decompiler) goTypeDef(t irtypes.Type) ast.Expr {
 				Type: d.goType(p),
 			}
 			// TODO: figure out how to handle function parameter name.
-			//paramName := localIdent(p.LocalIdent)
+			//paramName := p.Name()
 			//if len(paramName) > 0 {
 			//	param.Names = append(param.Names, d.localIdent(paramName))
 			//}
