@@ -52,9 +52,20 @@ func assignbinop(file *ast.File) bool {
 		if len(lhs) != 1 {
 			return
 		}
-		ident, ok := lhs[0].(*ast.Ident)
-		if !ok {
-			return
+		var ident *ast.Ident
+		deref := false // e.g. *x = *x + 5
+		switch left := lhs[0].(type) {
+		case *ast.Ident:
+			ident = left
+		case *ast.StarExpr:
+			deref = true
+			_ident, ok := left.X.(*ast.Ident)
+			if !ok {
+				return
+			}
+			ident = _ident
+		default:
+			return // not ident nor dereference expression.
 		}
 		rhs := assignStmt.Rhs
 		binExpr, ok := rhs[0].(*ast.BinaryExpr)
@@ -64,11 +75,11 @@ func assignbinop(file *ast.File) bool {
 		x, y := binExpr.X, binExpr.Y
 		one := false
 		switch {
-		case isName(x, ident.Name):
+		case isName(x, ident.Name) || (deref && isDeref(x, ident.Name)):
 			// a = a + b
 			one = isOne(y)
 			rhs = []ast.Expr{y}
-		case isName(y, ident.Name):
+		case isName(y, ident.Name) || (deref && isDeref(y, ident.Name)):
 			// a = b + a
 			switch binExpr.Op {
 			case token.ADD, token.MUL, token.AND, token.OR, token.XOR:
@@ -89,7 +100,7 @@ func assignbinop(file *ast.File) bool {
 			if one {
 				// x++
 				*stmt = &ast.IncDecStmt{
-					X:   ident,
+					X:   lhs[0],
 					Tok: token.INC,
 				}
 				fixed = true
@@ -100,7 +111,7 @@ func assignbinop(file *ast.File) bool {
 			if one {
 				// x--
 				*stmt = &ast.IncDecStmt{
-					X:   ident,
+					X:   lhs[0],
 					Tok: token.DEC,
 				}
 				fixed = true
@@ -142,4 +153,18 @@ func assignbinop(file *ast.File) bool {
 func isOne(n ast.Expr) bool {
 	lit, ok := n.(*ast.BasicLit)
 	return ok && lit.Kind == token.INT && lit.Value == "1"
+}
+
+// isDeref reports whether n is an unary dereference expression of the given
+// identifier.
+func isDeref(n ast.Expr, name string) bool {
+	expr, ok := n.(*ast.StarExpr)
+	if !ok {
+		return false
+	}
+	ident, ok := expr.X.(*ast.Ident)
+	if !ok {
+		return false
+	}
+	return ident.Name == name
 }

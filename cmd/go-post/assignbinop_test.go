@@ -77,7 +77,7 @@ func main() {
 	},
 	// i=4,
 	{
-		Name: "assignbinop.3",
+		Name: "assignbinop.4",
 		In: `package main
 
 func main() {
@@ -94,6 +94,60 @@ func main() {
 	for i < 10 {
 		i += 2
 	}
+}
+`,
+	},
+	// i=5,
+	{
+		Name: "assignbinop.5",
+		In: `package main
+
+func main() {
+	x := new(int)
+	*x = *x + 2
+}
+`,
+		Out: `package main
+
+func main() {
+	x := new(int)
+	*x += 2
+}
+`,
+	},
+	// i=6,
+	{
+		Name: "assignbinop.6",
+		In: `package main
+
+func main() {
+	x := new(int)
+	*x = *x + 1
+}
+`,
+		Out: `package main
+
+func main() {
+	x := new(int)
+	*x++
+}
+`,
+	},
+	// i=7,
+	{
+		Name: "assignbinop.7",
+		In: `package main
+
+func main() {
+	x := new(int)
+	*x = *x - 1
+}
+`,
+		Out: `package main
+
+func main() {
+	x := new(int)
+	*x--
 }
 `,
 	},
